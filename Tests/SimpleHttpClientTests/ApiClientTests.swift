@@ -30,6 +30,8 @@ class ApiClientTests: XCTestCase {
 //  }
 
   func testApi() {
+    let exp = expectation(description: "Tests API")
+
     let request = APIRequest(method: .get, path: "posts")
 
     subject.perform(request) { (result) in
@@ -39,6 +41,8 @@ class ApiClientTests: XCTestCase {
           if let response = try? response.decode(to: [Post].self) {
             let posts = response.body
             print("Received posts: \(posts.first?.title ?? "")")
+
+            exp.fulfill()
           } else {
             print("Failed to decode response")
           }
@@ -46,5 +50,7 @@ class ApiClientTests: XCTestCase {
           print("Error perform network request")
       }
     }
+
+    waitForExpectations(timeout: 10, handler: nil)
   }
 }

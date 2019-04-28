@@ -10,8 +10,9 @@ extension APIResponse where Body == Data? {
     guard let data = body else {
       throw APIError.decodingFailure
     }
+
     let decodedJSON = try JSONDecoder().decode(BodyType.self, from: data)
-    return APIResponse<BodyType>(statusCode: self.statusCode,
-      body: decodedJSON)
+
+    return APIResponse<BodyType>(statusCode: self.statusCode, body: decodedJSON)
   }
 }

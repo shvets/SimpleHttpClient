@@ -1,4 +1,4 @@
-enum HTTPMethod2: String {
+enum HttpMethod: String {
   case get = "GET"
   case put = "PUT"
   case post = "POST"

@@ -28,7 +28,9 @@ struct APIClient {
     urlRequest.httpMethod = request.method.rawValue
     urlRequest.httpBody = request.body
 
-    request.headers?.forEach { urlRequest.addValue($0.value, forHTTPHeaderField: $0.field) }
+    request.headers?.forEach {
+      urlRequest.addValue($0.value, forHTTPHeaderField: $0.field)
+    }
 
     let task = session.dataTask(with: url) { (data, response, error) in
       guard let httpResponse = response as? HTTPURLResponse else {

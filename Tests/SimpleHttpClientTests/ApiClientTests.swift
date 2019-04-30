@@ -17,15 +17,13 @@ class ApiClientTests: XCTestCase {
   func testGetApi() {
     let exp = expectation(description: "Tests Get API")
 
-    let request = APIRequest(method: .get, path: "posts")
-
-    subject.fetch(request) { (result) in
+    subject.fetch(method: .get, path: "posts") { (result) in
       switch result {
         case .success(let response):
           if let response = try? response.decode(to: [Post].self) {
             let posts = response.body
 
-            // print("Received posts: \(posts.first?.title ?? "")")
+            print("Received posts: \(posts.first?.title ?? "")")
 
             XCTAssertEqual(posts.count, 100)
 

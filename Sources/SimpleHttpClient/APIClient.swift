@@ -11,8 +11,9 @@ struct APIClient {
     self.session = session
   }
 
-  func fetch(_ request: APIRequest, _ completionHandler: @escaping APICompletionHandler<APIResponse<Data?>>) {
-    guard let url = request.buildUrl(baseURL) else {
+  func fetch(method: HttpMethod = .get, path: String = "", queryItems: [URLQueryItem] = [],
+             _ completionHandler: @escaping APICompletionHandler<APIResponse<Data?>>) {
+    guard let url = buildUrl(baseURL, path: path, queryItems: queryItems) else {
       completionHandler(.failure(APIError.invalidURL)); return
     }
 
@@ -33,5 +34,16 @@ struct APIClient {
     }
 
     task.resume()
+  }
+
+  func buildUrl(_ baseURL: URL, path: String, queryItems: [URLQueryItem]) -> URL? {
+    var urlComponents = URLComponents()
+
+    urlComponents.scheme = baseURL.scheme
+    urlComponents.host = baseURL.host
+    urlComponents.path = baseURL.path
+    urlComponents.queryItems = queryItems
+
+    return urlComponents.url?.appendingPathComponent(path)
   }
 }

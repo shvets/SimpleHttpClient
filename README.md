@@ -18,4 +18,4 @@ swift -I .build/debug -L .build/debug -lSimpleHttpClient
     # Links
     
 https://tim.engineering/break-up-third-party-networking-urlsession
-https://mecid.github.io/2019/04/17/asynchronous-completion-handlers-with-result-type/  
+https://mecid.github.io/2019/04/17/asynchronous-completion-handlers-with-result-type  

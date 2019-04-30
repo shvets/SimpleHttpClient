@@ -17,4 +17,15 @@ class APIRequest {
       self.path = path
       self.body = try JSONEncoder().encode(body)
   }
+
+  func buildUrl(_ baseURL: URL) -> URL? {
+    var urlComponents = URLComponents()
+
+    urlComponents.scheme = baseURL.scheme
+    urlComponents.host = baseURL.host
+    urlComponents.path = baseURL.path
+    urlComponents.queryItems = queryItems
+
+    return urlComponents.url?.appendingPathComponent(path)
+  }
 }

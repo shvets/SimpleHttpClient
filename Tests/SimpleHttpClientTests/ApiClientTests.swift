@@ -20,8 +20,8 @@ class ApiClientTests: XCTestCase {
     subject.fetch(method: .get, path: "posts") { (result) in
       switch result {
         case .success(let response):
-          if let response = try? self.subject.decode(response: response, to: [Post].self) {
-            let posts = response.body
+          if let decoded = try? self.subject.decode(response: response, to: [Post].self) {
+            let posts = decoded.value
 
             print("Received posts: \(posts.first?.title ?? "")")
 

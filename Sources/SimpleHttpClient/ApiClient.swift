@@ -2,7 +2,7 @@ import Foundation
 
 typealias CompletionHandler<T> = (Result<T, Error>) -> Void
 
-typealias DataAPIResponse = APIResponse<Data?>
+typealias DataAPIResponse = ApiResponse<Data?>
 
 extension URLSession {
   func dataTask(with url: URL, completionHandler: @escaping CompletionHandler<DataAPIResponse>) ->
@@ -17,7 +17,7 @@ extension URLSession {
         completionHandler(.success(result))
       }
       else {
-        completionHandler(.failure(APIError.requestFailed))
+        completionHandler(.failure(ApiError.requestFailed))
       }
     }
   }
@@ -31,7 +31,7 @@ extension URLSession {
 //      urlRequest.addValue($0.value, forHTTPHeaderField: $0.field)
 //    }
 
-struct APIClient {
+struct ApiClient {
   private let baseURL: URL
   private let session: URLSession
 
@@ -43,20 +43,20 @@ struct APIClient {
   func fetch(method: HttpMethod = .get, path: String = "", queryItems: [URLQueryItem] = [],
              _ completionHandler: @escaping CompletionHandler<DataAPIResponse>) {
     guard let url = buildUrl(baseURL, path: path, queryItems: queryItems) else {
-      completionHandler(.failure(APIError.invalidURL)); return
+      completionHandler(.failure(ApiError.invalidURL)); return
     }
 
     session.dataTask(with: url, completionHandler: completionHandler).resume()
   }
 
-  func decode<T: Decodable>(response: DataAPIResponse, to type: T.Type) throws -> APIResponse<T> {
+  func decode<T: Decodable>(response: DataAPIResponse, to type: T.Type) throws -> ApiResponse<T> {
     guard let data = response.body else {
-      throw APIError.decodingFailure
+      throw ApiError.decodingFailure
     }
 
     let decodedJSON = try JSONDecoder().decode(T.self, from: data)
 
-    return APIResponse<T>(statusCode: response.statusCode, body: decodedJSON)
+    return ApiResponse<T>(statusCode: response.statusCode, body: decodedJSON)
   }
 
   func buildUrl(_ baseURL: URL, path: String, queryItems: [URLQueryItem]) -> URL? {

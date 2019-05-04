@@ -12,7 +12,7 @@ struct Post: Decodable {
 class ApiClientTests: XCTestCase {
   static let url = URL(string: "https://jsonplaceholder.typicode.com")
 
-  var subject = APIClient(ApiClientTests.url!)
+  var subject = ApiClient(ApiClientTests.url!)
 
   func testGetApi() {
     let exp = expectation(description: "Tests Get API")

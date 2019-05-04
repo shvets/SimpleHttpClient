@@ -1,4 +1,4 @@
-enum APIError: Error {
+enum ApiError: Error {
   case invalidURL
 
   case requestFailed

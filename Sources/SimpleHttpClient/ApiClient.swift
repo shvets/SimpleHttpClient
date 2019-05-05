@@ -25,17 +25,20 @@ class ApiClient {
           completionHandler(.failure(error))
         }
         else if let httpResponse = response as? HTTPURLResponse {
-          let apiResponse = ApiResponse(statusCode: httpResponse.statusCode, body: data)
+          let response = ApiResponse(statusCode: httpResponse.statusCode, body: data)
 
-          if let data = apiResponse.body {
+          if let data = response.body {
             let value = try? JSONDecoder().decode(T.self, from: data)
 
             if let value = value {
               completionHandler(.success(value))
             }
+            else {
+              completionHandler(.failure(ApiError.bodyDecodingFailed))
+            }
           }
           else {
-            completionHandler(.failure(ApiError.bodyDecodingFailed))
+            completionHandler(.failure(ApiError.emptyResponse))
           }
         }
         else {

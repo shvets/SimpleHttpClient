@@ -6,4 +6,6 @@ enum ApiError: Error {
   case bodyEncodingFailed
 
   case bodyDecodingFailed
+
+  case emptyResponse
 }

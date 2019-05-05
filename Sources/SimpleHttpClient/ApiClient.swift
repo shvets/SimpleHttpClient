@@ -45,10 +45,6 @@ class ApiClient {
     }
   }
 
-  func encode<T: Encodable>(body: T) throws -> Data? {
-    return try JSONEncoder().encode(body)
-  }
-
   func decode<T: Decodable>(response: ApiResponse, to type: T.Type) throws -> ApiDecoded<T>? {
     var decoded: ApiDecoded<T>? = nil
 
@@ -77,7 +73,7 @@ class ApiClient {
     urlRequest.httpMethod = request.method.rawValue
 
     if let body = request.body {
-      urlRequest.httpBody = try encode(body: body)
+      urlRequest.httpBody = try JSONEncoder().encode(body)
     }
 
     request.headers?.forEach {

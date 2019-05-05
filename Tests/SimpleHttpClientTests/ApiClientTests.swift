@@ -19,7 +19,7 @@ class ApiClientTests: XCTestCase {
 
     let request = ApiRequest(path: "posts")
 
-    subject.fetch(request) { (result) in
+    subject.fetch(request, to: [Post].self) { (result) in
       switch result {
         case .success(let response):
           if let decoded = try? self.subject.decode(response: response, to: [Post].self) {

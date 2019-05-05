@@ -1,6 +1,6 @@
 import Foundation
 
-typealias CompletionHandler<T> = (Result<T, Error>) -> Void
+typealias CompletionHandler<T> = (Result<T, ApiError>) -> Void
 
 class ApiClient {
   private let baseURL: URL
@@ -19,7 +19,7 @@ class ApiClient {
 
         let task = session.dataTask(with: urlRequest) { (data, response, error) in
           if let error = error {
-            completionHandler(.failure(error))
+            completionHandler(.failure(.genericError(error: error)))
           }
           else if let httpResponse = response as? HTTPURLResponse {
             let response = ApiResponse(statusCode: httpResponse.statusCode, body: data)
@@ -31,25 +31,25 @@ class ApiClient {
                 completionHandler(.success(value))
               }
               else {
-                completionHandler(.failure(ApiError.bodyDecodingFailed))
+                completionHandler(.failure(.bodyDecodingFailed))
               }
             }
             else {
-              completionHandler(.failure(ApiError.emptyResponse))
+              completionHandler(.failure(.emptyResponse))
             }
           }
           else {
-            completionHandler(.failure(ApiError.notHttpResponse))
+            completionHandler(.failure(.notHttpResponse))
           }
         }
 
         task.resume()
       } catch {
-        completionHandler(.failure(ApiError.bodyEncodingFailed))
+        completionHandler(.failure(.bodyEncodingFailed))
       }
     }
     else {
-      completionHandler(.failure(ApiError.invalidURL))
+      completionHandler(.failure(.invalidURL))
     }
   }
 

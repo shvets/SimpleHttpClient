@@ -13,42 +13,43 @@ class ApiClient {
 
   func fetch<T: Decodable>(_ request: ApiRequest, to type: T.Type,
                            _ completionHandler: @escaping CompletionHandler<T>) {
-    guard let url = buildUrl(request) else {
-      completionHandler(.failure(ApiError.invalidURL)); return
-    }
+    if let url = buildUrl(request) {
+      do {
+        let urlRequest = try buildUrlRequest(url: url, request: request)
 
-    do {
-      let urlRequest = try buildUrlRequest(url: url, request: request)
+        let task = session.dataTask(with: urlRequest) { (data, response, error) in
+          if let error = error {
+            completionHandler(.failure(error))
+          }
+          else if let httpResponse = response as? HTTPURLResponse {
+            let response = ApiResponse(statusCode: httpResponse.statusCode, body: data)
 
-      let task = session.dataTask(with: urlRequest) { (data, response, error) in
-        if let error = error {
-          completionHandler(.failure(error))
-        }
-        else if let httpResponse = response as? HTTPURLResponse {
-          let response = ApiResponse(statusCode: httpResponse.statusCode, body: data)
+            if let data = response.body {
+              let value = try? JSONDecoder().decode(T.self, from: data)
 
-          if let data = response.body {
-            let value = try? JSONDecoder().decode(T.self, from: data)
-
-            if let value = value {
-              completionHandler(.success(value))
+              if let value = value {
+                completionHandler(.success(value))
+              }
+              else {
+                completionHandler(.failure(ApiError.bodyDecodingFailed))
+              }
             }
             else {
-              completionHandler(.failure(ApiError.bodyDecodingFailed))
+              completionHandler(.failure(ApiError.emptyResponse))
             }
           }
           else {
-            completionHandler(.failure(ApiError.emptyResponse))
+            completionHandler(.failure(ApiError.notHttpResponse))
           }
         }
-        else {
-          completionHandler(.failure(ApiError.notHttpResponse))
-        }
-      }
 
-      task.resume()
-    } catch {
-      completionHandler(.failure(ApiError.bodyEncodingFailed)); return
+        task.resume()
+      } catch {
+        completionHandler(.failure(ApiError.bodyEncodingFailed))
+      }
+    }
+    else {
+      completionHandler(.failure(ApiError.invalidURL))
     }
   }
 

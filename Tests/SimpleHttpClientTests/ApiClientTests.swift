@@ -17,7 +17,9 @@ class ApiClientTests: XCTestCase {
   func testGetApi() {
     let exp = expectation(description: "Tests Get API")
 
-    subject.fetch(method: .get, path: "posts") { (result) in
+    let request = ApiRequest(path: "posts")
+
+    subject.fetch(request) { (result) in
       switch result {
         case .success(let response):
           if let decoded = try? self.subject.decode(response: response, to: [Post].self) {

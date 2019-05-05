@@ -2,25 +2,6 @@ import Foundation
 
 typealias CompletionHandler<T> = (Result<T, Error>) -> Void
 
-extension URLSession {
-  func dataTask(with url: URL, completionHandler: @escaping CompletionHandler<ApiResponse>) ->
-    URLSessionDataTask {
-    return dataTask(with: url) { (data, response, error) in
-      if let error = error {
-        completionHandler(.failure(error))
-      }
-      else if let httpResponse = response as? HTTPURLResponse {
-        let result = ApiResponse(statusCode: httpResponse.statusCode, body: data)
-
-        completionHandler(.success(result))
-      }
-      else {
-        completionHandler(.failure(ApiError.requestFailed))
-      }
-    }
-  }
-}
-
 //    var urlRequest = URLRequest(url: url)
 //    urlRequest.httpMethod = request.method.rawValue
 //    urlRequest.httpBody = request.body
@@ -38,9 +19,8 @@ struct ApiClient {
     self.session = session
   }
 
-  func fetch(method: HttpMethod = .get, path: String = "", queryItems: [URLQueryItem] = [],
-             _ completionHandler: @escaping CompletionHandler<ApiResponse>) {
-    guard let url = buildUrl(baseURL, path: path, queryItems: queryItems) else {
+  func fetch(_ request: ApiRequest, _ completionHandler: @escaping CompletionHandler<ApiResponse>) {
+    guard let url = buildUrl(request) else {
       completionHandler(.failure(ApiError.invalidURL)); return
     }
 
@@ -57,14 +37,14 @@ struct ApiClient {
     return ApiDecoded<T>(value: value)
   }
 
-  func buildUrl(_ baseURL: URL, path: String, queryItems: [URLQueryItem]) -> URL? {
+  func buildUrl(_ request: ApiRequest) -> URL? {
     var urlComponents = URLComponents()
 
     urlComponents.scheme = baseURL.scheme
     urlComponents.host = baseURL.host
     urlComponents.path = baseURL.path
-    urlComponents.queryItems = queryItems
+    urlComponents.queryItems = request.queryItems
 
-    return urlComponents.url?.appendingPathComponent(path)
+    return urlComponents.url?.appendingPathComponent(request.path)
   }
 }

@@ -27,8 +27,12 @@ class ApiClient {
         else if let httpResponse = response as? HTTPURLResponse {
           let apiResponse = ApiResponse(statusCode: httpResponse.statusCode, body: data)
 
-          if let decoded = try? self.decode(response: apiResponse, to: type) {
-            completionHandler(.success(decoded.value))
+          if let data = apiResponse.body {
+            let value = try? JSONDecoder().decode(T.self, from: data)
+
+            if let value = value {
+              completionHandler(.success(value))
+            }
           }
           else {
             completionHandler(.failure(ApiError.bodyDecodingFailed))
@@ -43,18 +47,6 @@ class ApiClient {
     } catch {
       completionHandler(.failure(ApiError.bodyEncodingFailed)); return
     }
-  }
-
-  func decode<T: Decodable>(response: ApiResponse, to type: T.Type) throws -> ApiDecoded<T>? {
-    var decoded: ApiDecoded<T>? = nil
-
-    if let data = response.body {
-      let value = try JSONDecoder().decode(T.self, from: data)
-
-      decoded = ApiDecoded<T>(value: value)
-    }
-
-    return decoded
   }
 
   func buildUrl(_ request: ApiRequest) -> URL? {

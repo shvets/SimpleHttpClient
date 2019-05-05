@@ -2,7 +2,7 @@ import Foundation
 
 typealias CompletionHandler<T> = (Result<T, Error>) -> Void
 
-struct ApiClient {
+class ApiClient {
   private let baseURL: URL
   private let session: URLSession
 
@@ -20,7 +20,24 @@ struct ApiClient {
     do {
       let urlRequest = try buildUrlRequest(url: url, request: request)
 
-      let task = dataTask(with: urlRequest, to: type, completionHandler: completionHandler)
+      let task = session.dataTask(with: urlRequest) { (data, response, error) in
+        if let error = error {
+          completionHandler(.failure(error))
+        }
+        else if let httpResponse = response as? HTTPURLResponse {
+          let apiResponse = ApiResponse(statusCode: httpResponse.statusCode, body: data)
+
+          if let decoded = try? self.decode(response: apiResponse, to: type) {
+            completionHandler(.success(decoded.value))
+          }
+          else {
+            completionHandler(.failure(ApiError.bodyDecodingFailed))
+          }
+        }
+        else {
+          completionHandler(.failure(ApiError.notHttpResponse))
+        }
+      }
 
       task.resume()
     } catch {
@@ -42,34 +59,6 @@ struct ApiClient {
     }
 
     return decoded
-  }
-
-  func dataTask<T: Decodable>(with request: URLRequest, to type: T.Type,
-                completionHandler: @escaping CompletionHandler<T>) ->
-    URLSessionDataTask {
-    return session.dataTask(with: request) { (data, response, error) in
-      self.handle(data: data, to: type, response: response, error: error, completionHandler: completionHandler)
-    }
-  }
-
-  func handle<T: Decodable>(data: Data?, to type: T.Type, response: URLResponse?, error: Error?,
-              completionHandler: @escaping CompletionHandler<T>) {
-    if let error = error {
-      completionHandler(.failure(error))
-    }
-    else if let httpResponse = response as? HTTPURLResponse {
-      let apiResponse = ApiResponse(statusCode: httpResponse.statusCode, body: data)
-
-      if let decoded = try? self.decode(response: apiResponse, to: type) {
-        completionHandler(.success(decoded.value))
-      }
-      else {
-        completionHandler(.failure(ApiError.bodyDecodingFailed))
-      }
-    }
-    else {
-      completionHandler(.failure(ApiError.notHttpResponse))
-    }
   }
 
   func buildUrl(_ request: ApiRequest) -> URL? {

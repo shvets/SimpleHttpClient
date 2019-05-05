@@ -21,20 +21,14 @@ class ApiClientTests: XCTestCase {
 
     subject.fetch(request, to: [Post].self) { (result) in
       switch result {
-        case .success(let response):
-          if let decoded = try? self.subject.decode(response: response, to: [Post].self) {
-            let posts = decoded.value
+        case .success(let posts):
+          print("Received posts: \(posts.first?.title ?? "")")
 
-            print("Received posts: \(posts.first?.title ?? "")")
+          XCTAssertEqual(posts.count, 100)
 
-            XCTAssertEqual(posts.count, 100)
-
-            exp.fulfill()
-          } else {
-            XCTFail("Failed to decode response")
-          }
-        case .failure:
-          XCTFail("Error perform network request")
+          exp.fulfill()
+        case .failure(let error):
+          XCTFail("Error during request: \(error)")
       }
     }
 

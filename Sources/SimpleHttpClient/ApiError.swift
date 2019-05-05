@@ -1,9 +1,9 @@
 enum ApiError: Error {
   case invalidURL
 
-  case bodyEncodeFailed
+  case notHttpResponse
 
-  case requestFailed
+  case bodyEncodingFailed
 
-  case decodingFailure
+  case bodyDecodingFailed
 }

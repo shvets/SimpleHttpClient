@@ -12,7 +12,7 @@ struct ApiClient {
   }
 
   func fetch<T: Decodable>(_ request: ApiRequest, to type: T.Type,
-                           _ completionHandler: @escaping CompletionHandler<ApiResponse>) {
+                           _ completionHandler: @escaping CompletionHandler<T>) {
     guard let url = buildUrl(request) else {
       completionHandler(.failure(ApiError.invalidURL)); return
     }
@@ -20,12 +20,11 @@ struct ApiClient {
     do {
       let urlRequest = try buildUrlRequest(url: url, request: request)
 
-      let task = dataTask(with: urlRequest, completionHandler: completionHandler)
-
+      let task = dataTask(with: urlRequest, to: type, completionHandler: completionHandler)
 
       task.resume()
     } catch {
-      completionHandler(.failure(ApiError.bodyEncodeFailed)); return
+      completionHandler(.failure(ApiError.bodyEncodingFailed)); return
     }
   }
 
@@ -34,10 +33,6 @@ struct ApiClient {
   }
 
   func decode<T: Decodable>(response: ApiResponse, to type: T.Type) throws -> ApiDecoded<T>? {
-    //    guard let data = response.body else {
-//      throw .decodingFailure
-//    }
-
     var decoded: ApiDecoded<T>? = nil
 
     if let data = response.body {
@@ -49,25 +44,31 @@ struct ApiClient {
     return decoded
   }
 
-  func dataTask(with request: URLRequest, completionHandler: @escaping CompletionHandler<ApiResponse>) ->
+  func dataTask<T: Decodable>(with request: URLRequest, to type: T.Type,
+                completionHandler: @escaping CompletionHandler<T>) ->
     URLSessionDataTask {
     return session.dataTask(with: request) { (data, response, error) in
-      self.handle(data: data, response: response, error: error, completionHandler: completionHandler)
+      self.handle(data: data, to: type, response: response, error: error, completionHandler: completionHandler)
     }
   }
 
-  func handle(data: Data?, response: URLResponse?, error: Error?,
-              completionHandler: @escaping CompletionHandler<ApiResponse>) {
+  func handle<T: Decodable>(data: Data?, to type: T.Type, response: URLResponse?, error: Error?,
+              completionHandler: @escaping CompletionHandler<T>) {
     if let error = error {
       completionHandler(.failure(error))
     }
     else if let httpResponse = response as? HTTPURLResponse {
-      let result = ApiResponse(statusCode: httpResponse.statusCode, body: data)
+      let apiResponse = ApiResponse(statusCode: httpResponse.statusCode, body: data)
 
-      completionHandler(.success(result))
+      if let decoded = try? self.decode(response: apiResponse, to: type) {
+        completionHandler(.success(decoded.value))
+      }
+      else {
+        completionHandler(.failure(ApiError.bodyDecodingFailed))
+      }
     }
     else {
-      completionHandler(.failure(ApiError.requestFailed))
+      completionHandler(.failure(ApiError.notHttpResponse))
     }
   }
 

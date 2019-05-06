@@ -2,7 +2,7 @@ import XCTest
 
 @testable import SimpleHttpClient
 
-struct Post: Decodable {
+struct Post: Codable {
   let userId: Int
   let id: Int
   let title: String

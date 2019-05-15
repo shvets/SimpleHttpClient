@@ -4,6 +4,7 @@ Simple Swift HTTP client package.
 
     # Commands
     
+```sh
 swift package generate-xcodeproj
 swift package init --type=executable
 swift package init --type=library
@@ -14,6 +15,7 @@ swift test -s <testname>
 swift package show-dependencies
 swift package show-dependencies --format json
 swift -I .build/debug -L .build/debug -lSimpleHttpClient
+```
 
     # Links
     

@@ -27,13 +27,13 @@ class IdentifierTests: XCTestCase {
                  }
                  """.data(using: .utf8)!
 
-  func testIdentifierDecode() {
-    let author = try! JSONDecoder().decode(Identified<Author>.self, from: authorJson)
+  func testIdentifierDecode() throws {
+    let author = try JSONDecoder().decode(Identified<Author>.self, from: authorJson)
 
     XCTAssertEqual(author.identifier.value, "A13424B6")
     XCTAssertEqual(author.value.name, "Robert C. Martin")
 
-    let book = try! JSONDecoder().decode(Identified<Book>.self, from: bookJson)
+    let book = try JSONDecoder().decode(Identified<Book>.self, from: bookJson)
 
     XCTAssertEqual(book.identifier.value, "A161F15C")
     XCTAssertEqual(book.value.title, "Clean Code")

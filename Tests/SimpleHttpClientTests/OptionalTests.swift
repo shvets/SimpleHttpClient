@@ -5,7 +5,7 @@ import XCTest
 class LiveBeing {}
 
 class Bird: LiveBeing {
-  let wings: Int?;
+  let wings: Int?
 
   init(_ wings: Int) {
     self.wings = wings
@@ -13,7 +13,7 @@ class Bird: LiveBeing {
 }
 
 class Animal: LiveBeing {
-  let legs: Int?;
+  let legs: Int?
 
   init(_ legs: Int) {
     self.legs = legs
@@ -44,7 +44,7 @@ extension Optional where Wrapped == LiveBeing {
 class OptionalTests: XCTestCase {
 
   func test1() throws {
-    var data: String? = nil
+    var data: String?
 
     XCTAssertEqual(data.isNilOrEmpty, true)
 

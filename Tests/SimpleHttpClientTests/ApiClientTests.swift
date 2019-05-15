@@ -21,14 +21,14 @@ class ApiClientTests: XCTestCase {
 
     subject.fetch(request, to: [Post].self) { (result) in
       switch result {
-        case .success(let posts):
-          print("Received posts: \(posts.first?.title ?? "")")
+      case .success(let posts):
+        print("Received posts: \(posts.first?.title ?? "")")
 
-          XCTAssertEqual(posts.count, 100)
+        XCTAssertEqual(posts.count, 100)
 
-          exp.fulfill()
-        case .failure(let error):
-          XCTFail("Error during request: \(error)")
+        exp.fulfill()
+      case .failure(let error):
+        XCTFail("Error during request: \(error)")
       }
     }
 

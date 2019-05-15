@@ -41,5 +41,3 @@ extension KeyedDecodingContainerProtocol {
     return try decodeIfPresent(T.self, forKey: key) ?? defaultExpression()
   }
 }
-
-

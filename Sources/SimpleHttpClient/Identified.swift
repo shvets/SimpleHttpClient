@@ -14,7 +14,7 @@ struct AnyCodingKey: CodingKey {
 }
 
 struct Identified<T> {
-  let identifier: Identifier<T>
+  let id: Identifier<T>
 
   let value: T
 }
@@ -23,14 +23,14 @@ extension Identified: Codable where T: Codable {
   init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: AnyCodingKey.self)
 
-    self.identifier = try container.decode(Identifier<T>.self, forKey: AnyCodingKey(stringValue: "identifier")!)
+    self.id = try container.decode(Identifier<T>.self, forKey: AnyCodingKey(stringValue: "id")!)
     self.value = try T.init(from: decoder)
   }
 
   func encode(to encoder: Encoder) throws {
     var container = encoder.container(keyedBy: AnyCodingKey.self)
 
-    try container.encode(identifier, forKey: AnyCodingKey(stringValue: "identifier")!)
+    try container.encode(id, forKey: AnyCodingKey(stringValue: "id")!)
     try value.encode(to: encoder)
   }
 }

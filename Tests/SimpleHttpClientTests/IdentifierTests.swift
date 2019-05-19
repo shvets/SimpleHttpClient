@@ -1,6 +1,6 @@
 import XCTest
 
-@testable import SimpleHttpClient
+@testable import Identity
 
 struct Author: Identifiable, Codable {
   let id: ID
@@ -25,7 +25,7 @@ extension Book: Equatable {
   }
 }
 
-class IdentifierTests: XCTestCase {
+final class IdentifierTests: XCTestCase {
   let authorJson = """
                    {
                        "id": "A13424B6",
@@ -69,9 +69,52 @@ class IdentifierTests: XCTestCase {
   }
 
   func testWrongId() throws {
-    let author = Author(id: "1", name: "Stephen King")
+    //let author = Author(id: "1", name: "Stephen King")
 //    let book1 = Book(id: author.id, title: "Some Title", authorId: "A001") // fail
     let book = Book(id: "B1111111", title: "Some Title",  authorId: "A001") // OK
+
     print(book)
+  }
+
+  func testStringBasedIdentifier() {
+    struct Model: Identifiable {
+      let id: ID
+    }
+
+    let model = Model(id: "Hello, world!")
+    XCTAssertEqual(model.id, "Hello, world!")
+  }
+
+  func testIntBasedIdentifier() {
+    struct Model: Identifiable {
+      typealias RawIdentifier = Int
+      let id: ID
+    }
+
+    let model = Model(id: 7)
+    XCTAssertEqual(model.id, 7)
+  }
+
+  func testCodableIdentifier() throws {
+    struct Model: Identifiable, Codable {
+      typealias RawIdentifier = UUID
+      let id: ID
+    }
+
+    let model = Model(id: Identifier(rawValue: UUID()))
+    let data = try JSONEncoder().encode(model)
+    let decoded = try JSONDecoder().decode(Model.self, from: data)
+    XCTAssertEqual(model.id, decoded.id)
+  }
+
+  func testIdentifierEncodedAsSingleValue() throws {
+    struct Model: Identifiable, Codable {
+      let id: ID
+    }
+
+    let model = Model(id: "I'm an ID")
+    let data = try JSONEncoder().encode(model)
+    let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+    XCTAssertEqual(json?["id"] as? String, "I'm an ID")
   }
 }

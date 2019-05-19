@@ -1,6 +1,6 @@
 import XCTest
 
-@testable import SimpleHttpClient
+@testable import Tagging
 
 final class TaggableTests: XCTestCase {
 

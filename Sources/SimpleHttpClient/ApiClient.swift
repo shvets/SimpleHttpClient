@@ -1,5 +1,14 @@
 import Foundation
 
+enum ApiError: Error {
+  case genericError(error: Error)
+  case invalidURL
+  case notHttpResponse
+  case bodyEncodingFailed
+  case bodyDecodingFailed
+  case emptyResponse
+}
+
 typealias CompletionHandler<T> = (Result<T, ApiError>) -> Void
 
 class ApiClient {

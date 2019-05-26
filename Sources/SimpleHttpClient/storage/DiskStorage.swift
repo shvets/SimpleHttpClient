@@ -1,5 +1,10 @@
 import Foundation
 
+enum StorageError: Error {
+  case notFound
+  case cantWrite(Error)
+}
+
 class DiskStorage {
   private let queue: DispatchQueue
   private let fileManager: FileManager

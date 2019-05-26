@@ -1,24 +1,5 @@
 import Foundation
 
-enum StorageError: Error {
-  case notFound
-  case cantWrite(Error)
-}
-
-typealias ResultHandler<T> = (Result<T, Error>) -> Void
-
-protocol ReadableStorage {
-  func fetchValue(for key: String) throws -> Data
-  func fetchValue(for key: String, handler: @escaping ResultHandler<Data>)
-}
-
-protocol WritableStorage {
-  func save(value: Data, for key: String) throws
-  func save(value: Data, for key: String, handler: @escaping ResultHandler<Data>)
-}
-
-typealias Storage = ReadableStorage & WritableStorage
-
 class DiskStorage {
   private let queue: DispatchQueue
   private let fileManager: FileManager
@@ -33,7 +14,7 @@ class DiskStorage {
 }
 
 extension DiskStorage: WritableStorage {
-  func save(value: Data, for key: String) throws {
+  func write(value: Data, for key: String) throws {
     let url = path.appendingPathComponent(key)
 
     do {
@@ -45,10 +26,10 @@ extension DiskStorage: WritableStorage {
     }
   }
 
-  func save(value: Data, for key: String, handler: @escaping ResultHandler<Data>) {
+  func write(value: Data, for key: String, handler: @escaping (Result<Data, Error>) -> Void) {
     queue.async {
       do {
-        try self.save(value: value, for: key)
+        try self.write(value: value, for: key)
 
         handler(.success(value))
       } catch {
@@ -69,7 +50,7 @@ extension DiskStorage {
 }
 
 extension DiskStorage: ReadableStorage {
-  func fetchValue(for key: String) throws -> Data {
+  func read(for key: String) throws -> Data {
     let url = path.appendingPathComponent(key)
 
     guard let data = fileManager.contents(atPath: url.path) else {
@@ -79,10 +60,9 @@ extension DiskStorage: ReadableStorage {
     return data
   }
 
-  func fetchValue(for key: String, handler: @escaping ResultHandler<Data>) {
+  func read(for key: String, handler: @escaping (Result<Data, Error>) -> Void) {
     queue.async {
-      handler(Result { try self.fetchValue(for: key) })
+      handler(Result { try self.read(for: key) })
     }
   }
 }
-

@@ -1,16 +1,5 @@
 import Foundation
 
-enum ApiError: Error {
-  case genericError(error: Error)
-  case invalidURL
-  case notHttpResponse
-  case bodyEncodingFailed
-  case bodyDecodingFailed
-  case emptyResponse
-}
-
-typealias CompletionHandler<T> = (Result<T, ApiError>) -> Void
-
 class ApiClient {
   private let baseURL: URL
   private let session: URLSession
@@ -21,14 +10,14 @@ class ApiClient {
   }
 
   func fetch<T: Decodable>(_ request: ApiRequest, to type: T.Type,
-                           _ completionHandler: @escaping CompletionHandler<T>) {
+                           _ handler: @escaping (Result<T, ApiError>) -> Void) {
     if let url = buildUrl(request) {
       do {
         let urlRequest = try buildUrlRequest(url: url, request: request)
 
         let task = session.dataTask(with: urlRequest) { (data, response, error) in
           if let error = error {
-            completionHandler(.failure(.genericError(error: error)))
+            handler(.failure(.genericError(error: error)))
           }
           else if let httpResponse = response as? HTTPURLResponse {
             let response = ApiResponse(statusCode: httpResponse.statusCode, body: data)
@@ -37,28 +26,28 @@ class ApiClient {
               let value = try? JSONDecoder().decode(T.self, from: data)
 
               if let value = value {
-                completionHandler(.success(value))
+                handler(.success(value))
               }
               else {
-                completionHandler(.failure(.bodyDecodingFailed))
+                handler(.failure(.bodyDecodingFailed))
               }
             }
             else {
-              completionHandler(.failure(.emptyResponse))
+              handler(.failure(.emptyResponse))
             }
           }
           else {
-            completionHandler(.failure(.notHttpResponse))
+            handler(.failure(.notHttpResponse))
           }
         }
 
         task.resume()
       } catch {
-        completionHandler(.failure(.bodyEncodingFailed))
+        handler(.failure(.bodyEncodingFailed))
       }
     }
     else {
-      completionHandler(.failure(.invalidURL))
+      handler(.failure(.invalidURL))
     }
   }
 

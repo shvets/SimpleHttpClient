@@ -9,12 +9,11 @@ final class StorageTests: XCTestCase {
     }
 
     let path = URL(fileURLWithPath: NSTemporaryDirectory())
-    let disk = DiskStorage(path: path)
-    let storage = CodableStorage(storage: disk)
+    let storage = CodableStorage(path: path)
 
     let timeline = Timeline(tweets: ["Hello", "World", "!!!"])
-    try storage.save(timeline, for: "timeline")
-    let cached: Timeline = try storage.fetch(for: "timeline")
+    try storage.write(timeline, for: "timeline")
+    let cached: Timeline = try storage.read(for: "timeline")
 
     XCTAssertEqual(cached, timeline)
   }

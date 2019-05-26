@@ -1,10 +1,5 @@
 import Foundation
 
-enum StorageError: Error {
-  case notFound
-  case cantWrite(Error)
-}
-
 class DiskStorage {
   private let queue: DispatchQueue
   private let fileManager: FileManager
@@ -16,35 +11,7 @@ class DiskStorage {
     self.queue = queue
     self.fileManager = fileManager
   }
-}
 
-extension DiskStorage: WritableStorage {
-  func write(value: Data, for key: String) throws {
-    let url = path.appendingPathComponent(key)
-
-    do {
-      try self.createFolders(in: url)
-
-      try value.write(to: url, options: .atomic)
-    } catch {
-      throw StorageError.cantWrite(error)
-    }
-  }
-
-  func write(value: Data, for key: String, handler: @escaping (Result<Data, Error>) -> Void) {
-    queue.async {
-      do {
-        try self.write(value: value, for: key)
-
-        handler(.success(value))
-      } catch {
-        handler(.failure(error))
-      }
-    }
-  }
-}
-
-extension DiskStorage {
   private func createFolders(in url: URL) throws {
     let folderUrl = url.deletingLastPathComponent()
 
@@ -54,20 +21,62 @@ extension DiskStorage {
   }
 }
 
-extension DiskStorage: ReadableStorage {
-  func read(for key: String) throws -> Data {
-    let url = path.appendingPathComponent(key)
+//func read<T: Decodable>(for key: String) throws -> T {
+//  let data = try super.read(for: key)
+//
+//  return try decoder.decode(T.self, from: data)
+//}
 
-    guard let data = fileManager.contents(atPath: url.path) else {
-      throw StorageError.notFound
+extension DiskStorage: ReadableStorage, WritableStorage {
+  func read<T: Decodable>(for key: String, type: T.Type, using decoder: AnyDecoder = JSONDecoder(),
+                          handler: @escaping StorageHandler<T>) {
+    queue.async {
+      let url = self.path.appendingPathComponent(key)
+
+      if let data = self.fileManager.contents(atPath: url.path) {
+        do {
+          //let result = try data.decoded(using: decoder)
+
+          let result = try decoder.decode(type, from: data)
+
+          handler(.success(result))
+        } catch {
+          handler(.failure(.genericError(error: error)))
+        }
+      }
+      else {
+        handler(.failure(.notFound))
+      }
     }
-
-    return data
   }
 
-  func read(for key: String, handler: @escaping (Result<Data, Error>) -> Void) {
+  //
+//func write<T: Encodable>(_ value: T, for key: String) throws {
+//  let data = try encoder.encode(value)
+//
+//  try super.write(value: data, for: key)
+//}
+
+  func write<T: Encodable>(_ value: T, for key: String, using encoder: AnyEncoder = JSONEncoder(),
+                           handler: @escaping StorageHandler<T> = { _ in }) {
     queue.async {
-      handler(Result { try self.read(for: key) })
+      let url = self.path.appendingPathComponent(key)
+
+      do {
+        try self.createFolders(in: url)
+
+        //let data = try value.encoded(using: encoder)
+
+        let data = try encoder.encode(value)
+
+        //try super.write(value: data, for: key)
+
+        try data.write(to: url, options: .atomic)
+
+        handler(.success(value))
+      } catch {
+        handler(.failure(.genericError(error: error)))
+      }
     }
   }
 }

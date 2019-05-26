@@ -23,4 +23,5 @@ swift -I .build/debug -L .build/debug -lSimpleHttpClient
 - https://mecid.github.io/2019/04/17/asynchronous-completion-handlers-with-result-type
 - https://medium.com/better-programming/better-swift-codable-models-through-composition-a6b109b7e8c7
 - https://www.swiftbysundell.com/posts/type-safe-identifiers-in-swift
+- https://mecid.github.io/2019/05/22/storing-codable-structs-on-the-disk/
   

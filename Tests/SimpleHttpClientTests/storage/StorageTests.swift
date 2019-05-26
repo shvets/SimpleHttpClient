@@ -15,6 +15,8 @@ final class StorageTests: XCTestCase {
     try storage.write(timeline, for: "timeline")
     let cached: Timeline = try storage.read(for: "timeline")
 
+    // print(cached)
+
     XCTAssertEqual(cached, timeline)
   }
 }

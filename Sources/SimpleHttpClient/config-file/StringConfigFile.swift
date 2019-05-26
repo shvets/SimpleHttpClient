@@ -1,46 +1,28 @@
 import Foundation
 import Files
 
-open class StringConfigFile: ConfigFile {
+open class StringConfigFile: ConfigFile<String> {
   public typealias Item = String
-
-  private var list: [String: Item] = [:]
-
-  public var items: [String: Item] {
-    get {
-      return list
-    }
-    set {
-      list = newValue
-    }
-  }
 
   var fileName: String = ""
 
   let encoder = JSONEncoder()
   let decoder = JSONDecoder()
+  let fileManager = FileManager.default
 
   public init(_ fileName: String) {
     self.fileName = fileName
   }
 
-  public func clear() {
-    items.removeAll()
+  public override func exists() -> Bool {
+    return fileManager.fileExists(atPath: fileName)
   }
 
-  public func exists() -> Bool {
-    return File.exists(atPath: fileName)
-  }
-
-  public func add(key: String, value: Item) {
-    items[key] = value
-  }
-
-  public func remove(_ key: String) -> Bool {
+  public override func remove(_ key: String) -> Bool {
     return items.removeValue(forKey: key) != nil
   }
 
-  public func load() throws {
+  public override func load() throws {
     clear()
 
     let data = try File(path: fileName).read()
@@ -48,7 +30,7 @@ open class StringConfigFile: ConfigFile {
     items = try decoder.decode([String: Item].self, from: data)
   }
 
-  public func save() throws {
+  public override func save() throws {
     let data = try encoder.encode(items)
 
     try FileSystem().createFile(at: fileName, contents: data)

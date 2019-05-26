@@ -34,7 +34,7 @@ class ApiClientTests: XCTestCase {
       }
     }
 
-    waitForExpectations(timeout: 10, handler: nil)
+    waitForExpectations(timeout: 10)
   }
 
   func testGetApi2() {
@@ -80,6 +80,6 @@ class ApiClientTests: XCTestCase {
 
     queue.waitUntilAllOperationsAreFinished()
 
-    waitForExpectations(timeout: 10, handler: nil)
+    waitForExpectations(timeout: 10)
   }
 }

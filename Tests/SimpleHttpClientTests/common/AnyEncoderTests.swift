@@ -8,22 +8,19 @@ final class AnyEncoderDecoderTests: XCTestCase {
     let lastName: String
   }
 
-  func testEncoder() throws {
+  func testEncoded() throws {
     let user = User(firstName: "Harry", lastName: "Potter")
-
-    print(try user.prettify())
 
     XCTAssertEqual(try user.encoded().count, 52)
   }
 
-  func testDecoder() throws {
+  func testPrettify() throws {
     let user = User(firstName: "Harry", lastName: "Potter")
-    let data = try user.encoded()
 
-    let result = try data.decoded() as User
+    print(try user.prettify())
 
-    print(try data.decoded() as User)
+    let result = try user.prettify()
 
-    XCTAssertEqual(result, user)
+    XCTAssertTrue(result.contains("\"firstName\" : \"Harry\""))
   }
 }

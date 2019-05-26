@@ -16,7 +16,7 @@ final class DiskStorageTests: XCTestCase {
     let timeline = Timeline(tweets: ["Hello", "World", "!!!"])
 
     storage.write(timeline, for: "timeline") { _ in
-      storage.read(for: "timeline", type: Timeline.self) { result in
+      storage.read(Timeline.self, for: "timeline") { result in
         print(try? result.get())
 
         XCTAssertEqual(try? result.get(), timeline)

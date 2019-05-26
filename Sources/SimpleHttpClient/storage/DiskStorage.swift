@@ -21,22 +21,14 @@ class DiskStorage {
   }
 }
 
-//func read<T: Decodable>(for key: String) throws -> T {
-//  let data = try super.read(for: key)
-//
-//  return try decoder.decode(T.self, from: data)
-//}
-
 extension DiskStorage: ReadableStorage, WritableStorage {
-  func read<T: Decodable>(for key: String, type: T.Type, using decoder: AnyDecoder = JSONDecoder(),
+  func read<T: Decodable>(_ type: T.Type, for key: String, using decoder: AnyDecoder = JSONDecoder(),
                           handler: @escaping StorageHandler<T>) {
     queue.async {
       let url = self.path.appendingPathComponent(key)
 
       if let data = self.fileManager.contents(atPath: url.path) {
         do {
-          //let result = try data.decoded(using: decoder)
-
           let result = try decoder.decode(type, from: data)
 
           handler(.success(result))
@@ -50,13 +42,6 @@ extension DiskStorage: ReadableStorage, WritableStorage {
     }
   }
 
-  //
-//func write<T: Encodable>(_ value: T, for key: String) throws {
-//  let data = try encoder.encode(value)
-//
-//  try super.write(value: data, for: key)
-//}
-
   func write<T: Encodable>(_ value: T, for key: String, using encoder: AnyEncoder = JSONEncoder(),
                            handler: @escaping StorageHandler<T> = { _ in }) {
     queue.async {
@@ -65,11 +50,7 @@ extension DiskStorage: ReadableStorage, WritableStorage {
       do {
         try self.createFolders(in: url)
 
-        //let data = try value.encoded(using: encoder)
-
         let data = try encoder.encode(value)
-
-        //try super.write(value: data, for: key)
 
         try data.write(to: url, options: .atomic)
 

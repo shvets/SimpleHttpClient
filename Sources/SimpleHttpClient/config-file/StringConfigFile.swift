@@ -3,14 +3,14 @@ import Files
 import RxSwift
 
 open class StringConfigFile: ConfigFile<String> {
-  var fileName: String = ""
+  var name: String = ""
 
   let fileManager = FileManager.default
 
   let storage: DiskStorage!
 
   public init(_ fileName: String) {
-    self.fileName = fileName
+    self.name = fileName
 
     let path = URL(fileURLWithPath: NSTemporaryDirectory())
 
@@ -18,7 +18,7 @@ open class StringConfigFile: ConfigFile<String> {
   }
 
   public func exists() -> Bool {
-    return fileManager.fileExists(atPath: fileName)
+    return fileManager.fileExists(atPath: name)
   }
 
 //  public func read1() throws {
@@ -48,7 +48,7 @@ open class StringConfigFile: ConfigFile<String> {
   public func read() throws -> Observable<ConfigurationItems<String>> {
     clear()
 
-    return storage.read([String: Item].self, for: fileName).map { items in
+    return storage.read(ConfigurationItems<String>.self, for: name).map { items in
       self.items = items
 
       return items
@@ -56,6 +56,6 @@ open class StringConfigFile: ConfigFile<String> {
   }
 
   public func write() throws -> Observable<ConfigurationItems<String>> {
-    return storage.write(items, for: fileName)
+    return storage.write(items, for: name)
   }
 }

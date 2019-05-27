@@ -30,7 +30,7 @@ class StringConfigFileTests: XCTestCase {
 
     let data = "{\"key1\": \"value1\", \"key2\": \"value2\"}".data(using: .utf8)
 
-    try FileSystem().createFile(at: subject.fileName, contents: data!)
+    try FileSystem().createFile(at: subject.name, contents: data!)
 
     try subject.read().subscribe(onNext: { items in
       exp.fulfill()

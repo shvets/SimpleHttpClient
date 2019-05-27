@@ -40,7 +40,7 @@ open class ApiService: AuthService {
 
   func loadConfig() {
     do {
-      try config.load()
+      try config.read()
     }
     catch let error {
       print("Error loading configuration: \(error)")
@@ -49,7 +49,7 @@ open class ApiService: AuthService {
 
   func saveConfig() {
     do {
-      try config.save()
+      try config.write()
     }
     catch let error {
       print("Error saving configuration: \(error)")

@@ -44,7 +44,7 @@ class AuthAPITests: XCTestCase {
 
     subject.config.items = response!.asDictionary()
 
-    try subject.config.save()
+    try subject.config.write()
     
     XCTAssertNotNil(response!.accessToken)
   }

@@ -1,4 +1,5 @@
 import Foundation
+import RxSwift
 
 class DiskStorage {
   private let queue: DispatchQueue
@@ -21,7 +22,7 @@ class DiskStorage {
   }
 }
 
-extension DiskStorage: ReadableStorage, WritableStorage {
+extension DiskStorage: ReadableStorage {
   func read<T: Decodable>(_ type: T.Type, for key: String, using decoder: AnyDecoder = JSONDecoder(),
                           handler: @escaping StorageHandler<T>) {
     queue.async {
@@ -29,9 +30,9 @@ extension DiskStorage: ReadableStorage, WritableStorage {
 
       if let data = self.fileManager.contents(atPath: url.path) {
         do {
-          let result = try decoder.decode(type, from: data)
+          let value = try decoder.decode(type, from: data)
 
-          handler(.success(result))
+          handler(.success(value))
         } catch {
           handler(.failure(.genericError(error: error)))
         }
@@ -42,6 +43,30 @@ extension DiskStorage: ReadableStorage, WritableStorage {
     }
   }
 
+  func read<T: Decodable>(_ type: T.Type, for key: String, using decoder: AnyDecoder = JSONDecoder()) -> Observable<T> {
+    return Observable.create { observer in
+      let url = self.path.appendingPathComponent(key)
+
+      if let data = self.fileManager.contents(atPath: url.path) {
+        do {
+          let value = try decoder.decode(type, from: data)
+
+          observer.onNext(value)
+          observer.onCompleted()
+        } catch {
+          observer.onError(StorageError.genericError(error: error))
+        }
+      }
+      else {
+        observer.onError(StorageError.notFound)
+      }
+
+      return Disposables.create()
+    }
+  }
+}
+
+extension DiskStorage: WritableStorage {
   func write<T: Encodable>(_ value: T, for key: String, using encoder: AnyEncoder = JSONEncoder(),
                            handler: @escaping StorageHandler<T> = { _ in }) {
     queue.async {
@@ -58,6 +83,28 @@ extension DiskStorage: ReadableStorage, WritableStorage {
       } catch {
         handler(.failure(.genericError(error: error)))
       }
+    }
+  }
+
+  func write<T: Encodable>(_ value: T, for key: String, using encoder: AnyEncoder = JSONEncoder()) -> Observable<T> {
+    return Observable.create { observer in
+
+      let url = self.path.appendingPathComponent(key)
+
+      do {
+        try self.createFolders(in: url)
+
+        let data = try encoder.encode(value)
+
+        try data.write(to: url, options: .atomic)
+
+        observer.onNext(value)
+        observer.onCompleted()
+      } catch {
+        observer.onError(StorageError.genericError(error: error))
+      }
+
+      return Disposables.create()
     }
   }
 }

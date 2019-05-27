@@ -1,4 +1,4 @@
-typealias ConfigurationItems<T> = Dictionary<String, T>;
+public typealias ConfigurationItems<T> = Dictionary<String, T>;
 
 protocol Configuration {
   associatedtype Item
@@ -21,9 +21,9 @@ protocol Configuration {
 open class ConfigFile<T> {
   typealias Item = T
 
-  private var list: ConfigurationItems<Item> = [:]
+  private var list: ConfigurationItems<T> = [:]
 
-  internal var items: ConfigurationItems<Item> {
+  public var items: ConfigurationItems<T> {
     get {
       return list
     }

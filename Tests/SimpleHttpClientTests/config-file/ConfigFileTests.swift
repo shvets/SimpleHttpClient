@@ -19,6 +19,10 @@ class ConfigFileTests: XCTestCase {
     subject.write().subscribe(onNext: { items in
       exp.fulfill()
       XCTAssertEqual(items.asDictionary().keys.count, 2)
+    }, onError: { (error) -> Void in
+      exp.fulfill()
+      print(error)
+      XCTFail("Error during request: \(error)")
     })
 
     waitForExpectations(timeout: 10)
@@ -38,7 +42,7 @@ class ConfigFileTests: XCTestCase {
     }, onError: { (error) -> Void in
       exp.fulfill()
       print(error)
-      XCTFail()
+      XCTFail("Error during request: \(error)")
     })
 
     waitForExpectations(timeout: 10)

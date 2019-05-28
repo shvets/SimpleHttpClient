@@ -4,24 +4,24 @@ import Foundation
 
 @testable import SimpleHttpClient
 
+struct Post: Codable {
+  let userId: Int
+  let id: Int
+  let title: String
+  let body: String
+}
+
 class ApiClientTests: XCTestCase {
   static let url = URL(string: "https://jsonplaceholder.typicode.com")
 
   var subject = ApiClient(ApiClientTests.url!)
 
-  func testGetApi() {
-    struct Post: Codable {
-      let userId: Int
-      let id: Int
-      let title: String
-      let body: String
-    }
-
-    let exp = expectation(description: "Tests Get API")
+  func testGetAsyncApi() {
+    let exp = expectation(description: "Tests Get Async API")
 
     let request = ApiRequest(path: "posts")
 
-    subject.fetch(request, to: [Post].self) { (result) in
+    subject.fetchAsync(request, to: [Post].self) { (result) in
       switch result {
       case .success(let posts):
         print("Received posts: \(posts.first?.title ?? "")")
@@ -37,7 +37,27 @@ class ApiClientTests: XCTestCase {
     waitForExpectations(timeout: 10)
   }
 
-  func testGetApi2() {
+  func testGetApi() {
+    let exp = expectation(description: "Tests Get API")
+
+    let request = ApiRequest(path: "posts")
+
+    subject.fetch(request, to: [Post].self).subscribe(onNext: { items in
+      exp.fulfill()
+
+      print("Received posts: \(items.first?.title ?? "")")
+
+      XCTAssertEqual(items.count, 100)
+    }, onError: { (error) -> Void in
+      exp.fulfill()
+      print(error)
+      "Error during request: \(error)"
+    })
+
+    waitForExpectations(timeout: 10)
+  }
+
+  func testGetDownloadApi() {
     let queue = OperationQueue()
 // set maxConcurrentOperationCount to 1 so that only one operation can be run at one time
     queue.maxConcurrentOperationCount = 1

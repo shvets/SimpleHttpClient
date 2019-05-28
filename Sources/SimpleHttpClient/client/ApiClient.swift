@@ -1,4 +1,5 @@
 import Foundation
+import RxSwift
 
 enum ApiError: Error {
   case genericError(error: Error)
@@ -9,6 +10,13 @@ enum ApiError: Error {
   case emptyResponse
 }
 
+protocol HttpFetcher {
+  func fetchAsync<T: Decodable>(_ request: ApiRequest, to type: T.Type,
+                           _ handler: @escaping (Result<T, ApiError>) -> Void)
+
+  func fetch<T: Decodable>(_ request: ApiRequest, to type: T.Type) -> Observable<T>
+}
+
 class ApiClient {
   private let baseURL: URL
   private let session: URLSession
@@ -17,8 +25,10 @@ class ApiClient {
     self.baseURL = baseURL
     self.session = session
   }
+}
 
-  func fetch<T: Decodable>(_ request: ApiRequest, to type: T.Type,
+extension ApiClient: HttpFetcher {
+  func fetchAsync<T: Decodable>(_ request: ApiRequest, to type: T.Type,
                            _ handler: @escaping (Result<T, ApiError>) -> Void) {
     if let url = buildUrl(request) {
       do {
@@ -57,6 +67,58 @@ class ApiClient {
     }
     else {
       handler(.failure(.invalidURL))
+    }
+  }
+
+  func fetch<T: Decodable>(_ request: ApiRequest, to type: T.Type) -> Observable<T> {
+    return Observable.create { observer in
+      if let url = self.buildUrl(request) {
+        do {
+          let urlRequest = try self.buildUrlRequest(url: url, request: request)
+
+          let task = self.session.dataTask(with: urlRequest) { (data, response, error) in
+            if let error = error {
+              // handler(.failure(.genericError(error: error)))
+            }
+            else if let httpResponse = response as? HTTPURLResponse {
+              let response = ApiResponse(statusCode: httpResponse.statusCode, body: data)
+
+              if let data = response.body {
+                let value = try? JSONDecoder().decode(T.self, from: data)
+
+                if let value = value {
+                  //handler(.success(value))
+                  observer.onNext(value)
+                  observer.onCompleted()
+                }
+                else {
+                  //handler(.failure(.bodyDecodingFailed))
+                  observer.onError(ApiError.bodyDecodingFailed)
+                }
+              }
+              else {
+                //handler(.failure(.emptyResponse))
+                observer.onError(ApiError.emptyResponse)
+              }
+            }
+            else {
+              //handler(.failure(.notHttpResponse))
+
+              observer.onError(ApiError.notHttpResponse)
+            }
+          }
+
+          task.resume()
+        } catch {
+          //handler(.failure(.bodyEncodingFailed))
+          observer.onError(ApiError.bodyEncodingFailed)
+        }
+      }
+      else {
+        //handler(.failure(.invalidURL))
+      }
+
+      return Disposables.create()
     }
   }
 

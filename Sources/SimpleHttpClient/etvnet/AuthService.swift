@@ -62,6 +62,24 @@ public struct AuthProperties: Codable {
 
     return dict
   }
+
+  public func asConfigurationItems() -> ConfigurationItems<String> {
+    var dict = ConfigurationItems<String>()
+
+    if let accessToken = accessToken {
+      dict["access_token"] = accessToken
+    }
+
+    if let refreshToken = refreshToken {
+      dict["refresh_token"] = refreshToken
+    }
+
+    if let expires = expires{
+      dict["expires"] = String(expires)
+    }
+
+    return dict
+  }
 }
 
 open class AuthService: HttpService {

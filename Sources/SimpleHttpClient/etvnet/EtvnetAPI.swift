@@ -38,7 +38,7 @@ open class EtvnetAPI: ApiService {
 
   public static let Topics = ["etvslider/main", "newmedias", "best", "top", "newest", "now_watched", "recommend"]
 
-  public init(config: StringConfigFile) {
+  public init(config: ConfigFile<String>) {
     super.init(config: config, apiUrl: ApiUrl, userAgent: UserAgent, authUrl: AuthUrl, clientId: ClientId,
       clientSecret: ClientSecret, grantType: GrantType, scope: Scope)
   }
@@ -64,7 +64,7 @@ open class EtvnetAPI: ApiService {
     }
 
     if let result = result {
-      config.items = result.asDictionary()
+      config.items = result.asConfigurationItems()
       saveConfig()
     }
 

@@ -1,7 +1,35 @@
-public typealias ConfigurationItems<T> = Dictionary<String, T>;
+import Foundation
+import RxSwift
+import Files
+
+public struct ConfigurationItems<T: Codable>: Codable {
+  private var dict: Dictionary<String, T> = [:]
+
+  public subscript(key: String) -> T? {
+    get {
+      return dict[key]
+    }
+
+    set(newValue) {
+      dict[key] = newValue
+    }
+  }
+
+  public mutating func removeAll() {
+    dict.removeAll()
+  }
+
+  public mutating func removeValue(forKey: String) {
+    dict.removeValue(forKey: forKey)
+  }
+
+  public func asDictionary() -> Dictionary<String, T> {
+    return dict
+  }
+}
 
 protocol Configuration {
-  associatedtype Item
+  associatedtype Item: Codable
 
   var items: ConfigurationItems<Item> { get set }
 
@@ -11,17 +39,21 @@ protocol Configuration {
 
   func clear()
 
-//  func load() throws
-//
-//  func save() throws
+  func read() -> Observable<ConfigurationItems<Item>>
 
-//  func exists() -> Bool
+  func write() -> Observable<ConfigurationItems<Item>>
+
+  func exists() -> Bool
 }
 
-open class ConfigFile<T> {
+open class ConfigFile<T: Codable> {
   typealias Item = T
 
-  private var list: ConfigurationItems<T> = [:]
+  var name: String = ""
+
+  let fileManager = FileManager.default
+
+  private var list: ConfigurationItems<T> = ConfigurationItems()
 
   public var items: ConfigurationItems<T> {
     get {
@@ -30,6 +62,16 @@ open class ConfigFile<T> {
     set {
       list = newValue
     }
+  }
+
+  let storage: DiskStorage!
+
+  public init(_ fileName: String) {
+    self.name = fileName
+
+    let path = URL(fileURLWithPath: NSTemporaryDirectory())
+
+    storage = DiskStorage(path: path)
   }
 }
 
@@ -46,13 +88,21 @@ extension ConfigFile: Configuration {
     items.removeAll()
   }
 
-//  func load() throws {
-//  }
-//
-//  func save() throws {
-//  }
+  public func read() -> Observable<ConfigurationItems<T>> {
+    clear()
 
-//  func exists() -> Bool {
-//    fatalError("exists() has not been implemented")
-//  }
+    return storage.read(ConfigurationItems<T>.self, for: name).map { items in
+      self.items = items
+
+      return items
+    }
+  }
+
+  public func write() -> Observable<ConfigurationItems<T>> {
+    return storage.write(items, for: name)
+  }
+
+  public func exists() -> Bool {
+    return fileManager.fileExists(atPath: name)
+  }
 }

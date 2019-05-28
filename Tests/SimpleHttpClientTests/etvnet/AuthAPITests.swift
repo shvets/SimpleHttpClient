@@ -4,7 +4,7 @@ import XCTest
 @testable import SimpleHttpClient
 
 class AuthAPITests: XCTestCase {
-  static var config = StringConfigFile("etvnet.config")
+  static var config = ConfigFile<String>("etvnet.config")
   
   var subject = EtvnetAPI(config: config)
   
@@ -38,14 +38,23 @@ class AuthAPITests: XCTestCase {
   }
   
   func testUpdateToken() throws {
+    let exp = expectation(description: "Tests update token")
+
     let refreshToken = subject.config.items["refresh_token"]!
     
     let response = subject.updateToken(refreshToken: refreshToken)
 
-    subject.config.items = response!.asDictionary()
+    subject.config.items = response!.asConfigurationItems()
 
-    try subject.config.write()
-    
+    subject.config.write().subscribe(onNext: { items in
+      exp.fulfill()
+    }, onError: { (error) -> Void in
+      print(error)
+      XCTFail()
+    })
+
+    waitForExpectations(timeout: 10)
+
     XCTAssertNotNil(response!.accessToken)
   }
 }

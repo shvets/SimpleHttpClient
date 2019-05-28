@@ -4,14 +4,14 @@ import Alamofire
 import RxSwift
 
 open class ApiService: AuthService {
-  public var config: StringConfigFile
+  public var config: ConfigFile<String>
 
   public var authorizeCallback: () -> Void = {}
 
   let apiUrl: String
   let userAgent: String
   
-  init(config: StringConfigFile, apiUrl: String, userAgent: String, authUrl: String, clientId: String,
+  init(config: ConfigFile<String>, apiUrl: String, userAgent: String, authUrl: String, clientId: String,
        clientSecret: String, grantType: String, scope: String) {
     self.config = config
     
@@ -39,21 +39,41 @@ open class ApiService: AuthService {
   }
 
   func loadConfig() {
-    do {
-      try config.read()
-    }
-    catch let error {
+    //do {
+    let semaphore = DispatchSemaphore.init(value: 0)
+
+    config.read().subscribe(onNext: { items in
+      semaphore.signal()
+    },
+    onError: { (error) -> Void in
+      semaphore.signal()
       print("Error loading configuration: \(error)")
-    }
+    })
+
+    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
+//    }
+//    catch let error {
+//      print("Error loading configuration: \(error)")
+//    }
   }
 
   func saveConfig() {
-    do {
-      try config.write()
-    }
-    catch let error {
-      print("Error saving configuration: \(error)")
-    }
+    //do {
+    let semaphore = DispatchSemaphore.init(value: 0)
+
+    config.write().subscribe(onNext: { items in
+      semaphore.signal()
+    },
+      onError: { (error) -> Void in
+        semaphore.signal()
+        print("Error configuration configuration: \(error)")
+      })
+
+    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
+//    }
+//    catch let error {
+//      print("Error saving configuration: \(error)")
+//    }
   }
   
   public func authorization(includeClientSecret: Bool=true) -> (userCode: String, deviceCode: String, activationUrl: String) {
@@ -74,11 +94,15 @@ open class ApiService: AuthService {
         deviceCode = acResponse.deviceCode!
         activationUrl = acResponse.activationUrl!
 
-        config.items = [
-          "user_code": userCode,
-          "device_code": deviceCode,
-          "activation_url": activationUrl
-        ]
+        config.items["user_code"] = userCode
+        config.items["device_code"] = deviceCode
+        config.items["activation_url"] = activationUrl
+
+//        config.items = [
+//          "user_code": userCode,
+//          "device_code": deviceCode,
+//          "activation_url": activationUrl
+//        ]
 
         saveConfig()
 
@@ -109,7 +133,7 @@ open class ApiService: AuthService {
       let refreshToken = config.items["refresh_token"]
       
       if let response = updateToken(refreshToken: refreshToken!) {
-        config.items = response.asDictionary()
+        config.items = response.asConfigurationItems()
         saveConfig()
 
         return true
@@ -119,7 +143,7 @@ open class ApiService: AuthService {
       let deviceCode = config.items["device_code"]
       
       if let response = createToken(deviceCode: deviceCode!) {
-        config.items = response.asDictionary()
+        config.items = response.asConfigurationItems()
         saveConfig()
 
         return false
@@ -156,7 +180,7 @@ open class ApiService: AuthService {
             let refreshToken = config.items["refresh_token"]
 
             if let updateResult = updateToken(refreshToken: refreshToken!) {
-              config.items = updateResult.asDictionary()
+              config.items = updateResult.asConfigurationItems()
               saveConfig()
 
               response = fullRequest(path: path, method: method, parameters: parameters, unauthorized: true)
@@ -234,7 +258,7 @@ open class ApiService: AuthService {
             let refreshToken = self.config.items["refresh_token"]
 
             if let updateResult = self.updateToken(refreshToken: refreshToken!) {
-              self.config.items = updateResult.asDictionary()
+              self.config.items = updateResult.asConfigurationItems()
               self.saveConfig()
 
               _ = self.httpRequestRx(url, headers: headers, parameters: parameters, method: method, unauthorized: true)

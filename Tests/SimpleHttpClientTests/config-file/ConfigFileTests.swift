@@ -3,23 +3,22 @@ import Files
 
 @testable import SimpleHttpClient
 
-class StringConfigFileTests: XCTestCase {
+class ConfigFileTests: XCTestCase {
   let path = URL(fileURLWithPath: NSTemporaryDirectory())
 
-  var subject: StringConfigFile = StringConfigFile("test.config")
+  var subject: ConfigFile = ConfigFile<String>("test.config")
 
   func testSave() throws {
     let exp = expectation(description: "Tests Save")
 
     //try File(path: subject.fileName).delete()
 
-    let data = ["key1": "value1", "key2": "value2"]
+    subject.items["key1"] = "value1"
+    subject.items["key2"] = "value2"
 
-    subject.items = data
-
-    try subject.write().subscribe(onNext: { items in
+    subject.write().subscribe(onNext: { items in
       exp.fulfill()
-      XCTAssertEqual(items.keys.count, 2)
+      XCTAssertEqual(items.asDictionary().keys.count, 2)
     })
 
     waitForExpectations(timeout: 10)
@@ -32,12 +31,16 @@ class StringConfigFileTests: XCTestCase {
 
     try FileSystem().createFile(at: subject.name, contents: data!)
 
-    try subject.read().subscribe(onNext: { items in
+    subject.read().subscribe(onNext: { items in
       exp.fulfill()
-      XCTAssertEqual(items.keys.count, 2)
+
+      XCTAssertEqual(items.asDictionary().keys.count, 2)
+    }, onError: { (error) -> Void in
+      exp.fulfill()
+      print(error)
+      XCTFail()
     })
 
     waitForExpectations(timeout: 10)
   }
-
 }

@@ -42,12 +42,12 @@ extension ApiClient: HttpFetcher {
             let response = ApiResponse(statusCode: httpResponse.statusCode, body: data)
 
             if let data = response.body {
-              let value = try? JSONDecoder().decode(T.self, from: data)
+              do {
+                let value = try JSONDecoder().decode(T.self, from: data)
 
-              if let value = value {
                 handler(.success(value))
               }
-              else {
+              catch {
                 handler(.failure(.bodyDecodingFailed))
               }
             }
@@ -84,13 +84,13 @@ extension ApiClient: HttpFetcher {
               let response = ApiResponse(statusCode: httpResponse.statusCode, body: data)
 
               if let data = response.body {
-                let value = try? JSONDecoder().decode(T.self, from: data)
+                do {
+                  let value = try JSONDecoder().decode(T.self, from: data)
 
-                if let value = value {
                   observer.on(.next(value))
                   observer.on(.completed)
                 }
-                else {
+                catch {
                   observer.on(.error(ApiError.bodyDecodingFailed))
                 }
               }

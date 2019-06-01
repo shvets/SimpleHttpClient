@@ -66,10 +66,8 @@ open class ConfigFile<T: Codable> {
 
   let storage: DiskStorage!
 
-  public init(_ fileName: String) {
+  public init(path: URL, fileName: String) {
     self.name = fileName
-
-    let path = URL(fileURLWithPath: NSTemporaryDirectory())
 
     storage = DiskStorage(path: path)
   }

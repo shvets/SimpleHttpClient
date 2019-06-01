@@ -4,7 +4,9 @@ import XCTest
 @testable import SimpleHttpClient
 
 class EtvnetAPITests: XCTestCase {
-  static var config = ConfigFile<String>("etvnet.config")
+  static let path = URL(fileURLWithPath: NSTemporaryDirectory())
+
+  static var config = ConfigFile<String>(path: path, fileName: "etvnet.config")
 
   var subject = EtvnetAPI(config: config)
 

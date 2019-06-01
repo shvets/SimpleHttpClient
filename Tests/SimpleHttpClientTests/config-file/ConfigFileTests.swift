@@ -4,9 +4,9 @@ import Files
 @testable import SimpleHttpClient
 
 class ConfigFileTests: XCTestCase {
-  let path = URL(fileURLWithPath: NSTemporaryDirectory())
+  static let path = URL(fileURLWithPath: NSTemporaryDirectory())
 
-  var subject: ConfigFile = ConfigFile<String>("test.config")
+  var subject: ConfigFile = ConfigFile<String>(path: path, fileName: "test.config")
 
   func testSave() throws {
     let exp = expectation(description: "Tests Save")

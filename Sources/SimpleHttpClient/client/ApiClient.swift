@@ -17,7 +17,7 @@ protocol HttpFetcher {
   func fetch<T: Decodable>(_ request: ApiRequest, to type: T.Type) -> Observable<T>
 }
 
-class ApiClient {
+open class ApiClient {
   private let baseURL: URL
   private let session: URLSession
 

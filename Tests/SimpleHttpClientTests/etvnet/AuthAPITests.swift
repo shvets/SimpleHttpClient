@@ -1,10 +1,11 @@
 import XCTest
-//import ConfigFile
 
 @testable import SimpleHttpClient
 
 class AuthAPITests: XCTestCase {
-  static var config = ConfigFile<String>("etvnet.config")
+  static let path = URL(fileURLWithPath: NSTemporaryDirectory())
+
+  static var config = ConfigFile<String>(path: path, fileName: "etvnet.config")
   
   var subject = EtvnetAPI(config: config)
   

@@ -71,14 +71,14 @@ extension ApiClient: HttpFetcher {
   }
 
   func fetch<T: Decodable>(_ request: ApiRequest, to type: T.Type) -> Observable<T> {
-    return Observable.create { observer in
+    return Observable.create { observer -> Disposable in
       if let url = self.buildUrl(request) {
         do {
           let urlRequest = try self.buildUrlRequest(url: url, request: request)
 
           let task = self.session.dataTask(with: urlRequest) { (data, response, error) in
             if let error = error {
-              // handler(.failure(.genericError(error: error)))
+              observer.onError(ApiError.genericError(error: error))
             }
             else if let httpResponse = response as? HTTPURLResponse {
               let response = ApiResponse(statusCode: httpResponse.statusCode, body: data)
@@ -87,35 +87,29 @@ extension ApiClient: HttpFetcher {
                 let value = try? JSONDecoder().decode(T.self, from: data)
 
                 if let value = value {
-                  //handler(.success(value))
-                  observer.onNext(value)
-                  observer.onCompleted()
+                  observer.on(.next(value))
+                  observer.on(.completed)
                 }
                 else {
-                  //handler(.failure(.bodyDecodingFailed))
-                  observer.onError(ApiError.bodyDecodingFailed)
+                  observer.on(.error(ApiError.bodyDecodingFailed))
                 }
               }
               else {
-                //handler(.failure(.emptyResponse))
-                observer.onError(ApiError.emptyResponse)
+                observer.on(.error(ApiError.emptyResponse))
               }
             }
             else {
-              //handler(.failure(.notHttpResponse))
-
-              observer.onError(ApiError.notHttpResponse)
+              observer.on(.error(ApiError.notHttpResponse))
             }
           }
 
           task.resume()
         } catch {
-          //handler(.failure(.bodyEncodingFailed))
-          observer.onError(ApiError.bodyEncodingFailed)
+          observer.on(.error(ApiError.bodyEncodingFailed))
         }
       }
       else {
-        //handler(.failure(.invalidURL))
+        observer.on(.error(ApiError.invalidURL))
       }
 
       return Disposables.create()

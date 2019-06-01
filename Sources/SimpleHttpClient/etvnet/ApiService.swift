@@ -57,6 +57,21 @@ open class ApiService: AuthService {
 //    }
   }
 
+//  func wrap() {
+//    let semaphore = DispatchSemaphore.init(value: 0)
+//
+//    config.read().subscribe(onNext: { items in
+//        semaphore.signal()
+//      },
+//      onError: { (error) -> Void in
+//        semaphore.signal()
+//        print("Error loading configuration: \(error)")
+//      }
+//    )
+//
+//    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
+//  }
+
   func saveConfig() {
     //do {
     let semaphore = DispatchSemaphore.init(value: 0)

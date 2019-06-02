@@ -86,6 +86,7 @@ extension ConfigFile: Configuration {
     items.removeAll()
   }
 
+  @discardableResult
   public func read() -> Observable<ConfigurationItems<T>> {
     clear()
 
@@ -96,6 +97,7 @@ extension ConfigFile: Configuration {
     }
   }
 
+  @discardableResult
   public func write() -> Observable<ConfigurationItems<T>> {
     return storage.write(items, for: name)
   }

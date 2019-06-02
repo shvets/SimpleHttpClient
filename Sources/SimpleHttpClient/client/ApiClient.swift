@@ -14,7 +14,10 @@ protocol HttpFetcher {
   func fetchAsync<T: Decodable>(_ request: ApiRequest, to type: T.Type,
                            _ handler: @escaping (Result<T, ApiError>) -> Void)
 
-  func fetch<T: Decodable>(_ request: ApiRequest, to type: T.Type) -> Observable<T>
+  @discardableResult
+  func fetchRx<T: Decodable>(_ request: ApiRequest, to type: T.Type) -> Observable<T>
+
+  func fetch<T: Decodable>(_ request: ApiRequest, to type: T.Type) -> T?
 }
 
 open class ApiClient {
@@ -70,7 +73,8 @@ extension ApiClient: HttpFetcher {
     }
   }
 
-  func fetch<T: Decodable>(_ request: ApiRequest, to type: T.Type) -> Observable<T> {
+  @discardableResult
+  func fetchRx<T: Decodable>(_ request: ApiRequest, to type: T.Type) -> Observable<T> {
     return Observable.create { observer -> Disposable in
       if let url = self.buildUrl(request) {
         do {
@@ -114,6 +118,26 @@ extension ApiClient: HttpFetcher {
 
       return Disposables.create()
     }
+  }
+
+  func fetch<T: Decodable>(_ request: ApiRequest, to type: T.Type) -> T? {
+    var result: T?
+
+    let semaphore = DispatchSemaphore.init(value: 0)
+
+    fetchRx(request, to: type).subscribe(onNext: { response in
+        result = response
+
+        semaphore.signal()
+      },
+      onError: { (error) -> Void in
+        semaphore.signal()
+      }
+    )
+
+    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
+
+    return result
   }
 
   func buildUrl(_ request: ApiRequest) -> URL? {

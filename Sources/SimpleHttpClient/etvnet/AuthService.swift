@@ -43,9 +43,10 @@ open class AuthService: HttpService {
 
     let request = ApiRequest(path: "device/code", queryItems: queryItems)
 
-    return client.fetch(request, to: ActivationCodesProperties.self)
+    return client.fetchRx(request, to: ActivationCodesProperties.self)
   }
-  
+
+  @discardableResult
   public func createToken(deviceCode: String) -> Observable<AuthProperties> {
     var queryItems: [URLQueryItem] = []
 
@@ -60,12 +61,11 @@ open class AuthService: HttpService {
 
     let request = ApiRequest(path: "token", queryItems: queryItems)
 
-    return client.fetch(request, to: AuthProperties.self)
+    return client.fetchRx(request, to: AuthProperties.self)
   }
-  
-  func updateToken(refreshToken: String) -> Observable<AuthProperties> {
-    var result: AuthProperties?
 
+  @discardableResult
+  func updateToken(refreshToken: String) -> Observable<AuthProperties> {
     var queryItems: [URLQueryItem] = []
 
     queryItems.append(URLQueryItem(name: "grant_type", value: "refresh_token"))
@@ -79,6 +79,6 @@ open class AuthService: HttpService {
 
     let request = ApiRequest(path: "token", queryItems: queryItems)
 
-    return client.fetch(request, to: AuthProperties.self)
+    return client.fetchRx(request, to: AuthProperties.self)
   }
 }

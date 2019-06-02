@@ -42,12 +42,12 @@ class ApiClientTests: XCTestCase {
 
     let request = ApiRequest(path: "posts")
 
-    subject.fetch(request, to: [Post].self).subscribe(onNext: { items in
+    subject.fetchRx(request, to: [Post].self).subscribe(onNext: { response in
       exp.fulfill()
 
-      print("Received posts: \(items.first?.title ?? "")")
+      print("Received posts: \(response.first?.title ?? "")")
 
-      XCTAssertEqual(items.count, 100)
+      XCTAssertEqual(response.count, 100)
     }, onError: { (error) -> Void in
       exp.fulfill()
       print(error)

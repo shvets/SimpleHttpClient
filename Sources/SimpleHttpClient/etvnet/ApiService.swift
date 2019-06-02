@@ -43,8 +43,8 @@ open class ApiService: AuthService {
       let semaphore = DispatchSemaphore.init(value: 0)
 
       config.read().subscribe(onNext: { items in
-        semaphore.signal()
-      },
+          semaphore.signal()
+        },
         onError: { (error) -> Void in
           semaphore.signal()
           print("Error loading configuration: \(error)")

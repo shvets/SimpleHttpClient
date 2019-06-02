@@ -42,7 +42,7 @@ class ApiClientTests: XCTestCase {
 
     let request = ApiRequest(path: "posts")
 
-    subject.fetchRx(request, to: [Post].self).subscribe(onNext: { response in
+    _ = subject.fetchRx(request, to: [Post].self).subscribe(onNext: { response in
       exp.fulfill()
 
       print("Received posts: \(response.first?.title ?? "")")
@@ -50,8 +50,7 @@ class ApiClientTests: XCTestCase {
       XCTAssertEqual(response.count, 100)
     }, onError: { (error) -> Void in
       exp.fulfill()
-      print(error)
-      "Error during request: \(error)"
+      XCTFail("Error during request: \(error)")
     })
 
     waitForExpectations(timeout: 10)

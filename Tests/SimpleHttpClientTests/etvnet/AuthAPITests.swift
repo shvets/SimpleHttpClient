@@ -17,14 +17,12 @@ class AuthAPITests: XCTestCase {
   func testGetActivationCodes() throws {
     let exp = expectation(description: "Tests Activation Codes")
 
-    let request = ApiRequest(path: "posts")
-
-    subject.getActivationCodes().subscribe(onNext: { result in
-      XCTAssertNotNil(result)
+    _ = subject.getActivationCodes().subscribe(onNext: { response in
+      XCTAssertNotNil(response)
 
       print("Activation url: \(self.subject.getActivationUrl())")
-      print("Activation code: \(result.userCode!)")
-      print("Device code: \(result.deviceCode!)")
+      print("Activation code: \(response.userCode!)")
+      print("Device code: \(response.deviceCode!)")
 
       exp.fulfill()
     }, onError: { (error) -> Void in
@@ -40,16 +38,16 @@ class AuthAPITests: XCTestCase {
   func testCreateToken() {
     let result = subject.authorization()
 
-    if result != nil && result.userCode != "" {
-      let response = subject.tryCreateToken(
-          userCode: result.userCode,
-          deviceCode: result.deviceCode
-      )!
+    if result.userCode != "" {
+      if let response = subject.tryCreateToken(userCode: result.userCode, deviceCode: result.deviceCode) {
+        XCTAssertNotNil(response.accessToken)
+        XCTAssertNotNil(response.refreshToken)
 
-      XCTAssertNotNil(response.accessToken)
-      XCTAssertNotNil(response.refreshToken)
-
-      print("Result: \(result)")
+        print("Result: \(result)") 
+      }
+      else {
+        XCTFail()
+      }
     }
     else {
       XCTFail()
@@ -63,7 +61,7 @@ class AuthAPITests: XCTestCase {
 
     var result1: AuthProperties?
 
-    subject.updateToken(refreshToken: refreshToken).subscribe(onNext: { result in
+    _ = subject.updateToken(refreshToken: refreshToken).subscribe(onNext: { result in
       result1 = result
 
       XCTAssertNotNil(result.accessToken)
@@ -82,7 +80,7 @@ class AuthAPITests: XCTestCase {
     if let result = result1 {
       subject.config.items = result.asConfigurationItems()
 
-      subject.config.write().subscribe(onNext: { items in
+      _ = subject.config.write().subscribe(onNext: { items in
         exp2.fulfill()
       }, onError: { (error) -> Void in
         exp2.fulfill()

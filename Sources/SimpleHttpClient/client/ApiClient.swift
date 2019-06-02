@@ -28,6 +28,32 @@ open class ApiClient {
     self.baseURL = baseURL
     self.session = session
   }
+
+  func buildUrl(_ request: ApiRequest) -> URL? {
+    var urlComponents = URLComponents()
+
+    urlComponents.scheme = baseURL.scheme
+    urlComponents.host = baseURL.host
+    urlComponents.path = baseURL.path
+    urlComponents.queryItems = request.queryItems
+
+    return urlComponents.url?.appendingPathComponent(request.path)
+  }
+
+  func buildUrlRequest(url: URL, request: ApiRequest) throws -> URLRequest {
+    var urlRequest = URLRequest(url: url)
+    urlRequest.httpMethod = request.method.rawValue
+
+    if let body = request.body {
+      urlRequest.httpBody = try JSONEncoder().encode(body)
+    }
+
+    request.headers?.forEach {
+      urlRequest.addValue($0.value, forHTTPHeaderField: $0.field)
+    }
+
+    return urlRequest
+  }
 }
 
 extension ApiClient: HttpFetcher {
@@ -120,12 +146,13 @@ extension ApiClient: HttpFetcher {
     }
   }
 
+  @discardableResult
   func fetch<T: Decodable>(_ request: ApiRequest, to type: T.Type) -> T? {
     var result: T?
 
     let semaphore = DispatchSemaphore.init(value: 0)
 
-    fetchRx(request, to: type).subscribe(onNext: { response in
+      _ = fetchRx(request, to: type).subscribe(onNext: { response in
         result = response
 
         semaphore.signal()
@@ -138,31 +165,5 @@ extension ApiClient: HttpFetcher {
     _ = semaphore.wait(timeout: DispatchTime.distantFuture)
 
     return result
-  }
-
-  func buildUrl(_ request: ApiRequest) -> URL? {
-    var urlComponents = URLComponents()
-
-    urlComponents.scheme = baseURL.scheme
-    urlComponents.host = baseURL.host
-    urlComponents.path = baseURL.path
-    urlComponents.queryItems = request.queryItems
-
-    return urlComponents.url?.appendingPathComponent(request.path)
-  }
-
-  func buildUrlRequest(url: URL, request: ApiRequest) throws -> URLRequest {
-    var urlRequest = URLRequest(url: url)
-    urlRequest.httpMethod = request.method.rawValue
-
-    if let body = request.body {
-      urlRequest.httpBody = try JSONEncoder().encode(body)
-    }
-
-    request.headers?.forEach {
-      urlRequest.addValue($0.value, forHTTPHeaderField: $0.field)
-    }
-
-    return urlRequest
   }
 }

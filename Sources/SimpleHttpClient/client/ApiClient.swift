@@ -40,6 +40,27 @@ open class ApiClient {
     return urlComponents.url?.appendingPathComponent(request.path)
   }
 
+  func await<T>(_ handler: @escaping () -> Observable<T>) -> T? {
+    var result: T?
+
+    let semaphore = DispatchSemaphore.init(value: 0)
+
+    let disposable = handler().subscribe(onNext: { response in
+      result = response
+      semaphore.signal()
+    },
+      onError: { (error) -> Void in
+        semaphore.signal()
+      }
+    )
+
+    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
+
+    disposable.dispose()
+
+    return result
+  }
+
   func buildUrlRequest(url: URL, request: ApiRequest) throws -> URLRequest {
     var urlRequest = URLRequest(url: url)
     urlRequest.httpMethod = request.method.rawValue

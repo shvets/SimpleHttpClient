@@ -39,10 +39,9 @@ open class ApiService: AuthService {
 
   func loadConfig() {
     if (config.exists()) {
-      //do {
       let semaphore = DispatchSemaphore.init(value: 0)
 
-      config.read().subscribe(onNext: { items in
+      let disposable = config.read().subscribe(onNext: { items in
           semaphore.signal()
         },
         onError: { (error) -> Void in
@@ -51,32 +50,15 @@ open class ApiService: AuthService {
         })
 
       _ = semaphore.wait(timeout: DispatchTime.distantFuture)
-//    }
-//    catch let error {
-//      print("Error loading configuration: \(error)")
-//    }
+
+      disposable.dispose()
     }
   }
-
-//  func wrap() {
-//    let semaphore = DispatchSemaphore.init(value: 0)
-//
-//    config.read().subscribe(onNext: { items in
-//        semaphore.signal()
-//      },
-//      onError: { (error) -> Void in
-//        semaphore.signal()
-//        print("Error loading configuration: \(error)")
-//      }
-//    )
-//
-//    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
-//  }
 
   func saveConfig() {
     let semaphore = DispatchSemaphore.init(value: 0)
 
-    config.write().subscribe(onNext: { items in
+    let disposable = config.write().subscribe(onNext: { items in
       semaphore.signal()
     },
     onError: { (error) -> Void in
@@ -85,6 +67,8 @@ open class ApiService: AuthService {
     })
 
     _ = semaphore.wait(timeout: DispatchTime.distantFuture)
+
+    disposable.dispose()
   }
   
   public func authorization(includeClientSecret: Bool=true) -> AuthResult {
@@ -261,23 +245,6 @@ open class ApiService: AuthService {
 
     return Observable.just(Data())
   }
-
-//  public override func httpRequestRx0(_ url: String,
-//                            headers: HTTPHeaders = [:],
-//                            parameters: Parameters = [:],
-//                            method: HTTPMethod = .get) -> Observable<Data> {
-//
-//    if let sessionManager = self.sessionManager {
-//      if let retrier = sessionManager.retrier, !(retrier is OAuth2Handler) {
-//         sessionManager.retrier = OAuth2Handler(self)
-//      }
-//      else {
-//         sessionManager.retrier = OAuth2Handler(self)
-//      }
-//    }
-//
-//    return super.httpRequestRx(url, headers: headers, parameters: parameters, method: method)
-//  }
 
   public func httpRequestRx(_ url: String,
                             headers: HTTPHeaders = [:],

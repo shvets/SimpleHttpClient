@@ -8,12 +8,20 @@ open class AuthService: HttpService {
   var grantType: String
   var scope: String
 
+  let client: ApiClient!
+
   init(authUrl: String, clientId: String, clientSecret: String, grantType: String, scope: String) {
     self.authUrl = authUrl
     self.clientId = clientId
     self.clientSecret = clientSecret
     self.grantType = grantType
     self.scope = scope
+
+    client = ApiClient(URL(string: authUrl)!)
+  }
+
+  func await<T>(_ handler: @escaping () -> Observable<T>) -> T? {
+    return client.await(handler)
   }
 
   func getActivationUrl() -> String {
@@ -37,10 +45,6 @@ open class AuthService: HttpService {
 
     queryItems.append(URLQueryItem(name: "client_id", value: clientId))
 
-    let url = URL(string: authUrl)
-
-    let client = ApiClient(url!)
-
     let request = ApiRequest(path: "device/code", queryItems: queryItems)
 
     return client.fetchRx(request, to: ActivationCodesProperties.self)
@@ -55,10 +59,6 @@ open class AuthService: HttpService {
     queryItems.append(URLQueryItem(name: "client_secret", value: clientSecret))
     queryItems.append(URLQueryItem(name: "client_id", value: clientId))
 
-    let url = URL(string: authUrl)
-
-    let client = ApiClient(url!)
-
     let request = ApiRequest(path: "token", queryItems: queryItems)
 
     return client.fetchRx(request, to: AuthProperties.self)
@@ -72,10 +72,6 @@ open class AuthService: HttpService {
     queryItems.append(URLQueryItem(name: "refresh_token", value: refreshToken))
     queryItems.append(URLQueryItem(name: "client_secret", value: clientSecret))
     queryItems.append(URLQueryItem(name: "client_id", value: clientId))
-
-    let url = URL(string: authUrl)
-
-    let client = ApiClient(url!)
 
     let request = ApiRequest(path: "token", queryItems: queryItems)
 

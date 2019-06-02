@@ -15,24 +15,16 @@ class AuthAPITests: XCTestCase {
   var subject = EtvnetAPI(config: config)
   
   func testGetActivationCodes() throws {
-    let exp = expectation(description: "Tests Activation Codes")
-
-    _ = subject.getActivationCodes().subscribe(onNext: { response in
-      XCTAssertNotNil(response)
+    if let result = subject.await({ self.subject.getActivationCodes() }) {
+      XCTAssertNotNil(result)
 
       print("Activation url: \(self.subject.getActivationUrl())")
-      print("Activation code: \(response.userCode!)")
-      print("Device code: \(response.deviceCode!)")
-
-      exp.fulfill()
-    }, onError: { (error) -> Void in
-      print(error)
-      XCTFail("Error during request: \(error)")
-
-      exp.fulfill()
-    })
-
-    waitForExpectations(timeout: 10)
+      print("Activation code: \(result.userCode)")
+      print("Device code: \(result.deviceCode)")
+    }
+    else {
+      XCTFail("Error during request")
+    }
   }
   
   func testCreateToken() {
@@ -55,43 +47,24 @@ class AuthAPITests: XCTestCase {
   }
   
   func testUpdateToken() throws {
-    let exp = expectation(description: "Tests update token")
-
     let refreshToken = subject.config.items["refresh_token"]!
 
-    var result1: AuthProperties?
+    if let result1 = subject.await({ self.subject.updateToken(refreshToken: refreshToken) }) {
+      XCTAssertNotNil(result1.accessToken)
 
-    _ = subject.updateToken(refreshToken: refreshToken).subscribe(onNext: { result in
-      result1 = result
+      print("Result: \(result1)")
 
-      XCTAssertNotNil(result.accessToken)
+      subject.config.items = result1.asConfigurationItems()
 
-      print("Result: \(result)")
-
-      exp.fulfill()
-    }, onError: { (error) -> Void in
-      exp.fulfill()
-    })
-
-    waitForExpectations(timeout: 10)
-
-    let exp2 = expectation(description: "Tests update token")
-
-    if let result = result1 {
-      subject.config.items = result.asConfigurationItems()
-
-      _ = subject.config.write().subscribe(onNext: { items in
-        exp2.fulfill()
-      }, onError: { (error) -> Void in
-        exp2.fulfill()
-        print(error)
+      if let _ = subject.await({ self.subject.config.write() }) {
+        print("Saved config.")
+      }
+      else {
         XCTFail()
-      })
-
-      waitForExpectations(timeout: 10)
+      }
     }
     else {
-      XCTFail()
+      XCTFail("Error during request")
     }
   }
 }

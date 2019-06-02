@@ -1,5 +1,4 @@
 import Foundation
-//import ConfigFile
 import RxSwift
 
 open class EtvnetAPI: ApiService {
@@ -43,9 +42,7 @@ open class EtvnetAPI: ApiService {
       clientSecret: ClientSecret, grantType: GrantType, scope: Scope)
   }
 
-  func tryCreateToken(userCode: String, deviceCode: String)
-//                      activationUrl: String)
-      -> AuthProperties? {
+  func tryCreateToken(userCode: String, deviceCode: String) -> AuthProperties? {
     print("Register activation code on web site \(getActivationUrl()): \(userCode)")
 
     var result: AuthProperties?
@@ -53,20 +50,28 @@ open class EtvnetAPI: ApiService {
     var done = false
 
     while !done {
-      result = createToken(deviceCode: deviceCode)
+      let semaphore = DispatchSemaphore.init(value: 0)
 
-      if let result = result {
-        done = result.accessToken != nil
-      }
+      createToken(deviceCode: deviceCode).subscribe(onNext: { r in
+        done = r.accessToken != nil
+
+        if done {
+          result = r
+
+          self.config.items = r.asConfigurationItems()
+          self.saveConfig()
+        }
+
+        semaphore.signal()
+      }, onError: { (error) -> Void in
+        semaphore.signal()
+      })
+
+      _ = semaphore.wait(timeout: DispatchTime.distantFuture)
 
       if !done {
         sleep(5)
       }
-    }
-
-    if let result = result {
-      config.items = result.asConfigurationItems()
-      saveConfig()
     }
 
     return result

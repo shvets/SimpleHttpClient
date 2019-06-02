@@ -1,6 +1,5 @@
 import Foundation
 import Alamofire
-//import ConfigFile
 import RxSwift
 
 open class ApiService: AuthService {
@@ -75,65 +74,59 @@ open class ApiService: AuthService {
 //  }
 
   func saveConfig() {
-    //do {
     let semaphore = DispatchSemaphore.init(value: 0)
 
     config.write().subscribe(onNext: { items in
       semaphore.signal()
     },
-      onError: { (error) -> Void in
-        semaphore.signal()
-        print("Error configuration configuration: \(error)")
-      })
+    onError: { (error) -> Void in
+      semaphore.signal()
+      print("Error configuration configuration: \(error)")
+    })
 
     _ = semaphore.wait(timeout: DispatchTime.distantFuture)
-//    }
-//    catch let error {
-//      print("Error saving configuration: \(error)")
-//    }
   }
   
-  public func authorization(includeClientSecret: Bool=true) -> (userCode: String, deviceCode: String) {
-  //}, activationUrl: String) {
-    //var activationUrl: String
-    var userCode: String
-    var deviceCode: String
+  public func authorization(includeClientSecret: Bool=true) -> AuthResult {
+    var result = AuthResult(userCode: "", deviceCode: "")
 
     if checkAccessData("device_code") && checkAccessData("user_code") {
-      //activationUrl = config.items["activation_url"]!
-      userCode = config.items["user_code"]!
-      deviceCode = config.items["device_code"]!
+      let userCode = config.items["user_code"]!
+      let deviceCode = config.items["device_code"]!
 
-      return (userCode: userCode, deviceCode: deviceCode)
-      //, activationUrl: activationUrl)
+      return AuthResult(userCode: userCode, deviceCode: deviceCode)
     }
     else {
-      if let acResponse = getActivationCodes(includeClientSecret: includeClientSecret) {
-        userCode = acResponse.userCode!
-        deviceCode = acResponse.deviceCode!
-        //activationUrl = acResponse.activationUrl!
+      let semaphore = DispatchSemaphore.init(value: 0)
 
-        config.items["user_code"] = userCode
-        config.items["device_code"] = deviceCode
-        //config.items["activation_url"] = activationUrl
+      getActivationCodes(includeClientSecret: includeClientSecret).subscribe(onNext: { r in
+        if let userCode = r.userCode, let deviceCode = r.deviceCode {
+          self.config.items["user_code"] = userCode
+          self.config.items["device_code"] = deviceCode
+          self.config.items["activation_url"] = self.getActivationUrl()
 
-//        config.items = [
-//          "user_code": userCode,
-//          "device_code": deviceCode,
-//          "activation_url": activationUrl
-//        ]
+          self.saveConfig()
 
-        saveConfig()
+          result = AuthResult(userCode: userCode, deviceCode: deviceCode)
+        }
+        else {
+          print("Error getting activation codes")
+          result = AuthResult(userCode: "", deviceCode: "")
+        }
 
-        return (userCode: userCode, deviceCode: deviceCode)
-        //, activationUrl: activationUrl)
-      }
+        semaphore.signal()
+      }, onError: { (error) -> Void in
+        print("Error getting activation codes")
+
+        result = AuthResult(userCode: "", deviceCode: "")
+
+        semaphore.signal()
+      })
+
+      _ = semaphore.wait(timeout: DispatchTime.distantFuture)
     }
 
-    print("Error getting activation codes")
-
-    return (userCode: "", deviceCode: "")
-    //, activationUrl: "")
+    return result
   }
 
   func checkAccessData(_ key: String) -> Bool {
@@ -147,31 +140,58 @@ open class ApiService: AuthService {
   }
   
   public func checkToken() -> Bool {
+    var res = false
+
     if checkAccessData("access_token") {
-      return true
+      res = true
     }
     else if config.items["refresh_token"] != nil {
       let refreshToken = config.items["refresh_token"]
       
-      if let response = updateToken(refreshToken: refreshToken!) {
-        config.items = response.asConfigurationItems()
-        saveConfig()
-
-        return true
+      if let refreshToken = refreshToken, tryUpdateToken(refreshToken: refreshToken) {
+        res = true
       }
     }
     else if checkAccessData("device_code") {
       let deviceCode = config.items["device_code"]
-      
-      if let response = createToken(deviceCode: deviceCode!) {
-        config.items = response.asConfigurationItems()
-        saveConfig()
 
-        return false
-      }
+      let semaphore = DispatchSemaphore.init(value: 0)
+
+      createToken(deviceCode: deviceCode!).subscribe(onNext: { r in
+        self.config.items = r.asConfigurationItems()
+        self.saveConfig()
+
+        semaphore.signal()
+      }, onError: { (error) -> Void in
+        semaphore.signal()
+      })
+
+      _ = semaphore.wait(timeout: DispatchTime.distantFuture)
     }
 
-    return false
+    return res
+  }
+
+  func tryUpdateToken(refreshToken: String) -> Bool {
+    var ok = true
+
+    let semaphore = DispatchSemaphore.init(value: 0)
+
+    updateToken(refreshToken: refreshToken).subscribe(onNext: { response in
+      self.config.items = response.asConfigurationItems()
+      self.saveConfig()
+
+      semaphore.signal()
+    },
+    onError: { (error) -> Void in
+      semaphore.signal()
+      print("Error loading configuration: \(error)")
+      ok = false
+    })
+
+    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
+
+    return ok
   }
 
   func fullRequest(path: String, method: HTTPMethod = .get, parameters: [String: String] = [:],
@@ -200,10 +220,7 @@ open class ApiService: AuthService {
           if (statusCode == 401 || statusCode == 400) && !unauthorized {
             let refreshToken = config.items["refresh_token"]
 
-            if let updateResult = updateToken(refreshToken: refreshToken!) {
-              config.items = updateResult.asConfigurationItems()
-              saveConfig()
-
+            if let refreshToken = refreshToken, tryUpdateToken(refreshToken: refreshToken) {
               response = fullRequest(path: path, method: method, parameters: parameters, unauthorized: true)
             }
             else {
@@ -278,10 +295,7 @@ open class ApiService: AuthService {
           if (statusCode == 401 || statusCode == 400) && !unauthorized {
             let refreshToken = self.config.items["refresh_token"]
 
-            if let updateResult = self.updateToken(refreshToken: refreshToken!) {
-              self.config.items = updateResult.asConfigurationItems()
-              self.saveConfig()
-
+            if let refreshToken = refreshToken, self.tryUpdateToken(refreshToken: refreshToken) {
               _ = self.httpRequestRx(url, headers: headers, parameters: parameters, method: method, unauthorized: true)
             }
             else {

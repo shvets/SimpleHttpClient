@@ -1,4 +1,5 @@
 import Foundation
+import RxSwift
 
 open class AuthService: HttpService {
   var authUrl: String
@@ -20,8 +21,7 @@ open class AuthService: HttpService {
   }
   
   func getActivationCodes(includeClientSecret: Bool = true, includeClientId: Bool = false) ->
-    ActivationCodesProperties? {
-    var result: ActivationCodesProperties?
+    Observable<ActivationCodesProperties> {
 
     var queryItems: [URLQueryItem] = []
 
@@ -43,28 +43,10 @@ open class AuthService: HttpService {
 
     let request = ApiRequest(path: "device/code", queryItems: queryItems)
 
-    let semaphore = DispatchSemaphore.init(value: 0)
-
-    client.fetchAsync(request, to: ActivationCodesProperties.self) { (r) in
-      switch r {
-      case .success(let props):
-        result = props
-
-      case .failure(let error):
-        print("error: \(error)")
-      }
-
-      semaphore.signal()
-    }
-
-    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
-
-    return result
+    return client.fetch(request, to: ActivationCodesProperties.self)
   }
   
-  public func createToken(deviceCode: String) -> AuthProperties? {
-    var result: AuthProperties?
-
+  public func createToken(deviceCode: String) -> Observable<AuthProperties> {
     var queryItems: [URLQueryItem] = []
 
     queryItems.append(URLQueryItem(name: "grant_type", value: grantType))
@@ -78,26 +60,10 @@ open class AuthService: HttpService {
 
     let request = ApiRequest(path: "token", queryItems: queryItems)
 
-    let semaphore = DispatchSemaphore.init(value: 0)
-
-    client.fetchAsync(request, to: AuthProperties.self) { (r) in
-      switch r {
-      case .success(let props):
-        result = props
-
-      case .failure(let error):
-        print("error: \(error)")
-      }
-
-      semaphore.signal()
-    }
-
-    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
-
-    return result
+    return client.fetch(request, to: AuthProperties.self)
   }
   
-  func updateToken(refreshToken: String) -> AuthProperties? {
+  func updateToken(refreshToken: String) -> Observable<AuthProperties> {
     var result: AuthProperties?
 
     var queryItems: [URLQueryItem] = []
@@ -113,22 +79,6 @@ open class AuthService: HttpService {
 
     let request = ApiRequest(path: "token", queryItems: queryItems)
 
-    let semaphore = DispatchSemaphore.init(value: 0)
-
-    client.fetchAsync(request, to: AuthProperties.self) { (r) in
-      switch r {
-      case .success(let props):
-        result = props
-
-      case .failure(let error):
-        print("error: \(error)")
-      }
-
-      semaphore.signal()
-    }
-
-    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
-
-    return result
+    return client.fetch(request, to: AuthProperties.self)
   }
 }

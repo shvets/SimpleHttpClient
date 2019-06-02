@@ -15,15 +15,26 @@ class AuthAPITests: XCTestCase {
   var subject = EtvnetAPI(config: config)
   
   func testGetActivationCodes() throws {
-    let result = subject.getActivationCodes()
+    let exp = expectation(description: "Tests Activation Codes")
 
-    XCTAssertNotNil(result)
+    let request = ApiRequest(path: "posts")
 
-    if let result = result {
-      print("Activation url: \(subject.getActivationUrl())")
+    subject.getActivationCodes().subscribe(onNext: { result in
+      XCTAssertNotNil(result)
+
+      print("Activation url: \(self.subject.getActivationUrl())")
       print("Activation code: \(result.userCode!)")
-      print("Device code: \(result.deviceCode!)") 
-    }
+      print("Device code: \(result.deviceCode!)")
+
+      exp.fulfill()
+    }, onError: { (error) -> Void in
+      print(error)
+      XCTFail("Error during request: \(error)")
+
+      exp.fulfill()
+    })
+
+    waitForExpectations(timeout: 10)
   }
   
   func testCreateToken() {
@@ -49,19 +60,32 @@ class AuthAPITests: XCTestCase {
     let exp = expectation(description: "Tests update token")
 
     let refreshToken = subject.config.items["refresh_token"]!
-    
-    let result = subject.updateToken(refreshToken: refreshToken)
 
-    if let result = result {
+    var result1: AuthProperties?
+
+    subject.updateToken(refreshToken: refreshToken).subscribe(onNext: { result in
+      result1 = result
+
       XCTAssertNotNil(result.accessToken)
 
       print("Result: \(result)")
 
+      exp.fulfill()
+    }, onError: { (error) -> Void in
+      exp.fulfill()
+    })
+
+    waitForExpectations(timeout: 10)
+
+    let exp2 = expectation(description: "Tests update token")
+
+    if let result = result1 {
       subject.config.items = result.asConfigurationItems()
 
       subject.config.write().subscribe(onNext: { items in
-        exp.fulfill()
+        exp2.fulfill()
       }, onError: { (error) -> Void in
+        exp2.fulfill()
         print(error)
         XCTFail()
       })

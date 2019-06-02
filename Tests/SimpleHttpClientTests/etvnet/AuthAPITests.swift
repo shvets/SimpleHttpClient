@@ -3,38 +3,45 @@ import XCTest
 @testable import SimpleHttpClient
 
 class AuthAPITests: XCTestCase {
-  static let path = URL(fileURLWithPath: NSTemporaryDirectory())
+  static func getProjectDirectory() -> String {
+    return String(URL(fileURLWithPath: #file).pathComponents
+      .prefix(while: { $0 != "Tests" }).joined(separator: "/").dropFirst());
+  }
+
+  static let path = URL(fileURLWithPath: getProjectDirectory())
 
   static var config = ConfigFile<String>(path: path, fileName: "etvnet.config")
   
   var subject = EtvnetAPI(config: config)
   
-  func testGetActivationCodes() {
-    let result = subject.getActivationCodes()!
-    
-    let activationUrl = result.activationUrl!
-    let userCode = result.userCode!
-    
-    print("Activation url: \(activationUrl)")
-    print("Activation code: \(userCode)")
-    
-    XCTAssertNotNil(result.activationUrl)
-    XCTAssertNotNil(result.userCode)
-    XCTAssertNotNil(result.deviceCode)
+  func testGetActivationCodes() throws {
+    let result = subject.getActivationCodes()
+
+    XCTAssertNotNil(result)
+
+    if let result = result {
+      print("Activation url: \(subject.getActivationUrl())")
+      print("Activation code: \(result.userCode!)")
+      print("Device code: \(result.deviceCode!)") 
+    }
   }
   
   func testCreateToken() {
     let result = subject.authorization()
 
-    if result.userCode != "" {
+    if result != nil && result.userCode != "" {
       let response = subject.tryCreateToken(
           userCode: result.userCode,
-          deviceCode: result.deviceCode,
-          activationUrl: result.activationUrl
+          deviceCode: result.deviceCode
       )!
 
       XCTAssertNotNil(response.accessToken)
       XCTAssertNotNil(response.refreshToken)
+
+      print("Result: \(result)")
+    }
+    else {
+      XCTFail()
     }
   }
   
@@ -43,19 +50,26 @@ class AuthAPITests: XCTestCase {
 
     let refreshToken = subject.config.items["refresh_token"]!
     
-    let response = subject.updateToken(refreshToken: refreshToken)
+    let result = subject.updateToken(refreshToken: refreshToken)
 
-    subject.config.items = response!.asConfigurationItems()
+    if let result = result {
+      XCTAssertNotNil(result.accessToken)
 
-    subject.config.write().subscribe(onNext: { items in
-      exp.fulfill()
-    }, onError: { (error) -> Void in
-      print(error)
+      print("Result: \(result)")
+
+      subject.config.items = result.asConfigurationItems()
+
+      subject.config.write().subscribe(onNext: { items in
+        exp.fulfill()
+      }, onError: { (error) -> Void in
+        print(error)
+        XCTFail()
+      })
+
+      waitForExpectations(timeout: 10)
+    }
+    else {
       XCTFail()
-    })
-
-    waitForExpectations(timeout: 10)
-
-    XCTAssertNotNil(response!.accessToken)
+    }
   }
 }

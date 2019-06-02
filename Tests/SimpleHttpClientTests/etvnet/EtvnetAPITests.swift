@@ -18,7 +18,8 @@ class EtvnetAPITests: XCTestCase {
       let result = self.subject.authorization()
 
       if result.userCode != "" {
-        _ = self.subject.tryCreateToken(userCode: result.userCode, deviceCode: result.deviceCode, activationUrl: result.activationUrl)
+        _ = self.subject.tryCreateToken(userCode: result.userCode, deviceCode: result.deviceCode)
+        //, activationUrl: result.activationUrl)
       }
     }
   }

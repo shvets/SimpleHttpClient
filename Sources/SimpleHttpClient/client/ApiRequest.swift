@@ -26,9 +26,10 @@ struct ApiRequest {
 }
 
 extension ApiRequest {
-  init(method: HttpMethod = .get, path: String, body: Data? = nil) {
+  init(method: HttpMethod = .get, path: String, queryItems: [URLQueryItem] = [], body: Data? = nil) {
     self.method = method
     self.path = path
+    self.queryItems = queryItems
     self.body = body
   }
 }

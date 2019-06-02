@@ -20,6 +20,10 @@ class DiskStorage {
       try fileManager.createDirectory(at: folderUrl, withIntermediateDirectories: true, attributes: nil)
     }
   }
+
+  public func getPath() -> String {
+    return String(path.pathComponents.joined(separator: "/").dropFirst())
+  }
 }
 
 extension DiskStorage: ReadableStorage {

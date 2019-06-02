@@ -1,5 +1,4 @@
 import Foundation
-import Alamofire
 
 open class AuthService: HttpService {
   var authUrl: String
@@ -15,92 +14,121 @@ open class AuthService: HttpService {
     self.grantType = grantType
     self.scope = scope
   }
+
+  func getActivationUrl() -> String {
+    return "\(authUrl)device/usercode"
+  }
   
-  func getActivationCodes(includeClientSecret: Bool = true, includeClientId: Bool = false) -> ActivationCodesProperties? {
-    var parameters = ["scope": scope]
-    
+  func getActivationCodes(includeClientSecret: Bool = true, includeClientId: Bool = false) ->
+    ActivationCodesProperties? {
+    var result: ActivationCodesProperties?
+
+    var queryItems: [URLQueryItem] = []
+
+    queryItems.append(URLQueryItem(name: "scope", value: scope))
+
     if includeClientSecret {
-      parameters["client_secret"] = clientSecret
+      queryItems.append(URLQueryItem(name: "client_secret", value: clientSecret))
     }
     
     if includeClientId {
-      parameters["client_id"] = clientId
+      queryItems.append(URLQueryItem(name: "client_id", value: clientId))
     }
 
-    if let response = authRequest(parameters: parameters, rtype: "device/code", method: .get) {
-      if response.result.isSuccess {
-        if let data = response.data {
-          do {
-            var result = try data.decoded() as ActivationCodesProperties
+    queryItems.append(URLQueryItem(name: "client_id", value: clientId))
 
-            result.activationUrl = authUrl + "device/usercode"
+    let url = URL(string: authUrl)
 
-            return result
-          }
-          catch let e {
-            print("Error: \(e)")
-          }
-        }
+    let client = ApiClient(url!)
+
+    let request = ApiRequest(path: "device/code", queryItems: queryItems)
+
+    let semaphore = DispatchSemaphore.init(value: 0)
+
+    client.fetchAsync(request, to: ActivationCodesProperties.self) { (r) in
+      switch r {
+      case .success(let props):
+        result = props
+
+      case .failure(let error):
+        print("error: \(error)")
       }
+
+      semaphore.signal()
     }
-    
-    return nil
+
+    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
+
+    return result
   }
   
   public func createToken(deviceCode: String) -> AuthProperties? {
-    let parameters: [String: String] = ["grant_type": grantType, "code": deviceCode]
-
     var result: AuthProperties?
 
-    if let response = authRequest(parameters: parameters) {
-      if response.result.isSuccess {
-        if let data = response.data {
-          do {
-            result = try data.decoded() as AuthProperties
-          }
-          catch let e {
-            print("Error: \(e)")
-          }
-        }
+    var queryItems: [URLQueryItem] = []
+
+    queryItems.append(URLQueryItem(name: "grant_type", value: grantType))
+    queryItems.append(URLQueryItem(name: "code", value: deviceCode))
+    queryItems.append(URLQueryItem(name: "client_secret", value: clientSecret))
+    queryItems.append(URLQueryItem(name: "client_id", value: clientId))
+
+    let url = URL(string: authUrl)
+
+    let client = ApiClient(url!)
+
+    let request = ApiRequest(path: "token", queryItems: queryItems)
+
+    let semaphore = DispatchSemaphore.init(value: 0)
+
+    client.fetchAsync(request, to: AuthProperties.self) { (r) in
+      switch r {
+      case .success(let props):
+        result = props
+
+      case .failure(let error):
+        print("error: \(error)")
       }
+
+      semaphore.signal()
     }
+
+    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
 
     return result
   }
   
   func updateToken(refreshToken: String) -> AuthProperties? {
-    let data = ["grant_type": "refresh_token", "refresh_token": refreshToken]
-    
     var result: AuthProperties?
-    
-    if let response = authRequest(parameters: data) {
-      if response.result.isSuccess {
-        if let data = response.data {
-          do {
-            result = try data.decoded() as AuthProperties
-          }
-          catch let e {
-            print("Error: \(e)")
-          }
-        }
+
+    var queryItems: [URLQueryItem] = []
+
+    queryItems.append(URLQueryItem(name: "grant_type", value: "refresh_token"))
+    queryItems.append(URLQueryItem(name: "refresh_token", value: refreshToken))
+    queryItems.append(URLQueryItem(name: "client_secret", value: clientSecret))
+    queryItems.append(URLQueryItem(name: "client_id", value: clientId))
+
+    let url = URL(string: authUrl)
+
+    let client = ApiClient(url!)
+
+    let request = ApiRequest(path: "token", queryItems: queryItems)
+
+    let semaphore = DispatchSemaphore.init(value: 0)
+
+    client.fetchAsync(request, to: AuthProperties.self) { (r) in
+      switch r {
+      case .success(let props):
+        result = props
+
+      case .failure(let error):
+        print("error: \(error)")
       }
+
+      semaphore.signal()
     }
-    
+
+    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
+
     return result
   }
-  
-  func authRequest(parameters: [String: String], rtype: String="token", method: HTTPMethod = .get) -> DataResponse<Data>? {
-    var newParameters = parameters.reduce(into: [:], { dict, elem in dict[elem.key] = elem.value })
-
-    newParameters["client_id"] = clientId
-    
-    if rtype == "token" {
-      newParameters["client_secret"] = clientSecret
-    }
-    
-    let url = authUrl + rtype
-    
-    return httpRequest(url, parameters: newParameters, method: method)
-  }
-  
 }

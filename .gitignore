@@ -5,3 +5,4 @@
 .idea
 .buid
 Package.resolved
+*.config

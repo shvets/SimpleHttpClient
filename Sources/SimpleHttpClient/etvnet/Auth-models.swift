@@ -3,7 +3,7 @@ import Foundation
 public struct ActivationCodesProperties: Codable {
   public let deviceCode: String?
   public let userCode: String?
-  public var activationUrl: String?
+//  public var activationUrl: String?
 
   enum CodingKeys: String, CodingKey {
     case deviceCode = "device_code"
@@ -15,7 +15,7 @@ public struct ActivationCodesProperties: Codable {
 
     deviceCode = try container.decode(forKey: .deviceCode, default: nil)
     userCode = try container.decode(forKey: .userCode, default: nil)
-    activationUrl = "device/usercode"
+//    activationUrl = "device/usercode"
   }
 }
 

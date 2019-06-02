@@ -43,9 +43,10 @@ open class EtvnetAPI: ApiService {
       clientSecret: ClientSecret, grantType: GrantType, scope: Scope)
   }
 
-  func tryCreateToken(userCode: String, deviceCode: String,
-                      activationUrl: String) -> AuthProperties? {
-    print("Register activation code on web site \(activationUrl): \(userCode)")
+  func tryCreateToken(userCode: String, deviceCode: String)
+//                      activationUrl: String)
+      -> AuthProperties? {
+    print("Register activation code on web site \(getActivationUrl()): \(userCode)")
 
     var result: AuthProperties?
 

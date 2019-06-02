@@ -101,6 +101,6 @@ extension ConfigFile: Configuration {
   }
 
   public func exists() -> Bool {
-    return fileManager.fileExists(atPath: name)
+    return fileManager.fileExists(atPath: "\(storage.getPath())/\(name)")
   }
 }

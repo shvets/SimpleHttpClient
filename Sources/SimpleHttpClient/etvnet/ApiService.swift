@@ -39,22 +39,24 @@ open class ApiService: AuthService {
   }
 
   func loadConfig() {
-    //do {
-    let semaphore = DispatchSemaphore.init(value: 0)
+    if (config.exists()) {
+      //do {
+      let semaphore = DispatchSemaphore.init(value: 0)
 
-    config.read().subscribe(onNext: { items in
-      semaphore.signal()
-    },
-    onError: { (error) -> Void in
-      semaphore.signal()
-      print("Error loading configuration: \(error)")
-    })
+      config.read().subscribe(onNext: { items in
+        semaphore.signal()
+      },
+        onError: { (error) -> Void in
+          semaphore.signal()
+          print("Error loading configuration: \(error)")
+        })
 
-    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
+      _ = semaphore.wait(timeout: DispatchTime.distantFuture)
 //    }
 //    catch let error {
 //      print("Error loading configuration: \(error)")
 //    }
+    }
   }
 
 //  func wrap() {
@@ -91,27 +93,29 @@ open class ApiService: AuthService {
 //    }
   }
   
-  public func authorization(includeClientSecret: Bool=true) -> (userCode: String, deviceCode: String, activationUrl: String) {
-    var activationUrl: String
+  public func authorization(includeClientSecret: Bool=true) -> (userCode: String, deviceCode: String) {
+  //}, activationUrl: String) {
+    //var activationUrl: String
     var userCode: String
     var deviceCode: String
 
     if checkAccessData("device_code") && checkAccessData("user_code") {
-      activationUrl = config.items["activation_url"]!
+      //activationUrl = config.items["activation_url"]!
       userCode = config.items["user_code"]!
       deviceCode = config.items["device_code"]!
 
-      return (userCode: userCode, deviceCode: deviceCode, activationUrl: activationUrl)
+      return (userCode: userCode, deviceCode: deviceCode)
+      //, activationUrl: activationUrl)
     }
     else {
       if let acResponse = getActivationCodes(includeClientSecret: includeClientSecret) {
         userCode = acResponse.userCode!
         deviceCode = acResponse.deviceCode!
-        activationUrl = acResponse.activationUrl!
+        //activationUrl = acResponse.activationUrl!
 
         config.items["user_code"] = userCode
         config.items["device_code"] = deviceCode
-        config.items["activation_url"] = activationUrl
+        //config.items["activation_url"] = activationUrl
 
 //        config.items = [
 //          "user_code": userCode,
@@ -121,13 +125,15 @@ open class ApiService: AuthService {
 
         saveConfig()
 
-        return (userCode: userCode, deviceCode: deviceCode, activationUrl: activationUrl)
+        return (userCode: userCode, deviceCode: deviceCode)
+        //, activationUrl: activationUrl)
       }
     }
 
     print("Error getting activation codes")
 
-    return (userCode: "", deviceCode: "", activationUrl: "")
+    return (userCode: "", deviceCode: "")
+    //, activationUrl: "")
   }
 
   func checkAccessData(_ key: String) -> Bool {

@@ -5,7 +5,7 @@ public struct AuthResult {
   let deviceCode: String
 }
 
-public struct ActivationCodesProperties: Codable {
+public struct ActivationCodesProperties: Codable, CustomStringConvertible {
   public let deviceCode: String?
   public let userCode: String?
 
@@ -20,9 +20,13 @@ public struct ActivationCodesProperties: Codable {
     deviceCode = try container.decode(forKey: .deviceCode, default: nil)
     userCode = try container.decode(forKey: .userCode, default: nil)
   }
+
+  public var description: String {
+    return "AuthProperties?(\(deviceCode ?? ""), \(userCode ?? ""))"
+  }
 }
 
-public struct AuthProperties: Codable {
+public struct AuthProperties: Codable, CustomStringConvertible {
   public var accessToken: String?
   public var refreshToken: String?
   public var expiresIn: Int?
@@ -63,5 +67,9 @@ public struct AuthProperties: Codable {
     }
 
     return dict
+  }
+
+  public var description: String {
+    return "AuthProperties?(\(accessToken ?? ""), \(refreshToken ?? ""), \(expiresIn ?? 0), \(expires ?? 0))"
   }
 }

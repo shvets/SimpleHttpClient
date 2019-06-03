@@ -15,11 +15,8 @@ class EtvnetAPITests: XCTestCase {
     // Put setup code here. This method is called before the invocation of each test method in the class.
 
     subject.authorize {
-      let result = self.subject.authorization()
-
-      if result.userCode != "" {
+      if let result = self.subject.authorization() {
         _ = self.subject.tryCreateToken(userCode: result.userCode, deviceCode: result.deviceCode)
-        //, activationUrl: result.activationUrl)
       }
     }
   }

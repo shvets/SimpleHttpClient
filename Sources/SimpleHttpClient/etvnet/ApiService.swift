@@ -71,14 +71,14 @@ open class ApiService: AuthService {
     disposable.dispose()
   }
   
-  public func authorization(includeClientSecret: Bool=true) -> AuthResult {
-    var result = AuthResult(userCode: "", deviceCode: "")
+  public func authorization(includeClientSecret: Bool=true) -> AuthResult? {
+    var result: AuthResult?
 
     if checkAccessData("device_code") && checkAccessData("user_code") {
       let userCode = config.items["user_code"]!
       let deviceCode = config.items["device_code"]!
 
-      return AuthResult(userCode: userCode, deviceCode: deviceCode)
+      result = AuthResult(userCode: userCode, deviceCode: deviceCode)
     }
     else {
       let semaphore = DispatchSemaphore.init(value: 0)
@@ -94,15 +94,15 @@ open class ApiService: AuthService {
           result = AuthResult(userCode: userCode, deviceCode: deviceCode)
         }
         else {
-          print("Error getting activation codes")
-          result = AuthResult(userCode: "", deviceCode: "")
+          //print("Error getting activation codes")
+          //result = AuthResult(userCode: "", deviceCode: "")
         }
 
         semaphore.signal()
       }, onError: { (error) -> Void in
         print("Error getting activation codes")
 
-        result = AuthResult(userCode: "", deviceCode: "")
+        //result = AuthResult(userCode: "", deviceCode: "")
 
         semaphore.signal()
       })

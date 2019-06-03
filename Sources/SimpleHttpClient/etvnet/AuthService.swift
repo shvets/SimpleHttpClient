@@ -2,22 +2,22 @@ import Foundation
 import RxSwift
 
 open class AuthService: HttpService {
-  var authUrl: String
-  var clientId: String
-  var clientSecret: String
-  var grantType: String
-  var scope: String
-
   let client: ApiClient!
 
+  let authUrl: String
+  let clientId: String
+  let clientSecret: String
+  let grantType: String
+  let scope: String
+
   init(authUrl: String, clientId: String, clientSecret: String, grantType: String, scope: String) {
+    self.client = ApiClient(URL(string: authUrl)!)
+
     self.authUrl = authUrl
     self.clientId = clientId
     self.clientSecret = clientSecret
     self.grantType = grantType
     self.scope = scope
-
-    client = ApiClient(URL(string: authUrl)!)
   }
 
   func await<T>(_ handler: @escaping () -> Observable<T>) -> T? {

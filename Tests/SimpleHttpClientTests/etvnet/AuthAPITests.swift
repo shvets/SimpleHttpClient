@@ -19,8 +19,8 @@ class AuthAPITests: XCTestCase {
       XCTAssertNotNil(result)
 
       print("Activation url: \(self.subject.getActivationUrl())")
-      print("Activation code: \(result.userCode)")
-      print("Device code: \(result.deviceCode)")
+      print("Activation code: \(result.userCode!)")
+      print("Device code: \(result.deviceCode!)")
     }
     else {
       XCTFail("Error during request")
@@ -28,9 +28,7 @@ class AuthAPITests: XCTestCase {
   }
   
   func testCreateToken() {
-    let result = subject.authorization()
-
-    if result.userCode != "" {
+    if let result = subject.authorization() {
       if let response = subject.tryCreateToken(userCode: result.userCode, deviceCode: result.deviceCode) {
         XCTAssertNotNil(response.accessToken)
         XCTAssertNotNil(response.refreshToken)
@@ -49,15 +47,15 @@ class AuthAPITests: XCTestCase {
   func testUpdateToken() throws {
     let refreshToken = subject.config.items["refresh_token"]!
 
-    if let result1 = subject.await({ self.subject.updateToken(refreshToken: refreshToken) }) {
-      XCTAssertNotNil(result1.accessToken)
+    if let result = subject.await({ self.subject.updateToken(refreshToken: refreshToken) }) {
+      XCTAssertNotNil(result.accessToken)
 
-      print("Result: \(result1)")
+      print("Result: \(result)")
 
-      subject.config.items = result1.asConfigurationItems()
+      subject.config.items = result.asConfigurationItems()
 
       if let _ = subject.await({ self.subject.config.write() }) {
-        print("Saved config.")
+        print("Config saved.")
       }
       else {
         XCTFail()

@@ -66,7 +66,10 @@ open class ApiClient {
     urlRequest.httpMethod = request.method.rawValue
 
     if let body = request.body {
-      urlRequest.httpBody = try JSONEncoder().encode(body)
+      let encoder = JSONEncoder()
+      encoder.outputFormatting = .prettyPrinted
+
+      urlRequest.httpBody = try encoder.encode(body)
     }
 
     request.headers?.forEach {
@@ -93,7 +96,9 @@ extension ApiClient: HttpFetcher {
 
             if let data = response.body {
               do {
-                let value = try JSONDecoder().decode(T.self, from: data)
+                let decoder = JSONDecoder()
+
+                let value = try decoder.decode(T.self, from: data)
 
                 handler(.success(value))
               }
@@ -136,7 +141,9 @@ extension ApiClient: HttpFetcher {
 
               if let data = response.body {
                 do {
-                  let value = try JSONDecoder().decode(T.self, from: data)
+                  let decoder = JSONDecoder()
+
+                  let value = try decoder.decode(T.self, from: data)
 
                   observer.on(.next(value))
                   observer.on(.completed)
@@ -173,15 +180,14 @@ extension ApiClient: HttpFetcher {
 
     let semaphore = DispatchSemaphore.init(value: 0)
 
-      _ = fetchRx(request, to: type).subscribe(onNext: { response in
-        result = response
+    _ = fetchRx(request, to: type).subscribe(onNext: { response in
+      result = response
 
-        semaphore.signal()
-      },
-      onError: { (error) -> Void in
-        semaphore.signal()
-      }
-    )
+      semaphore.signal()
+    },
+    onError: { (error) -> Void in
+      semaphore.signal()
+    })
 
     _ = semaphore.wait(timeout: DispatchTime.distantFuture)
 

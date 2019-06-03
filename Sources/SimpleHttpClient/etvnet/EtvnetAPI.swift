@@ -51,24 +51,16 @@ open class EtvnetAPI: ApiService {
     var done = false
 
     while !done {
-      let semaphore = DispatchSemaphore.init(value: 0)
-
-      createToken(deviceCode: deviceCode).subscribe(onNext: { r in
-        done = r.accessToken != nil
+      if let response = client.await({ self.createToken(deviceCode: deviceCode) }) {
+        done = response.accessToken != nil
 
         if done {
-          result = r
+          result = response
 
-          self.config.items = r.asConfigurationItems()
+          self.config.items = response.asConfigurationItems()
           self.saveConfig()
         }
-
-        semaphore.signal()
-      }, onError: { (error) -> Void in
-        semaphore.signal()
-      })
-
-      _ = semaphore.wait(timeout: DispatchTime.distantFuture)
+      }
 
       if !done {
         sleep(5)

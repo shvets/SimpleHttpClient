@@ -20,7 +20,9 @@ open class ApiService: AuthService {
     super.init(authUrl: authUrl, clientId: clientId, clientSecret: clientSecret,
                grantType: grantType, scope: scope)
 
-    self.loadConfig()
+    if (config.exists()) {
+      self.loadConfig()
+    }
   }
 
   public func authorize(authorizeCallback: @escaping () -> Void) {
@@ -38,37 +40,11 @@ open class ApiService: AuthService {
   }
 
   func loadConfig() {
-    if (config.exists()) {
-      let semaphore = DispatchSemaphore.init(value: 0)
-
-      let disposable = config.read().subscribe(onNext: { items in
-          semaphore.signal()
-        },
-        onError: { (error) -> Void in
-          semaphore.signal()
-          print("Error loading configuration: \(error)")
-        })
-
-      _ = semaphore.wait(timeout: DispatchTime.distantFuture)
-
-      disposable.dispose()
-    }
+    client.await({ self.config.read() })
   }
 
   func saveConfig() {
-    let semaphore = DispatchSemaphore.init(value: 0)
-
-    let disposable = config.write().subscribe(onNext: { items in
-      semaphore.signal()
-    },
-    onError: { (error) -> Void in
-      semaphore.signal()
-      print("Error configuration configuration: \(error)")
-    })
-
-    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
-
-    disposable.dispose()
+    client.await({ self.config.write() })
   }
   
   public func authorization(includeClientSecret: Bool=true) -> AuthResult? {
@@ -81,10 +57,8 @@ open class ApiService: AuthService {
       result = AuthResult(userCode: userCode, deviceCode: deviceCode)
     }
     else {
-      let semaphore = DispatchSemaphore.init(value: 0)
-
-      getActivationCodes(includeClientSecret: includeClientSecret).subscribe(onNext: { r in
-        if let userCode = r.userCode, let deviceCode = r.deviceCode {
+      if let response = client.await({ self.getActivationCodes(includeClientSecret: includeClientSecret) }) {
+        if let userCode = response.userCode, let deviceCode = response.deviceCode {
           self.config.items["user_code"] = userCode
           self.config.items["device_code"] = deviceCode
           self.config.items["activation_url"] = self.getActivationUrl()
@@ -93,21 +67,7 @@ open class ApiService: AuthService {
 
           result = AuthResult(userCode: userCode, deviceCode: deviceCode)
         }
-        else {
-          //print("Error getting activation codes")
-          //result = AuthResult(userCode: "", deviceCode: "")
-        }
-
-        semaphore.signal()
-      }, onError: { (error) -> Void in
-        print("Error getting activation codes")
-
-        //result = AuthResult(userCode: "", deviceCode: "")
-
-        semaphore.signal()
-      })
-
-      _ = semaphore.wait(timeout: DispatchTime.distantFuture)
+      }
     }
 
     return result
@@ -124,56 +84,41 @@ open class ApiService: AuthService {
   }
   
   public func checkToken() -> Bool {
-    var res = false
+    var ok = false
 
     if checkAccessData("access_token") {
-      res = true
+      ok = true
     }
     else if config.items["refresh_token"] != nil {
       let refreshToken = config.items["refresh_token"]
       
       if let refreshToken = refreshToken, tryUpdateToken(refreshToken: refreshToken) {
-        res = true
+        ok = true
       }
     }
     else if checkAccessData("device_code") {
       let deviceCode = config.items["device_code"]
 
-      let semaphore = DispatchSemaphore.init(value: 0)
+      if let deviceCode = deviceCode,
+         let response = client.await({ self.createToken(deviceCode: deviceCode) }) {
 
-      createToken(deviceCode: deviceCode!).subscribe(onNext: { r in
-        self.config.items = r.asConfigurationItems()
+        self.config.items = response.asConfigurationItems()
         self.saveConfig()
-
-        semaphore.signal()
-      }, onError: { (error) -> Void in
-        semaphore.signal()
-      })
-
-      _ = semaphore.wait(timeout: DispatchTime.distantFuture)
+      }
     }
 
-    return res
+    return ok
   }
 
   func tryUpdateToken(refreshToken: String) -> Bool {
-    var ok = true
+    var ok = false
 
-    let semaphore = DispatchSemaphore.init(value: 0)
-
-    updateToken(refreshToken: refreshToken).subscribe(onNext: { response in
+    if let response = client.await({ self.updateToken(refreshToken: refreshToken) }) {
       self.config.items = response.asConfigurationItems()
       self.saveConfig()
 
-      semaphore.signal()
-    },
-    onError: { (error) -> Void in
-      semaphore.signal()
-      print("Error loading configuration: \(error)")
-      ok = false
-    })
-
-    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
+      ok = true
+    }
 
     return ok
   }

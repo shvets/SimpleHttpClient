@@ -4,14 +4,14 @@ import RxSwift
 open class EtvnetAPI: ApiService {
   public static let PER_PAGE = 15
 
-  let ApiUrl = "https://secure.etvnet.com/api/v3.0/"
-  let UserAgent = "Etvnet User Agent"
+  public static let ApiUrl = "https://secure.etvnet.com/api/v3.0/"
+  public static let UserAgent = "Etvnet User Agent"
 
-  let AuthUrl = "https://accounts.etvnet.com/auth/oauth/"
-  let ClientId = "a332b9d61df7254dffdc81a260373f25592c94c9"
-  let ClientSecret = "744a52aff20ec13f53bcfd705fc4b79195265497"
+  public static let AuthUrl = "https://accounts.etvnet.com/auth/oauth/"
+  public static let ClientId = "a332b9d61df7254dffdc81a260373f25592c94c9"
+  public static let ClientSecret = "744a52aff20ec13f53bcfd705fc4b79195265497"
 
-  let Scope = [
+  public static let Scope = [
     "com.etvnet.media.browse",
     "com.etvnet.media.watch",
     "com.etvnet.media.bookmarks",
@@ -23,9 +23,9 @@ open class EtvnetAPI: ApiService {
     "com.etvnet.notifications"
   ].joined(separator: " ")
 
-  let GrantType = "http://oauth.net/grant_type/device/1.0"
+  public static let GrantType = "http://oauth.net/grant_type/device/1.0"
 
-  let TimeShift = [
+  public static let TimeShift = [
     "0": 0,  // Moscow
     "1": 2,  // Berlin
     "2": 3,  // London
@@ -38,8 +38,9 @@ open class EtvnetAPI: ApiService {
   public static let Topics = ["etvslider/main", "newmedias", "best", "top", "newest", "now_watched", "recommend"]
 
   public init(config: ConfigFile<String>) {
-    super.init(config: config, apiUrl: ApiUrl, userAgent: UserAgent, authUrl: AuthUrl, clientId: ClientId,
-      clientSecret: ClientSecret, grantType: GrantType, scope: Scope)
+    super.init(config: config, apiUrl: EtvnetAPI.ApiUrl, userAgent: EtvnetAPI.UserAgent,
+      authUrl: EtvnetAPI.AuthUrl, clientId: EtvnetAPI.ClientId,
+      clientSecret: EtvnetAPI.ClientSecret, grantType: EtvnetAPI.GrantType, scope: EtvnetAPI.Scope)
   }
 
   func tryCreateToken(userCode: String, deviceCode: String) -> AuthProperties? {

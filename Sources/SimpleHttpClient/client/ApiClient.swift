@@ -40,8 +40,21 @@ open class ApiClient {
     return urlComponents.url?.appendingPathComponent(request.path)
   }
 
-  func await<T>(_ handler: @escaping () -> Observable<T>) -> T? {
+  func await0<T: Decodable>(_ handler: @escaping () -> Result<T, ApiError>) -> Result<T, ApiError> {
+    let result: Result<T, ApiError> = handler()
+
+    let semaphore = DispatchSemaphore.init(value: 0)
+
+    semaphore.signal()
+
+    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
+
+    return result
+  }
+
+  func await<T>(_ handler: @escaping () -> Observable<T>) throws -> T? {
     var result: T?
+    var error: Error?
 
     let semaphore = DispatchSemaphore.init(value: 0)
 
@@ -49,7 +62,8 @@ open class ApiClient {
       result = response
       semaphore.signal()
     },
-      onError: { (error) -> Void in
+      onError: { (e) -> Void in
+        error = e
         semaphore.signal()
       }
     )
@@ -57,6 +71,10 @@ open class ApiClient {
     _ = semaphore.wait(timeout: DispatchTime.distantFuture)
 
     disposable.dispose()
+
+    if let error = error {
+      throw error
+    }
 
     return result
   }

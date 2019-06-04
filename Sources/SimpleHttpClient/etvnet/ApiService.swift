@@ -40,11 +40,21 @@ open class ApiService: AuthService {
   }
 
   func loadConfig() {
-    client.await({ self.config.read() })
+    do {
+      try client.await({ self.config.read() })
+    }
+    catch {
+      print(error)
+    }
   }
 
   func saveConfig() {
-    client.await({ self.config.write() })
+    do {
+      try client.await({ self.config.write() })
+    }
+    catch {
+      print(error)
+    }
   }
   
   public func authorization(includeClientSecret: Bool=true) -> AuthResult? {
@@ -57,16 +67,21 @@ open class ApiService: AuthService {
       result = AuthResult(userCode: userCode, deviceCode: deviceCode)
     }
     else {
-      if let response = client.await({ self.getActivationCodes(includeClientSecret: includeClientSecret) }) {
-        if let userCode = response.userCode, let deviceCode = response.deviceCode {
-          self.config.items["user_code"] = userCode
-          self.config.items["device_code"] = deviceCode
-          self.config.items["activation_url"] = self.getActivationUrl()
+      do {
+        if let response = try client.await({ self.getActivationCodes(includeClientSecret: includeClientSecret) }) {
+          if let userCode = response.userCode, let deviceCode = response.deviceCode {
+            self.config.items["user_code"] = userCode
+            self.config.items["device_code"] = deviceCode
+            self.config.items["activation_url"] = self.getActivationUrl()
 
-          self.saveConfig()
+            self.saveConfig()
 
-          result = AuthResult(userCode: userCode, deviceCode: deviceCode)
+            result = AuthResult(userCode: userCode, deviceCode: deviceCode)
+          }
         }
+      }
+      catch {
+        print(error)
       }
     }
 
@@ -99,11 +114,16 @@ open class ApiService: AuthService {
     else if checkAccessData("device_code") {
       let deviceCode = config.items["device_code"]
 
-      if let deviceCode = deviceCode,
-         let response = client.await({ self.createToken(deviceCode: deviceCode) }) {
+      do {
+        if let deviceCode = deviceCode,
+           let response = try client.await({ self.createToken(deviceCode: deviceCode) }) {
 
-        self.config.items = response.asConfigurationItems()
-        self.saveConfig()
+          self.config.items = response.asConfigurationItems()
+          self.saveConfig()
+        }
+      }
+      catch {
+        print(error)
       }
     }
 
@@ -113,11 +133,16 @@ open class ApiService: AuthService {
   func tryUpdateToken(refreshToken: String) -> Bool {
     var ok = false
 
-    if let response = client.await({ self.updateToken(refreshToken: refreshToken) }) {
-      self.config.items = response.asConfigurationItems()
-      self.saveConfig()
+    do {
+      if let response = try client.await({ self.updateToken(refreshToken: refreshToken) }) {
+        self.config.items = response.asConfigurationItems()
+        self.saveConfig()
 
-      ok = true
+        ok = true
+      }
+    }
+    catch {
+      print(error)
     }
 
     return ok

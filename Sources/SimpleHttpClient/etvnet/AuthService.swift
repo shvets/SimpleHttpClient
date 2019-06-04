@@ -21,7 +21,14 @@ open class AuthService: HttpService {
   }
 
   func await<T>(_ handler: @escaping () -> Observable<T>) -> T? {
-    return client.await(handler)
+    do {
+      return try client.await(handler)
+    }
+    catch {
+      print(error)
+
+      return nil
+    }
   }
 
   func getActivationUrl() -> String {

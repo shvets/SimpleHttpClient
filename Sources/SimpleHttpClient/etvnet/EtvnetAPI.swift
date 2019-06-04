@@ -51,15 +51,20 @@ open class EtvnetAPI: ApiService {
     var done = false
 
     while !done {
-      if let response = client.await({ self.createToken(deviceCode: deviceCode) }) {
-        done = response.accessToken != nil
+      do {
+        if let response = try client.await({ self.createToken(deviceCode: deviceCode) }) {
+          done = response.accessToken != nil
 
-        if done {
-          result = response
+          if done {
+            result = response
 
-          self.config.items = response.asConfigurationItems()
-          self.saveConfig()
+            self.config.items = response.asConfigurationItems()
+            self.saveConfig()
+          }
         }
+      }
+      catch {
+        print(error)
       }
 
       if !done {

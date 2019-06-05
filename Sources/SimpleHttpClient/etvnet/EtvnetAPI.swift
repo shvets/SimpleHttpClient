@@ -92,7 +92,8 @@ open class EtvnetAPI: ApiService {
     return []
   }
 
-  public func getArchive0(genre: Int? = nil, channelId: Int? = nil, perPage: Int=PER_PAGE, page: Int=1) -> PaginatedMediaData? {
+  public func getArchive(genre: Int? = nil, channelId: Int? = nil, perPage: Int=PER_PAGE, page: Int=1) ->
+    PaginatedMediaData? {
     var path: String
 
     if channelId != nil && genre != nil {
@@ -108,56 +109,21 @@ open class EtvnetAPI: ApiService {
       path = "video/media/archive.json"
     }
 
-    var params = [String: String]()
-    params["per_page"] = String(perPage)
-    params["page"] = String(page)
+    var params: [URLQueryItem] = []
+    params.append(URLQueryItem(name: "per_page", value: String(perPage)))
+    params.append(URLQueryItem(name: "page", value: String(page)))
 
-    let url = buildUrl(path: path, params: params as [String : AnyObject])
-
-    if let response = fullRequest(path: url) {
-      if let data = response.data {
-        if let result = try? (data.decoded() as MediaResponse).data {
-          if case .paginatedMedia(let value) = result {
-            return value
-          }
-        }
-      }
-    }
-
-    return nil
-  }
-
-  public func getArchive(genre: Int? = nil, channelId: Int? = nil, perPage: Int=PER_PAGE, page: Int=1) -> Observable<PaginatedMediaData?> {
-    var path: String
-
-    if channelId != nil && genre != nil {
-      path = "video/media/channel/\(channelId!)/archive/\(genre!).json"
-    }
-    else if genre != nil {
-      path = "video/media/archive/\(genre!).json"
-    }
-    else if channelId != nil {
-      path = "video/media/channel/\(channelId!)/archive.json"
-    }
-    else {
-      path = "video/media/archive.json"
-    }
-
-    var params = [String: String]()
-    params["per_page"] = String(perPage)
-    params["page"] = String(page)
-
-    let url = buildUrl(path: path, params: params as [String : AnyObject])
-
-    return fullRequestRx(path: url).map { data in
-      if let result = try? (data.decoded() as MediaResponse).data {
+    if let response = fullRequest0(url: apiUrl, path: path, to: MediaResponse.self, params: params) {
+      if let result = try? response.data {
         if case .paginatedMedia(let value) = result {
           return value
         }
       }
-      
+
       return nil
     }
+
+    return nil
   }
 
   public func getGenres(parentId: String? = nil, today: Bool=false, channelId: String? = nil, format: String? = nil) -> [Genre] {

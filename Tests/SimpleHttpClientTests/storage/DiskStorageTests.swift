@@ -17,11 +17,16 @@ final class DiskStorageTests: XCTestCase {
 
     storage.writeAsync(timeline, for: "timeline") { _ in
       storage.readAsync(Timeline.self, for: "timeline") { result in
-        print(try? result.get())
+        do {
+          print(try result.get())
 
-        XCTAssertEqual(try? result.get(), timeline)
+          XCTAssertEqual(try result.get(), timeline)
 
-        exp.fulfill()
+          exp.fulfill()
+        }
+        catch {
+          XCTFail()
+        }
       }
     }
 

@@ -11,21 +11,21 @@ open class HttpService {
 
     sessionManager = Alamofire.SessionManager(configuration: configuration)
   }
-  
+
   public func httpRequest(_ url: String,
                           headers: HTTPHeaders = [:],
                           parameters: Parameters = [:],
                           method: HTTPMethod = .get) -> DataResponse<Data>? {
     var dataResponse: DataResponse<Data>?
-    
+
     if let sessionManager = sessionManager {
       let utilityQueue = DispatchQueue.global(qos: .utility)
       let semaphore = DispatchSemaphore.init(value: 0)
-      
+
       sessionManager.request(url, method: method, parameters: parameters,
          headers: headers).validate().responseData(queue: utilityQueue) { response in
           dataResponse = response
-          
+
           switch response.result {
             case .success:
               //print("success")
@@ -40,13 +40,41 @@ open class HttpService {
 
           semaphore.signal()
       }
-      
+
       //debugPrint(request)
-      
+
       _ = semaphore.wait(timeout: DispatchTime.distantFuture)
     }
-    
+
     return dataResponse
+  }
+
+
+  public func httpRequest0<T: Decodable>(url: String, path: String, to type: T.Type, method: HttpMethod = .get,
+                                         queryItems: [URLQueryItem] = [], headers: [HttpHeader] = []) -> T? {
+    var result: T?
+
+    let client = ApiClient(URL(string: url)!)
+
+    let request = ApiRequest(path: path, queryItems: queryItems, headers: headers)
+
+    let semaphore = DispatchSemaphore.init(value: 0)
+
+    let disposable = client.fetchRx(request, to: type).subscribe(onNext: { response in
+      result = response
+      semaphore.signal()
+    },
+      onError: { (e) -> Void in
+        //error = e
+        semaphore.signal()
+      }
+    )
+
+    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
+
+    disposable.dispose()
+
+    return result
   }
   
   public func httpRequestRx(_ url: String,

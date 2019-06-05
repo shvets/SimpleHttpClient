@@ -191,6 +191,50 @@ open class ApiService: AuthService {
     return response
   }
 
+  func fullRequest0<T: Decodable>(url: String, path: String, to type: T.Type, method: HttpMethod = .get,
+                                  params: [URLQueryItem] = [], unauthorized: Bool=false) -> T? {
+    var result: T?
+
+    if !checkToken() {
+      authorizeCallback()
+    }
+
+    if let accessToken = config.items["access_token"] {
+      var queryItems: [URLQueryItem] = []
+
+      for param in params {
+        queryItems.append(param)
+      }
+
+      queryItems.append(URLQueryItem(name: "access_token", value: accessToken))
+
+        var headers: [HttpHeader] = []
+        headers.append(HttpHeader(field: "User-agent", value: userAgent))
+
+        if let apiResponse = httpRequest0(url: url, path: path, to: type, method: method, queryItems: queryItems,
+          headers: headers) {
+
+          result = apiResponse
+           //let statusCode = apiResponse.response?.statusCode {
+//          if (statusCode == 401 || statusCode == 400) && !unauthorized {
+//            let refreshToken = config.items["refresh_token"]
+//
+//            if let refreshToken = refreshToken, tryUpdateToken(refreshToken: refreshToken) {
+//              response = fullRequest(path: path, method: method, parameters: parameters, unauthorized: true)
+//            }
+//            else {
+//              print("error")
+//            }
+//          }
+//          else {
+//            response = apiResponse
+//          }
+        }
+    }
+
+    return result
+  }
+
   func fullRequestRx(path: String, method: HTTPMethod = .get, parameters: [String: String] = [:]) -> Observable<Data> {
     if !checkToken() {
       authorizeCallback()

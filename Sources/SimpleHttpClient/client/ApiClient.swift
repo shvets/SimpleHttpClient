@@ -52,6 +52,7 @@ open class ApiClient {
     return result
   }
 
+  @discardableResult
   func await<T>(_ handler: @escaping () -> Observable<T>) throws -> T? {
     var result: T?
     var error: Error?
@@ -90,7 +91,7 @@ open class ApiClient {
       urlRequest.httpBody = try encoder.encode(body)
     }
 
-    request.headers?.forEach {
+    request.headers.forEach {
       urlRequest.addValue($0.value, forHTTPHeaderField: $0.field)
     }
 

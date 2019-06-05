@@ -78,14 +78,13 @@ open class EtvnetAPI: ApiService {
   public func getChannels(today: Bool = false) -> [Name] {
     let path = "video/channels.json"
 
-    let url = buildUrl(path: path, params: ["today": String(today) as AnyObject])
+    var params: [URLQueryItem] = []
+    params.append(URLQueryItem(name: "today", value: String(today)))
 
-    if let response = fullRequest(path: url) {
-      if let data = response.data {
-        if let result = try? (data.decoded() as MediaResponse).data {
-          if case .names(let channels) = result {
-            return channels
-          }
+    if let response = fullRequest0(url: apiUrl, path: path, to: MediaResponse.self, params: params) {
+      if let result = try? response.data {
+        if case .names(let channels) = result {
+          return channels
         }
       }
     }

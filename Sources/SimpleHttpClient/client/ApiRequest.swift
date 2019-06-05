@@ -1,11 +1,11 @@
 import Foundation
 
-struct HttpHeader {
+public struct HttpHeader {
   let field: String
   let value: String
 }
 
-enum HttpMethod: String {
+public enum HttpMethod: String {
   case get = "GET"
   case put = "PUT"
   case post = "POST"
@@ -21,15 +21,17 @@ struct ApiRequest {
   let path: String
 
   var queryItems: [URLQueryItem] = []
-  var headers: [HttpHeader]? = []
+  var headers: [HttpHeader] = []
   var body: Data?
 }
 
 extension ApiRequest {
-  init(method: HttpMethod = .get, path: String, queryItems: [URLQueryItem] = [], body: Data? = nil) {
-    self.method = method
+  init(path: String, queryItems: [URLQueryItem] = [], method: HttpMethod = .get,
+       headers: [HttpHeader] = [], body: Data? = nil) {
     self.path = path
     self.queryItems = queryItems
+    self.method = method
+    self.headers = headers
     self.body = body
   }
 }

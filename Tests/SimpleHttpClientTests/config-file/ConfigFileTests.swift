@@ -16,7 +16,7 @@ class ConfigFileTests: XCTestCase {
     subject.items["key1"] = "value1"
     subject.items["key2"] = "value2"
 
-    subject.write().subscribe(onNext: { items in
+    _ = subject.write().subscribe(onNext: { items in
       exp.fulfill()
       XCTAssertEqual(items.asDictionary().keys.count, 2)
     }, onError: { (error) -> Void in
@@ -35,7 +35,7 @@ class ConfigFileTests: XCTestCase {
 
     try FileSystem().createFile(at: subject.name, contents: data!)
 
-    subject.read().subscribe(onNext: { items in
+    _ = subject.read().subscribe(onNext: { items in
       exp.fulfill()
 
       XCTAssertEqual(items.asDictionary().keys.count, 2)

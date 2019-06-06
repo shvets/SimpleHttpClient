@@ -52,7 +52,7 @@ open class EtvnetAPI: ApiService {
 
     while !done {
       do {
-        if let response = try client.await({ self.createToken(deviceCode: deviceCode) }) {
+        if let response = try self.await({ self.createToken(deviceCode: deviceCode) }) {
           done = response.accessToken != nil
 
           if done {

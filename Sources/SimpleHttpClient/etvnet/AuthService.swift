@@ -1,9 +1,7 @@
 import Foundation
 import RxSwift
 
-open class AuthService {
-  let client: ApiClient!
-
+open class AuthService: ApiClient {
   let authUrl: String
   let clientId: String
   let clientSecret: String
@@ -11,18 +9,18 @@ open class AuthService {
   let scope: String
 
   init(authUrl: String, clientId: String, clientSecret: String, grantType: String, scope: String) {
-    self.client = ApiClient(URL(string: authUrl)!)
-
     self.authUrl = authUrl
     self.clientId = clientId
     self.clientSecret = clientSecret
     self.grantType = grantType
     self.scope = scope
+
+    super.init(URL(string: authUrl)!)
   }
 
-  func await<T>(_ handler: @escaping () -> Observable<T>) -> T? {
+  override func await<T>(_ handler: @escaping () -> Observable<T>) -> T? {
     do {
-      return try client.await(handler)
+      return try super.await(handler)
     }
     catch {
       print(error)
@@ -54,7 +52,7 @@ open class AuthService {
 
     let request = ApiRequest(path: "device/code", queryItems: queryItems)
 
-    return client.fetchRx(request, to: ActivationCodesProperties.self)
+    return self.fetchRx(request, to: ActivationCodesProperties.self)
   }
 
   @discardableResult
@@ -68,7 +66,7 @@ open class AuthService {
 
     let request = ApiRequest(path: "token", queryItems: queryItems)
 
-    return client.fetchRx(request, to: AuthProperties.self)
+    return self.fetchRx(request, to: AuthProperties.self)
   }
 
   @discardableResult
@@ -82,6 +80,6 @@ open class AuthService {
 
     let request = ApiRequest(path: "token", queryItems: queryItems)
 
-    return client.fetchRx(request, to: AuthProperties.self)
+    return self.fetchRx(request, to: AuthProperties.self)
   }
 }

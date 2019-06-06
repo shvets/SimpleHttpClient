@@ -1,5 +1,4 @@
 import XCTest
-//mport ConfigFile
 
 @testable import SimpleHttpClient
 
@@ -107,6 +106,8 @@ class EtvnetAPITests: XCTestCase {
   func testGetGenres() throws {
     let list = subject.getGenres()
 
+    print(try list.prettify())
+
     XCTAssertNotNil(list)
     XCTAssert(list.count > 0)
   }
@@ -114,6 +115,8 @@ class EtvnetAPITests: XCTestCase {
   func testSearch() throws {
     let query = "news"
     let data = subject.search(query)!
+
+    print(try data.prettify())
 
     XCTAssertNotNil(data)
     XCTAssert(data.media.count > 0)
@@ -145,7 +148,7 @@ class EtvnetAPITests: XCTestCase {
 
     let urlData = subject.getUrl(id, format: format, mediaProtocol: "hls", bitrate: bitrate)
 
-    puts("Media Url: " + urlData["url"]!)
+    print(try urlData.prettify())
 
     //    #print("Play list:\n" + self.service.get_play_list(url_data["url"]))
   }
@@ -157,18 +160,14 @@ class EtvnetAPITests: XCTestCase {
 
     let urlData = subject.getLiveChannelUrl(id, format: format, bitrate: bitrate)
 
-    puts("Media Url: " + urlData["url"]!)
+    print(try urlData.prettify())
 
     //    #print("Play list:\n" + self.service.get_play_list(url_data["url"]))
   }
 
   func testGetMediaObjects() throws {
-    let exp = expectation(description: "Gets media objects")
-
     if let result = subject.getArchive(channelId: 3) {
       var mediaObject: EtvnetAPI.Media? = nil
-
-      //print(try mediaObject!.prettify())
 
       for item in result.media {
         let type = item.mediaType
@@ -180,7 +179,7 @@ class EtvnetAPITests: XCTestCase {
       }
 
       if let mediaObject = mediaObject {
-        print(try mediaObject!.prettify())
+        print(try mediaObject.prettify())
       }
     }
     else {
@@ -211,6 +210,8 @@ class EtvnetAPITests: XCTestCase {
   func testGetAllBookmarks() throws {
     let data = subject.getBookmarks()!
 
+    print(try data.prettify())
+
     XCTAssertNotNil(data)
     XCTAssert(data.bookmarks.count > 0)
     XCTAssert(data.pagination.count > 0)
@@ -229,6 +230,8 @@ class EtvnetAPITests: XCTestCase {
     let bookmarks = subject.getBookmarks()!.bookmarks
 
     let bookmarkDetails = subject.getBookmark(id: bookmarks[0].id)
+
+    print(try bookmarkDetails.prettify())
 
     XCTAssertNotNil(bookmarkDetails)
   }
@@ -253,6 +256,8 @@ class EtvnetAPITests: XCTestCase {
     for topic in EtvnetAPI.Topics {
       let data = subject.getTopicItems(topic)!
 
+      print(try data.prettify())
+
       XCTAssertNotNil(data)
       XCTAssert(data.media.count > 0)
       XCTAssert(data.pagination.count > 0)
@@ -266,7 +271,7 @@ class EtvnetAPITests: XCTestCase {
   func testGetAllLiveChannels() throws {
     let list = subject.getLiveChannels()
 
-    print(list)
+    print(try list.prettify())
     XCTAssertNotNil(list)
     XCTAssert(list.count > 0)
   }
@@ -274,7 +279,7 @@ class EtvnetAPITests: XCTestCase {
   func testGetLiveChannelsByCategory() throws {
     let list = subject.getLiveChannelsByCategory(category: 7)
 
-    print(list)
+    print(try list.prettify())
 
     XCTAssertNotNil(list)
     XCTAssert(list.count > 0)
@@ -283,6 +288,8 @@ class EtvnetAPITests: XCTestCase {
   func testGetLiveFavoriteChannels() throws {
     let list = subject.getLiveChannels(favoriteOnly: true)
 
+    print(try list.prettify())
+
     XCTAssertNotNil(list)
     XCTAssert(list.count > 0)
   }
@@ -290,32 +297,34 @@ class EtvnetAPITests: XCTestCase {
   func testAddFavoriteChannel() {
     let id = 46
 
-    let _ = subject.addFavoriteChannel(id: id)
+    let result = subject.addFavoriteChannel(id: id)
 
-    //print(result as Any)
+    print(result)
   }
 
   func testRemoveFavoriteChannel() {
     let id = 46
 
-    let _ = subject.removeFavoriteChannel(id: id)
+    let result = subject.removeFavoriteChannel(id: id)
 
-    //print(result as Any)
+    print(result)
   }
 
   func testGetLiveSchedule() throws {
-    let list = subject.getLiveSchedule(liveChannelId: "423")
+    let result = subject.getLiveSchedule(liveChannelId: "423")
 
-    print(String(decoding: list, as: UTF8.self))
+    //print(String(decoding: list, as: UTF8.self))
 
-    XCTAssertNotNil(list)
-    XCTAssert(list.count > 0)
+    print(result)
+
+    //XCTAssertNotNil(list)
+//    XCTAssert(list.count > 0)
   }
 
   func testGetLiveCategories() throws {
     let list = subject.getLiveCategories()
 
-    print(list)
+    print(try list.prettify())
 
     XCTAssertNotNil(list)
     XCTAssert(list.count > 0)
@@ -324,6 +333,8 @@ class EtvnetAPITests: XCTestCase {
   func testGetHistory() throws {
     let data = subject.getHistory()!
 
+    print(try data.prettify())
+
     XCTAssertNotNil(data)
     XCTAssert(data.media.count > 0)
     XCTAssert(data.pagination.count > 0)
@@ -331,6 +342,8 @@ class EtvnetAPITests: XCTestCase {
 
   func testGetChildren() throws {
     let data = subject.getChildren(488406)!
+
+    print(try data.prettify())
 
     XCTAssertNotNil(data)
     XCTAssert(data.children.count > 0)

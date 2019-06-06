@@ -156,9 +156,9 @@ extension ApiClient: HttpFetcher {
               observer.onError(ApiError.genericError(error: error))
             }
             else if let httpResponse = response as? HTTPURLResponse {
-              let response = ApiResponse(statusCode: httpResponse.statusCode, body: data)
+              //let response = ApiResponse(statusCode: httpResponse.statusCode, body: data)
 
-              if let data = response.body {
+              if let data = data {
                 do {
                   let decoder = JSONDecoder()
 

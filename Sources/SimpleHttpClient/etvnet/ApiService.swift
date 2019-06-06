@@ -1,5 +1,4 @@
 import Foundation
-import Alamofire
 import RxSwift
 
 open class ApiService: AuthService {
@@ -148,49 +147,6 @@ open class ApiService: AuthService {
     return ok
   }
 
-//  func fullRequest(path: String, method: HTTPMethod = .get, parameters: [String: String] = [:],
-//                   unauthorized: Bool=false) -> DataResponse<Data>? {
-//    var response: DataResponse<Data>?
-//
-//    if !checkToken() {
-//      authorizeCallback()
-//    }
-//
-//    if let accessToken = config.items["access_token"] {
-//      var accessPath: String
-//
-//      if path.firstIndex(of: "?") != nil {
-//        accessPath = "\(path)&access_token=\(accessToken)"
-//      }
-//      else {
-//        accessPath = "\(path)?access_token=\(accessToken)"
-//      }
-//
-//      if let accessPath = accessPath.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed) {
-//        let headers = ["User-agent": userAgent]
-//
-//        if let apiResponse = httpRequest(apiUrl + accessPath, headers: headers, parameters: parameters, method: method),
-//           let statusCode = apiResponse.response?.statusCode {
-//          if (statusCode == 401 || statusCode == 400) && !unauthorized {
-//            let refreshToken = config.items["refresh_token"]
-//
-//            if let refreshToken = refreshToken, tryUpdateToken(refreshToken: refreshToken) {
-//              response = fullRequest(path: path, method: method, parameters: parameters, unauthorized: true)
-//            }
-//            else {
-//              print("error")
-//            }
-//          }
-//          else {
-//            response = apiResponse
-//          }
-//        }
-//      }
-//    }
-//
-//    return response
-//  }
-
   func fullRequest<T: Decodable>(url: String, path: String, to type: T.Type, method: HttpMethod = .get,
                                  params: [URLQueryItem] = [], unauthorized: Bool=false) -> T? {
     var result: T?
@@ -211,10 +167,12 @@ open class ApiService: AuthService {
         var headers: [HttpHeader] = []
         headers.append(HttpHeader(field: "User-agent", value: userAgent))
 
-        if let apiResponse = httpRequest0(url: url, path: path, to: type, method: method, queryItems: queryItems,
+        if let apiResponse = httpRequest(url: url, path: path, to: type, method: method, queryItems: queryItems,
           headers: headers) {
 
           result = apiResponse
+
+          // todo
            //let statusCode = apiResponse.response?.statusCode {
 //          if (statusCode == 401 || statusCode == 400) && !unauthorized {
 //            let refreshToken = config.items["refresh_token"]
@@ -235,72 +193,31 @@ open class ApiService: AuthService {
     return result
   }
 
-//  func fullRequestRx(path: String, method: HTTPMethod = .get, parameters: [String: String] = [:]) -> Observable<Data> {
-//    if !checkToken() {
-//      authorizeCallback()
-//    }
-//
-//    if let accessToken = config.items["access_token"] {
-//      var accessPath: String
-//
-//      if path.firstIndex(of: "?") != nil {
-//        accessPath = "\(path)&access_token=\(accessToken)"
-//      }
-//      else {
-//        accessPath = "\(path)?access_token=\(accessToken)"
-//      }
-//
-//      if let accessPath = accessPath.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed) {
-//        let headers = ["User-agent": userAgent]
-//
-//        return httpRequestRx(apiUrl + accessPath, headers: headers, parameters: parameters, method: method)
-//      }
-//    }
-//
-//    return Observable.just(Data())
-//  }
+  public func httpRequest<T: Decodable>(url: String, path: String, to type: T.Type, method: HttpMethod = .get,
+                                        queryItems: [URLQueryItem] = [], headers: [HttpHeader] = []) -> T? {
+    var result: T?
 
-//  public func httpRequestRx(_ url: String,
-//                            headers: HTTPHeaders = [:],
-//                            parameters: Parameters = [:],
-//                            method: HTTPMethod = .get,
-//                            unauthorized: Bool=false) -> Observable<Data> {
-//    return Observable.create { observer in
-//      if let sessionManager = self.sessionManager {
-//        let utilityQueue = DispatchQueue.global(qos: .utility)
-//
-//        let request = sessionManager.request(url, method: method, parameters: parameters,
-//                        headers: headers).validate().responseData(queue: utilityQueue) { response in
-//
-//        if let statusCode = response.response?.statusCode {
-//          if (statusCode == 401 || statusCode == 400) && !unauthorized {
-//            let refreshToken = self.config.items["refresh_token"]
-//
-//            if let refreshToken = refreshToken, self.tryUpdateToken(refreshToken: refreshToken) {
-//              _ = self.httpRequestRx(url, headers: headers, parameters: parameters, method: method, unauthorized: true)
-//            }
-//            else {
-//              print("error")
-//            }
-//          }
-//          else {
-//            switch response.result {
-//              case .success(let value):
-//                observer.onNext(value)
-//                observer.onCompleted()
-//
-//              case .failure(let error):
-//                observer.onError(error)
-//              }
-//            }
-//          }
-//        }
-//
-//        return Disposables.create(with: request.cancel)
-//      }
-//
-//      return Disposables.create()
-//    }
-//  }
+    let client = ApiClient(URL(string: url)!)
+
+    let request = ApiRequest(path: path, queryItems: queryItems, headers: headers)
+
+    let semaphore = DispatchSemaphore.init(value: 0)
+
+    let disposable = client.fetchRx(request, to: type).subscribe(onNext: { response in
+      result = response
+      semaphore.signal()
+    },
+      onError: { (e) -> Void in
+        //error = e
+        semaphore.signal()
+      }
+    )
+
+    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
+
+    disposable.dispose()
+
+    return result
+  }
 
 }

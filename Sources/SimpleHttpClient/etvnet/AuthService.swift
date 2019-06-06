@@ -1,7 +1,7 @@
 import Foundation
 import RxSwift
 
-open class AuthService: HttpService {
+open class AuthService {
   let client: ApiClient!
 
   let authUrl: String

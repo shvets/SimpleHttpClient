@@ -82,10 +82,8 @@ open class EtvnetAPI: ApiService {
     params.append(URLQueryItem(name: "today", value: String(today)))
 
     if let response = fullRequest(url: apiUrl, path: path, to: MediaResponse.self, params: params) {
-      if let result = try? response.data {
-        if case .names(let channels) = result {
-          return channels
-        }
+      if case .names(let channels) = response.data {
+        return channels
       }
     }
 
@@ -114,10 +112,8 @@ open class EtvnetAPI: ApiService {
     params.append(URLQueryItem(name: "page", value: String(page)))
 
     if let response = fullRequest(url: apiUrl, path: path, to: MediaResponse.self, params: params) {
-      if let result = try? response.data {
-        if case .paginatedMedia(let value) = result {
-          return value
-        }
+      if case .paginatedMedia(let value) = response.data {
+        return value
       }
     }
 
@@ -147,34 +143,32 @@ open class EtvnetAPI: ApiService {
     }
 
     if let response = fullRequest(url: apiUrl, path: path, to: MediaResponse.self, params: params) {
-      if let result = try? response.data {
-        if case .genres(let genres) = result {
-          // regroup genres
+      if case .genres(let genres) = response.data {
+        // regroup genres
 
-          var regrouped = [Genre]()
+        var regrouped = [Genre]()
 
-          regrouped.append(genres[0])
-          regrouped.append(genres[1])
-          regrouped.append(genres[5])
-          regrouped.append(genres[9])
+        regrouped.append(genres[0])
+        regrouped.append(genres[1])
+        regrouped.append(genres[5])
+        regrouped.append(genres[9])
 
-          regrouped.append(genres[7])
-          regrouped.append(genres[2])
-          regrouped.append(genres[3])
-          regrouped.append(genres[4])
+        regrouped.append(genres[7])
+        regrouped.append(genres[2])
+        regrouped.append(genres[3])
+        regrouped.append(genres[4])
 
-          regrouped.append(genres[6])
-          regrouped.append(genres[8])
-          regrouped.append(genres[10])
-          regrouped.append(genres[11])
+        regrouped.append(genres[6])
+        regrouped.append(genres[8])
+        regrouped.append(genres[10])
+        regrouped.append(genres[11])
 
-          regrouped.append(genres[12])
-          // regrouped.append(genres[13])
-          regrouped.append(genres[13])
-          // regrouped.append(genres[15])
+        regrouped.append(genres[12])
+        // regrouped.append(genres[13])
+        regrouped.append(genres[13])
+        // regrouped.append(genres[15])
 
-          return regrouped
-        }
+        return regrouped
       }
     }
 
@@ -232,10 +226,8 @@ open class EtvnetAPI: ApiService {
     params.append(URLQueryItem(name: "dir", value: dir))
 
     if let response = fullRequest(url: apiUrl, path: path, to: MediaResponse.self, params: params) {
-      if let result = try? response.data {
-        if case .paginatedMedia(let value) = result {
-          return value
-        }
+      if case .paginatedMedia(let value) = response.data {
+        return value
       }
     }
 
@@ -264,10 +256,8 @@ open class EtvnetAPI: ApiService {
     params.append(URLQueryItem(name: "page", value: String(page)))
 
     if let response = fullRequest(url: apiUrl, path: path, to: MediaResponse.self, params: params) {
-      if let result = try? response.data {
-        if case .paginatedMedia(let value) = result {
-          return value
-        }
+      if case .paginatedMedia(let value) = response.data {
+        return value
       }
     }
 
@@ -282,10 +272,8 @@ open class EtvnetAPI: ApiService {
     params.append(URLQueryItem(name: "page", value: String(page)))
 
     if let response = fullRequest(url: apiUrl, path: path, to: MediaResponse.self, params: params) {
-      if let result = try? response.data {
-        if case .paginatedMedia(let value) = result {
-          return value
-        }
+      if case .paginatedMedia(let value) = response.data {
+        return value
       }
     }
 
@@ -355,19 +343,17 @@ open class EtvnetAPI: ApiService {
     }
 
     if let response = fullRequest(url: apiUrl, path: path, to: MediaResponse.self, params: params) {
-      if let result = try? response.data {
-        if case .url(let value) = result {
-          var urlInfo = [String: String]()
+      if case .url(let value) = response.data {
+        var urlInfo = [String: String]()
 
-          urlInfo["url"] = value.url
-          urlInfo["format"] =  newFormat
+        urlInfo["url"] = value.url
+        urlInfo["format"] =  newFormat
 
-          if newMediaProtocol != nil {
-            urlInfo["protocol"] = newMediaProtocol
-          }
-
-          return urlInfo
+        if newMediaProtocol != nil {
+          urlInfo["protocol"] = newMediaProtocol
         }
+
+        return urlInfo
       }
     }
 
@@ -383,10 +369,8 @@ open class EtvnetAPI: ApiService {
     params.append(URLQueryItem(name: "dir", value: dir))
 
     if let response = fullRequest(url: apiUrl, path: path, to: MediaResponse.self, params: params) {
-      if let result = try? response.data {
-        if case .paginatedChildren(let value) = result {
-          return value
-        }
+      if case .paginatedChildren(let value) = response.data {
+        return value
       }
     }
 
@@ -408,10 +392,8 @@ open class EtvnetAPI: ApiService {
     params.append(URLQueryItem(name: "page", value: String(page)))
 
     if let response = fullRequest(url: apiUrl, path: path, to: MediaResponse.self, params: params) {
-      if let result = try? response.data {
-        if case .paginatedBookmarks(let value) = result {
-          return value
-        }
+      if case .paginatedBookmarks(let value) = response.data {
+        return value
       }
     }
 
@@ -430,10 +412,8 @@ open class EtvnetAPI: ApiService {
     let path = "video/bookmarks/items/\(id).json"
 
     if let response = fullRequest(url: apiUrl, path: path, to: MediaResponse.self) {
-      if let result = try? response.data {
-        if case .paginatedBookmarks(let value) = result {
-          return value.bookmarks[0]
-        }
+      if case .paginatedBookmarks(let value) = response.data {
+        return value.bookmarks[0]
       }
     }
 
@@ -448,7 +428,7 @@ open class EtvnetAPI: ApiService {
 //      let data = response.data
 //
 //      if statusCode == 201 && data != nil {
-//        if let result = try? (data!.decoded() as BookmarkResponse) {
+//        if let result = (data!.decoded() as BookmarkResponse) {
 //          return result.status == "Created"
 //        }
 //      }
@@ -465,7 +445,7 @@ open class EtvnetAPI: ApiService {
 //      let data = response.data
 //
 //      if statusCode == 204 && data != nil {
-//        //let result = try? decoder.decode(BookmarkResponse.self, from: data!)
+//        //let result = decoder.decode(BookmarkResponse.self, from: data!)
 //
 //        return true
 //      }
@@ -482,10 +462,8 @@ open class EtvnetAPI: ApiService {
     params.append(URLQueryItem(name: "page", value: String(page)))
 
     if let response = fullRequest(url: apiUrl, path: path, to: MediaResponse.self, params: params) {
-      if let result = try? response.data {
-        if case .paginatedMedia(let value) = result {
-          return value
-        }
+      if case .paginatedMedia(let value) = response.data {
+        return value
       }
     }
 
@@ -507,10 +485,8 @@ open class EtvnetAPI: ApiService {
     }
 
     if let response = fullRequest(url: apiUrl, path: path, to: MediaResponse.self, params: params) {
-      if let result = try? response.data {
-        if case .liveChannels(let liveChannels) = result {
-          return liveChannels
-        }
+      if case .liveChannels(let liveChannels) = response.data {
+        return liveChannels
       }
     }
 
@@ -532,10 +508,8 @@ open class EtvnetAPI: ApiService {
     }
 
     if let response = fullRequest(url: apiUrl, path: path, to: MediaResponse.self, params: params) {
-      if let result = try? response.data {
-        if case .liveChannels(let liveChannels) = result {
-          return liveChannels
-        }
+      if case .liveChannels(let liveChannels) = response.data {
+        return liveChannels
       }
     }
 
@@ -578,24 +552,22 @@ open class EtvnetAPI: ApiService {
     let path = "video/live/category.json"
 
     if let response = fullRequest(url: apiUrl, path: path, to: MediaResponse.self) {
-      if let result = try? response.data {
-        if case .names(let categories) = result {
-          // regroup categories
+      if case .names(let categories) = response.data {
+        // regroup categories
 
-          var regrouped = [Name]()
+        var regrouped = [Name]()
 
-          regrouped.append(categories[0])
-          regrouped.append(categories[1])
-          regrouped.append(categories[4])
-          regrouped.append(categories[6])
-          regrouped.append(categories[8])
-          regrouped.append(categories[3])
-          regrouped.append(categories[7])
-          regrouped.append(categories[5])
-          regrouped.append(categories[2])
+        regrouped.append(categories[0])
+        regrouped.append(categories[1])
+        regrouped.append(categories[4])
+        regrouped.append(categories[6])
+        regrouped.append(categories[8])
+        regrouped.append(categories[3])
+        regrouped.append(categories[7])
+        regrouped.append(categories[5])
+        regrouped.append(categories[2])
 
-          return regrouped
-        }
+        return regrouped
       }
     }
 

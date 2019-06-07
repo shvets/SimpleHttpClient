@@ -37,10 +37,13 @@ open class EtvnetAPI: ApiService {
 
   public static let Topics = ["etvslider/main", "newmedias", "best", "top", "newest", "now_watched", "recommend"]
 
+  let authService0 = AuthService(authUrl: EtvnetAPI.AuthUrl, clientId: EtvnetAPI.ClientId,
+    clientSecret: EtvnetAPI.ClientSecret,
+    grantType: EtvnetAPI.GrantType, scope: EtvnetAPI.Scope)
+
   public init(config: ConfigFile<String>) {
     super.init(config: config, apiUrl: EtvnetAPI.ApiUrl, userAgent: EtvnetAPI.UserAgent,
-      authUrl: EtvnetAPI.AuthUrl, clientId: EtvnetAPI.ClientId,
-      clientSecret: EtvnetAPI.ClientSecret, grantType: EtvnetAPI.GrantType, scope: EtvnetAPI.Scope)
+      authService: authService0)
   }
 
   func tryCreateToken(userCode: String, deviceCode: String) -> AuthProperties? {

@@ -4,23 +4,19 @@ import RxSwift
 open class ApiService: ApiClient {
   public var config: ConfigFile<String>
 
-  let authService: AuthService
-
   public var authorizeCallback: () -> Void = {}
 
   let apiUrl: String
   let userAgent: String
-  
-  init(config: ConfigFile<String>, apiUrl: String, userAgent: String, authUrl: String, clientId: String,
-       clientSecret: String, grantType: String, scope: String) {
+  let authService: AuthService
+
+  init(config: ConfigFile<String>, apiUrl: String, userAgent: String, authService: AuthService) {
     self.config = config
     self.apiUrl = apiUrl
     self.userAgent = userAgent
+    self.authService = authService
 
-    self.authService = AuthService(authUrl: authUrl, clientId: clientId, clientSecret: clientSecret,
-               grantType: grantType, scope: scope)
-
-    super.init(URL(string: authUrl)!)
+    super.init(URL(string: apiUrl)!)
 
     if (config.exists()) {
       self.loadConfig()

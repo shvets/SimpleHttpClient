@@ -18,17 +18,6 @@ open class AuthService: ApiClient {
     super.init(URL(string: authUrl)!)
   }
 
-  override func await<T>(_ handler: @escaping () -> Observable<T>) -> T? {
-    do {
-      return try super.await(handler)
-    }
-    catch {
-      print(error)
-
-      return nil
-    }
-  }
-
   func getActivationUrl() -> String {
     return "\(authUrl)device/usercode"
   }

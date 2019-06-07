@@ -41,9 +41,9 @@ open class ApiClient {
   }
 
   func await0<T: Decodable>(_ handler: @escaping () -> Result<T, ApiError>) -> Result<T, ApiError> {
-    let result: Result<T, ApiError> = handler()
-
     let semaphore = DispatchSemaphore.init(value: 0)
+
+    let result: Result<T, ApiError> = handler()
 
     semaphore.signal()
 

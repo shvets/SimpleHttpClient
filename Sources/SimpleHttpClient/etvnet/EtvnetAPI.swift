@@ -44,7 +44,7 @@ open class EtvnetAPI: ApiService {
   }
 
   func tryCreateToken(userCode: String, deviceCode: String) -> AuthProperties? {
-    print("Register activation code on web site \(getActivationUrl()): \(userCode)")
+    print("Register activation code on web site \(authService.getActivationUrl()): \(userCode)")
 
     var result: AuthProperties?
 
@@ -52,7 +52,7 @@ open class EtvnetAPI: ApiService {
 
     while !done {
       do {
-        if let response = try self.await({ self.createToken(deviceCode: deviceCode) }) {
+        if let response = try authService.await({ self.authService.createToken(deviceCode: deviceCode) }) {
           done = response.accessToken != nil
 
           if done {
@@ -78,8 +78,9 @@ open class EtvnetAPI: ApiService {
   public func getChannels(today: Bool = false) -> [Name] {
     let path = "video/channels.json"
 
-    var params: [URLQueryItem] = []
-    params.append(URLQueryItem(name: "today", value: String(today)))
+    let params: [URLQueryItem] = [
+      URLQueryItem(name: "today", value: String(today))
+    ]
 
     if let response = fullRequest(url: apiUrl, path: path, to: MediaResponse.self, params: params) {
       if case .names(let channels) = response.data {

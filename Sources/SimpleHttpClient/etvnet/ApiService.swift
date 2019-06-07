@@ -1,8 +1,10 @@
 import Foundation
 import RxSwift
 
-open class ApiService: AuthService {
+open class ApiService: ApiClient {
   public var config: ConfigFile<String>
+
+  let authService: AuthService
 
   public var authorizeCallback: () -> Void = {}
 
@@ -12,12 +14,13 @@ open class ApiService: AuthService {
   init(config: ConfigFile<String>, apiUrl: String, userAgent: String, authUrl: String, clientId: String,
        clientSecret: String, grantType: String, scope: String) {
     self.config = config
-    
     self.apiUrl = apiUrl
     self.userAgent = userAgent
-    
-    super.init(authUrl: authUrl, clientId: clientId, clientSecret: clientSecret,
+
+    self.authService = AuthService(authUrl: authUrl, clientId: clientId, clientSecret: clientSecret,
                grantType: grantType, scope: scope)
+
+    super.init(URL(string: authUrl)!)
 
     if (config.exists()) {
       self.loadConfig()
@@ -40,7 +43,9 @@ open class ApiService: AuthService {
 
   func loadConfig() {
     do {
-      try self.await({ self.config.read() })
+      try authService.await {
+        self.config.read()
+      }
     }
     catch {
       print(error)
@@ -49,7 +54,7 @@ open class ApiService: AuthService {
 
   func saveConfig() {
     do {
-      try self.await({ self.config.write() })
+      try authService.await({ self.config.write() })
     }
     catch {
       print(error)
@@ -67,11 +72,11 @@ open class ApiService: AuthService {
     }
     else {
       do {
-        if let response = try self.await({ self.getActivationCodes(includeClientSecret: includeClientSecret) }) {
+        if let response = try authService.await({ self.authService.getActivationCodes(includeClientSecret: includeClientSecret) }) {
           if let userCode = response.userCode, let deviceCode = response.deviceCode {
             self.config.items["user_code"] = userCode
             self.config.items["device_code"] = deviceCode
-            self.config.items["activation_url"] = self.getActivationUrl()
+            self.config.items["activation_url"] = authService.getActivationUrl()
 
             self.saveConfig()
 
@@ -115,7 +120,7 @@ open class ApiService: AuthService {
 
       do {
         if let deviceCode = deviceCode,
-           let response = try self.await({ self.createToken(deviceCode: deviceCode) }) {
+           let response = try authService.await({ self.authService.createToken(deviceCode: deviceCode) }) {
 
           self.config.items = response.asConfigurationItems()
           self.saveConfig()
@@ -133,7 +138,7 @@ open class ApiService: AuthService {
     var ok = false
 
     do {
-      if let response = try self.await({ self.updateToken(refreshToken: refreshToken) }) {
+      if let response = try authService.await({ self.authService.updateToken(refreshToken: refreshToken) }) {
         self.config.items = response.asConfigurationItems()
         self.saveConfig()
 
@@ -195,29 +200,29 @@ open class ApiService: AuthService {
 
   public func httpRequest<T: Decodable>(url: String, path: String, to type: T.Type, method: HttpMethod = .get,
                                         queryItems: [URLQueryItem] = [], headers: [HttpHeader] = []) -> T? {
-    var result: T?
+    //var result: T?
 
     let client = ApiClient(URL(string: url)!)
 
     let request = ApiRequest(path: path, queryItems: queryItems, headers: headers)
 
-    let semaphore = DispatchSemaphore.init(value: 0)
+//    let semaphore = DispatchSemaphore.init(value: 0)
+//
+//    let disposable = client.fetchRx(request, to: type).subscribe(onNext: { response in
+//      result = response
+//      semaphore.signal()
+//    },
+//      onError: { (e) -> Void in
+//        //error = e
+//        semaphore.signal()
+//      }
+//    )
+//
+//    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
+//
+//    disposable.dispose()
 
-    let disposable = client.fetchRx(request, to: type).subscribe(onNext: { response in
-      result = response
-      semaphore.signal()
-    },
-      onError: { (e) -> Void in
-        //error = e
-        semaphore.signal()
-      }
-    )
-
-    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
-
-    disposable.dispose()
-
-    return result
+    return client.fetch(request, to: type)
   }
 
 }

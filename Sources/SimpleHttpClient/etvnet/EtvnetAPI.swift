@@ -37,21 +37,19 @@ open class EtvnetAPI {
 
   public static let Topics = ["etvslider/main", "newmedias", "best", "top", "newest", "now_watched", "recommend"]
 
-  let authService0 = AuthService(authUrl: EtvnetAPI.AuthUrl, clientId: EtvnetAPI.ClientId,
+  let authService = AuthService(authUrl: EtvnetAPI.AuthUrl, clientId: EtvnetAPI.ClientId,
     clientSecret: EtvnetAPI.ClientSecret,
     grantType: EtvnetAPI.GrantType, scope: EtvnetAPI.Scope)
 
   let apiService = ApiService(apiUrl: EtvnetAPI.ApiUrl, userAgent: EtvnetAPI.UserAgent)
 
   public init(config: ConfigFile<String>) {
-    apiService.setAuth(authService: authService0)
+    apiService.setAuth(authService: authService)
     apiService.loadConfig(config: config)
-//    super.init(config: config, apiUrl: EtvnetAPI.ApiUrl, userAgent: EtvnetAPI.UserAgent,
-//      authService: authService0)
   }
 
   func tryCreateToken(userCode: String, deviceCode: String) -> AuthProperties? {
-    print("Register activation code on web site \(authService0.getActivationUrl()): \(userCode)")
+    print("Register activation code on web site \(authService.getActivationUrl()): \(userCode)")
 
     var result: AuthProperties?
 
@@ -59,7 +57,7 @@ open class EtvnetAPI {
 
     while !done {
       do {
-        if let response = try self.authService0.await({ self.authService0.createToken(deviceCode: deviceCode) }) {
+        if let response = try self.authService.await({ self.authService.createToken(deviceCode: deviceCode) }) {
           done = response.accessToken != nil
 
           if done {

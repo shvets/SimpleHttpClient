@@ -40,7 +40,7 @@ open class ApiService: ApiClient {
 
     if (config.exists()) {
       do {
-        try authService.await {
+        try await {
           self.config.read()
         }
       }
@@ -52,7 +52,7 @@ open class ApiService: ApiClient {
 
   func saveConfig() {
     do {
-      try authService.await({ self.config.write() })
+      try await({ self.config.write() })
     }
     catch {
       print(error)
@@ -70,7 +70,7 @@ open class ApiService: ApiClient {
     }
     else {
       do {
-        if let response = try authService.await({ self.authService.getActivationCodes(includeClientSecret: includeClientSecret) }) {
+        if let response = try await({ self.authService.getActivationCodes(includeClientSecret: includeClientSecret) }) {
           if let userCode = response.userCode, let deviceCode = response.deviceCode {
             self.config.items["user_code"] = userCode
             self.config.items["device_code"] = deviceCode
@@ -118,7 +118,7 @@ open class ApiService: ApiClient {
 
       do {
         if let deviceCode = deviceCode,
-           let response = try authService.await({ self.authService.createToken(deviceCode: deviceCode) }) {
+           let response = try await({ self.authService.createToken(deviceCode: deviceCode) }) {
 
           self.config.items = response.asConfigurationItems()
           self.saveConfig()
@@ -136,7 +136,7 @@ open class ApiService: ApiClient {
     var ok = false
 
     do {
-      if let response = try authService.await({ self.authService.updateToken(refreshToken: refreshToken) }) {
+      if let response = try await({ self.authService.updateToken(refreshToken: refreshToken) }) {
         self.config.items = response.asConfigurationItems()
         self.saveConfig()
 

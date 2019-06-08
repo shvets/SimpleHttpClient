@@ -15,10 +15,10 @@ class AuthAPITests: XCTestCase {
   var subject = EtvnetAPI(config: config)
   
   func testGetActivationCodes() throws {
-    if let (result, _) = try ApiClient.await({ self.subject.authClient.getActivationCodes() }) {
+    if let (result, _) = try ApiClient.await({ self.subject.apiClient.authClient.getActivationCodes() }) {
       XCTAssertNotNil(result)
 
-      print("Activation url: \(self.subject.authClient.getActivationUrl())")
+      print("Activation url: \(self.subject.apiClient.authClient.getActivationUrl())")
       print("Activation code: \(result.userCode!)")
       print("Device code: \(result.deviceCode!)")
     }
@@ -28,8 +28,8 @@ class AuthAPITests: XCTestCase {
   }
   
   func testCreateToken() {
-    if let result = subject.authorization() {
-      if let response = subject.tryCreateToken(userCode: result.userCode, deviceCode: result.deviceCode) {
+    if let result = subject.apiClient.authorization() {
+      if let response = subject.apiClient.tryCreateToken(userCode: result.userCode, deviceCode: result.deviceCode) {
         XCTAssertNotNil(response.accessToken)
         XCTAssertNotNil(response.refreshToken)
 
@@ -45,16 +45,18 @@ class AuthAPITests: XCTestCase {
   }
   
   func testUpdateToken() throws {
-    let refreshToken = subject.config.items["refresh_token"]!
+    let refreshToken = subject.apiClient.config.items["refresh_token"]!
 
-    if let (result, _) = try ApiClient.await({ self.subject.authClient.updateToken(refreshToken: refreshToken) }) {
+    if let (result, _) = try ApiClient.await({
+      self.subject.apiClient.authClient.updateToken(refreshToken: refreshToken)
+    }) {
       XCTAssertNotNil(result.accessToken)
 
       print("Result: \(result)")
 
-      subject.config.items = result.asConfigurationItems()
+      subject.apiClient.config.items = result.asConfigurationItems()
 
-      if let _ = try ApiClient.await({ self.subject.config.write() }) {
+      if let _ = try ApiClient.await({ self.subject.apiClient.config.write() }) {
         print("Config saved.")
       }
       else {

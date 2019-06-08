@@ -5,25 +5,9 @@ open class EtvnetAPI {
   public static let PER_PAGE = 15
 
   public static let ApiUrl = "https://secure.etvnet.com/api/v3.0/"
-  public static let UserAgent = "Etvnet User Agent"
-
   public static let AuthUrl = "https://accounts.etvnet.com/auth/oauth/"
-  public static let ClientId = "a332b9d61df7254dffdc81a260373f25592c94c9"
-  public static let ClientSecret = "744a52aff20ec13f53bcfd705fc4b79195265497"
 
-  public static let Scope = [
-    "com.etvnet.media.browse",
-    "com.etvnet.media.watch",
-    "com.etvnet.media.bookmarks",
-    "com.etvnet.media.history",
-    "com.etvnet.media.live",
-    "com.etvnet.media.fivestar",
-    "com.etvnet.media.comments",
-    "com.etvnet.persons",
-    "com.etvnet.notifications"
-  ].joined(separator: " ")
-
-  public static let GrantType = "http://oauth.net/grant_type/device/1.0"
+  public static let UserAgent = "Etvnet User Agent"
 
   public static let TimeShift = [
     "0": 0,  // Moscow
@@ -37,233 +21,12 @@ open class EtvnetAPI {
 
   public static let Topics = ["etvslider/main", "newmedias", "best", "top", "newest", "now_watched", "recommend"]
 
-  public var authorizeCallback: () -> Void = {}
-
-  public var config: ConfigFile<String>!
-
-  let authClient: AuthApiClient!
-
-  let apiClient = EtvnetApiClient(EtvnetAPI.ApiUrl, userAgent: EtvnetAPI.UserAgent)
+  let apiClient = EtvnetApiClient(EtvnetAPI.ApiUrl, authUrl: EtvnetAPI.AuthUrl)
 
   public init(config: ConfigFile<String>) {
-    authClient = AuthApiClient(authUrl: EtvnetAPI.AuthUrl, clientId: EtvnetAPI.ClientId,
-      clientSecret: EtvnetAPI.ClientSecret,
-      grantType: EtvnetAPI.GrantType, scope: EtvnetAPI.Scope)
-
-    loadConfig(config: config)
+    apiClient.loadConfig(config: config)
   }
 
-  public func resetToken() {
-    _ = config.remove("access_token")
-    _ = config.remove("refresh_token")
-    _ = config.remove("device_code")
-    _ = config.remove("user_code")
-    _ = config.remove("activation_url")
-
-    saveConfig()
-  }
-
-  func loadConfig(config: ConfigFile<String>) {
-    self.config = config
-
-    if (config.exists()) {
-      do {
-        try ApiClient.await {
-          self.config.read()
-        }
-      }
-      catch {
-        print(error)
-      }
-    }
-  }
-
-  func saveConfig() {
-    do {
-      try ApiClient.await({ self.config.write() })
-    }
-    catch {
-      print(error)
-    }
-  }
-
-  func checkAccessData(_ key: String) -> Bool {
-    return (config.items[key] != nil) && (config.items["expires"] != nil) &&
-      config.items["expires"]! >= String(Int(Date().timeIntervalSince1970))
-  }
-
-  public func authorize(authorizeCallback: @escaping () -> Void) {
-    self.authorizeCallback = authorizeCallback
-  }
-
-  public func authorization(includeClientSecret: Bool=true) -> AuthResult? {
-    var result: AuthResult?
-
-    if config.items["device_code"] != nil && checkAccessData("user_code") {
-      let userCode = config.items["user_code"]!
-      let deviceCode = config.items["device_code"]!
-
-      result = AuthResult(userCode: userCode, deviceCode: deviceCode)
-    }
-    else {
-      do {
-        if let (response, _) = try ApiClient.await({ self.authClient.getActivationCodes(includeClientSecret: includeClientSecret) }) {
-          if let userCode = response.userCode, let deviceCode = response.deviceCode {
-            self.config.items["user_code"] = userCode
-            self.config.items["device_code"] = deviceCode
-            self.config.items["activation_url"] = authClient.getActivationUrl()
-
-            self.saveConfig()
-
-            result = AuthResult(userCode: userCode, deviceCode: deviceCode)
-          }
-        }
-      }
-      catch {
-        print(error)
-      }
-    }
-
-    return result
-  }
-
-  func fullRequest<T: Decodable>(path: String, to type: T.Type, method: HttpMethod = .get,
-                                  params: [URLQueryItem] = [], unauthorized: Bool=false) -> FullValue<T>? {
-    var result: FullValue<T>?
-
-    checkAuthorization()
-
-    if let accessToken = config.items["access_token"] {
-      let queryItems = apiClient.addAccessToken(params: params, accessToken: accessToken)
-
-      var headers: [HttpHeader] = []
-      headers.append(HttpHeader(field: "User-agent", value: EtvnetAPI.UserAgent))
-
-      let request = ApiRequest(path: path, queryItems: queryItems, method: method, headers: headers)
-
-      let semaphore = DispatchSemaphore.init(value: 0)
-
-      let disposable = apiClient.fetchRx(request, to: type).subscribe(onNext: { r in
-        result = r
-
-        let statusCode = r.response.statusCode
-
-        if (statusCode == 401 || statusCode == 400) && !unauthorized {
-          if self.tryUpdateToken() {
-            result = self.fullRequest(path: path, to: type, method: method, params: params, unauthorized: true)
-          }
-        }
-
-        semaphore.signal()
-      },
-        onError: { (error) -> Void in
-          print("Error: \(error)")
-          semaphore.signal()
-        })
-
-      _ = semaphore.wait(timeout: DispatchTime.distantFuture)
-
-      disposable.dispose()
-    }
-
-    return result
-  }
-
-  func checkAuthorization() {
-    var ok = false
-
-    if checkAccessData("access_token") {
-      ok = true
-    } else if config.items["refresh_token"] != nil {
-      ok = tryUpdateToken()
-    }
-
-    if !ok {
-      //var ok = false
-
-      if config.items["device_code"] != nil {
-        let deviceCode = config.items["device_code"]
-
-        do {
-          if let deviceCode = deviceCode,
-             let (response, _) = try ApiClient.await({ self.authClient.createToken(deviceCode: deviceCode) }) {
-
-            ok = true
-
-            self.config.items = response.asConfigurationItems()
-            self.saveConfig()
-          }
-        }
-        catch {
-          print(error)
-        }
-      }
-
-      //return ok
-    }
-
-    if !ok {
-      authorizeCallback()
-    }
-  }
-
-  func tryCreateToken(userCode: String, deviceCode: String) -> AuthProperties? {
-    print("Register activation code on web site \(authClient.getActivationUrl()): \(userCode)")
-
-    var result: AuthProperties?
-
-    var done = false
-
-    while !done {
-      do {
-        if let (response, _) = try ApiClient.await({ self.authClient.createToken(deviceCode: deviceCode) }) {
-          done = response.accessToken != nil
-
-          if done {
-            result = response
-
-            self.config.items = response.asConfigurationItems()
-            saveConfig()
-          }
-        }
-      }
-      catch {
-        print(error)
-      }
-
-      if !done {
-        sleep(5)
-      }
-    }
-
-    return result
-  }
-
-  func tryUpdateToken() -> Bool {
-    var ok = false
-
-    let refreshToken = config.items["refresh_token"]
-
-    do {
-      if let refreshToken = refreshToken,
-         let (response, _) = try ApiClient.await({
-           self.authClient.updateToken(refreshToken: refreshToken)
-         }) {
-        self.config.items = response.asConfigurationItems()
-        self.saveConfig()
-
-        ok = true
-      }
-    }
-    catch {
-      print(error)
-    }
-
-    return ok
-  }
-}
-
-extension EtvnetAPI {
   public func getChannels(today: Bool = false) -> [Name] {
     let path = "video/channels.json"
 
@@ -271,7 +34,7 @@ extension EtvnetAPI {
       URLQueryItem(name: "today", value: String(today))
     ]
 
-    if let response = fullRequest(path: path, to: MediaResponse.self, params: params) {
+    if let response = apiClient.fullRequest(path: path, to: MediaResponse.self, params: params) {
       if case .names(let channels) = response.value.data {
         return channels
       }
@@ -301,7 +64,7 @@ extension EtvnetAPI {
     params.append(URLQueryItem(name: "per_page", value: String(perPage)))
     params.append(URLQueryItem(name: "page", value: String(page)))
 
-    if let response = fullRequest(path: path, to: MediaResponse.self, params: params) {
+    if let response = apiClient.fullRequest(path: path, to: MediaResponse.self, params: params) {
       if case .paginatedMedia(let value) = response.value.data {
         return value
       }
@@ -332,7 +95,7 @@ extension EtvnetAPI {
       params.append(URLQueryItem(name: "format", value: format))
     }
 
-    if let response = fullRequest(path: path, to: MediaResponse.self, params: params) {
+    if let response = apiClient.fullRequest(path: path, to: MediaResponse.self, params: params) {
       if case .genres(let genres) = response.value.data {
         // regroup genres
 
@@ -415,7 +178,7 @@ extension EtvnetAPI {
     params.append(URLQueryItem(name: "page", value: String(page)))
     params.append(URLQueryItem(name: "dir", value: dir))
 
-    if let response = fullRequest(path: path, to: MediaResponse.self, params: params) {
+    if let response = apiClient.fullRequest(path: path, to: MediaResponse.self, params: params) {
       if case .paginatedMedia(let value) = response.value.data {
         return value
       }
@@ -445,7 +208,7 @@ extension EtvnetAPI {
     params.append(URLQueryItem(name: "per_page", value: String(perPage)))
     params.append(URLQueryItem(name: "page", value: String(page)))
 
-    if let response = fullRequest(path: path, to: MediaResponse.self, params: params) {
+    if let response = apiClient.fullRequest(path: path, to: MediaResponse.self, params: params) {
       if case .paginatedMedia(let value) = response.value.data {
         return value
       }
@@ -461,7 +224,7 @@ extension EtvnetAPI {
     params.append(URLQueryItem(name: "per_page", value: String(perPage)))
     params.append(URLQueryItem(name: "page", value: String(page)))
 
-    if let response = fullRequest(path: path, to: MediaResponse.self, params: params) {
+    if let response = apiClient.fullRequest(path: path, to: MediaResponse.self, params: params) {
       if case .paginatedMedia(let value) = response.value.data {
         return value
       }
@@ -532,7 +295,7 @@ extension EtvnetAPI {
       }
     }
 
-    if let response = fullRequest(path: path, to: MediaResponse.self, params: params) {
+    if let response = apiClient.fullRequest(path: path, to: MediaResponse.self, params: params) {
       if case .url(let value) = response.value.data {
         var urlInfo = [String: String]()
 
@@ -558,7 +321,7 @@ extension EtvnetAPI {
     params.append(URLQueryItem(name: "page", value: String(page)))
     params.append(URLQueryItem(name: "dir", value: dir))
 
-    if let response = fullRequest(path: path, to: MediaResponse.self, params: params) {
+    if let response = apiClient.fullRequest(path: path, to: MediaResponse.self, params: params) {
       if case .paginatedChildren(let value) = response.value.data {
         return value
       }
@@ -581,7 +344,7 @@ extension EtvnetAPI {
     params.append(URLQueryItem(name: "per_page", value: String(perPage)))
     params.append(URLQueryItem(name: "page", value: String(page)))
 
-    if let response = fullRequest(path: path, to: MediaResponse.self, params: params) {
+    if let response = apiClient.fullRequest(path: path, to: MediaResponse.self, params: params) {
       if case .paginatedBookmarks(let value) = response.value.data {
         return value
       }
@@ -601,7 +364,7 @@ extension EtvnetAPI {
   public func getBookmark(id: Int) -> Media? {
     let path = "video/bookmarks/items/\(id).json"
 
-    if let response = fullRequest(path: path, to: MediaResponse.self) {
+    if let response = apiClient.fullRequest(path: path, to: MediaResponse.self) {
       if case .paginatedBookmarks(let value) = response.value.data {
         return value.bookmarks[0]
       }
@@ -613,7 +376,7 @@ extension EtvnetAPI {
   public func addBookmark(id: Int) -> Bool {
     let path = "video/bookmarks/items/\(id).json"
 
-    if let response = fullRequest(path: path, to: BookmarkResponse.self, method: .post) {
+    if let response = apiClient.fullRequest(path: path, to: BookmarkResponse.self, method: .post) {
       let statusCode = response.response.statusCode
       let data = response.value
 
@@ -628,7 +391,7 @@ extension EtvnetAPI {
   public func removeBookmark(id: Int) -> Bool {
     let path = "video/bookmarks/items/\(id).json"
 
-    if let response = fullRequest(path: path, to: BookmarkResponse.self, method: .delete) {
+    if let response = apiClient.fullRequest(path: path, to: BookmarkResponse.self, method: .delete) {
       let statusCode = response.response.statusCode
 
       if statusCode == 204 {
@@ -646,7 +409,7 @@ extension EtvnetAPI {
     params.append(URLQueryItem(name: "per_page", value: String(perPage)))
     params.append(URLQueryItem(name: "page", value: String(page)))
 
-    if let response = fullRequest(path: path, to: MediaResponse.self, params: params) {
+    if let response = apiClient.fullRequest(path: path, to: MediaResponse.self, params: params) {
       if case .paginatedMedia(let value) = response.value.data {
         return value
       }
@@ -669,7 +432,7 @@ extension EtvnetAPI {
       params.append(URLQueryItem(name: "offset", value: offset))
     }
 
-    if let response = fullRequest(path: path, to: MediaResponse.self, params: params) {
+    if let response = apiClient.fullRequest(path: path, to: MediaResponse.self, params: params) {
       if case .liveChannels(let liveChannels) = response.value.data {
         return liveChannels
       }
@@ -692,7 +455,7 @@ extension EtvnetAPI {
       params.append(URLQueryItem(name: "offset", value: offset))
     }
 
-    if let response = fullRequest(path: path, to: MediaResponse.self, params: params) {
+    if let response = apiClient.fullRequest(path: path, to: MediaResponse.self, params: params) {
       if case .liveChannels(let liveChannels) = response.value.data {
         return liveChannels
       }
@@ -704,7 +467,7 @@ extension EtvnetAPI {
   public func addFavoriteChannel(id: Int) -> Bool {
     let path = "video/live/\(id)/favorite.json"
 
-    let _ = fullRequest(path: path, to: Bool.self, method: .post)
+    let _ = apiClient.fullRequest(path: path, to: Bool.self, method: .post)
 
     return true
   }
@@ -712,7 +475,7 @@ extension EtvnetAPI {
   public func removeFavoriteChannel(id: Int) -> Bool {
     let path = "video/live/\(id)/favorite.json"
 
-    let _ = fullRequest(path: path, to: Bool.self, method: .delete)
+    let _ = apiClient.fullRequest(path: path, to: Bool.self, method: .delete)
 
     return true
   }
@@ -727,13 +490,13 @@ extension EtvnetAPI {
 
     let path = "video/live/schedule/\(liveChannelId).json"
 
-    return fullRequest(path: path, to: String.self)
+    return apiClient.fullRequest(path: path, to: String.self)
   }
 
   public func getLiveCategories() -> [Name] {
     let path = "video/live/category.json"
 
-    if let response = fullRequest(path: path, to: MediaResponse.self) {
+    if let response = apiClient.fullRequest(path: path, to: MediaResponse.self) {
       if case .names(let categories) = response.value.data {
         // regroup categories
 

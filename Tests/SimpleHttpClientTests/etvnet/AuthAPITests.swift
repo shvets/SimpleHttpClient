@@ -12,7 +12,7 @@ class AuthAPITests: XCTestCase {
 
   static var config = ConfigFile<String>(path: path, fileName: "etvnet.config")
   
-  var subject = EtvnetAPI(config: config)
+  var subject = EtvnetAPI(configFile: config)
   
   func testGetActivationCodes() throws {
     if let (result, _) = try Await.await({
@@ -47,7 +47,7 @@ class AuthAPITests: XCTestCase {
   }
   
   func testUpdateToken() throws {
-    let refreshToken = subject.apiClient.config.items["refresh_token"]!
+    let refreshToken = subject.apiClient.configFile.items["refresh_token"]!
 
     if let (result, _) = try self.subject.apiClient.await({
       self.subject.apiClient.authClient.updateToken(refreshToken: refreshToken)
@@ -56,10 +56,10 @@ class AuthAPITests: XCTestCase {
 
       print("Result: \(result)")
 
-      subject.apiClient.config.items = result.asConfigurationItems()
+      subject.apiClient.configFile.items = result.asConfigurationItems()
 
       if let _ = try self.subject.apiClient.await({
-        self.subject.apiClient.config.write()
+        self.subject.apiClient.configFile.write()
       }) {
         print("Config saved.")
       }

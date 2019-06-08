@@ -21,8 +21,12 @@ open class EtvnetAPI {
 
   let apiClient = EtvnetApiClient(EtvnetAPI.ApiUrl, authUrl: EtvnetAPI.AuthUrl)
 
-  public init(config: ConfigFile<String>) {
-    apiClient.loadConfig(config: config)
+  public init(configFile: ConfigFile<String>) {
+    apiClient.loadConfiguration(configFile: configFile)
+  }
+
+  public func authorize(authorizeCallback: @escaping () -> Void) {
+    self.apiClient.authorizeCallback = authorizeCallback
   }
 
   public func getChannels(today: Bool = false) -> [Name] {

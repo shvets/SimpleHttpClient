@@ -5,15 +5,15 @@ import XCTest
 class EtvnetAPITests: XCTestCase {
   static let path = URL(fileURLWithPath: NSTemporaryDirectory())
 
-  static var config = ConfigFile<String>(path: path, fileName: "etvnet.config")
+  static var configFile = ConfigFile<String>(path: path, fileName: "etvnet.config")
 
-  var subject = EtvnetAPI(config: config)
+  var subject = EtvnetAPI(configFile: configFile)
 
   override func setUp() {
     super.setUp()
     // Put setup code here. This method is called before the invocation of each test method in the class.
 
-    subject.apiClient.authorize {
+    subject.authorize {
       if let result = self.subject.apiClient.authorization() {
         _ = self.subject.apiClient.tryCreateToken(userCode: result.userCode, deviceCode: result.deviceCode)
       }

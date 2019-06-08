@@ -21,7 +21,7 @@ open class EtvnetApiClient: ApiClient {
 
   public let GrantType = "http://oauth.net/grant_type/device/1.0"
 
-  public var config: ConfigFile<String>!
+  public var configFile: ConfigFile<String>!
 
   let authClient: AuthApiClient!
 
@@ -34,20 +34,16 @@ open class EtvnetApiClient: ApiClient {
 
     super.init(URL(string: url)!)
   }
-
-  public func authorize(authorizeCallback: @escaping () -> Void) {
-    self.authorizeCallback = authorizeCallback
-  }
 }
 
 extension EtvnetApiClient {
-  func loadConfig(config: ConfigFile<String>) {
-    self.config = config
+  func loadConfiguration(configFile: ConfigFile<String>) {
+    self.configFile = configFile
 
-    if (config.exists()) {
+    if (configFile.exists()) {
       do {
         try await {
-          self.config.read()
+          self.configFile.read()
         }
       } catch {
         print(error)
@@ -58,7 +54,7 @@ extension EtvnetApiClient {
   func saveConfig() {
     do {
       try await({
-        self.config.write()
+        self.configFile.write()
       })
     } catch {
       print(error)
@@ -68,11 +64,11 @@ extension EtvnetApiClient {
 
 extension EtvnetApiClient {
   public func resetToken() {
-    _ = config.remove("access_token")
-    _ = config.remove("refresh_token")
-    _ = config.remove("device_code")
-    _ = config.remove("user_code")
-    _ = config.remove("activation_url")
+    _ = configFile.remove("access_token")
+    _ = configFile.remove("refresh_token")
+    _ = configFile.remove("device_code")
+    _ = configFile.remove("user_code")
+    _ = configFile.remove("activation_url")
 
     saveConfig()
   }
@@ -92,9 +88,9 @@ extension EtvnetApiClient {
   public func authorization(includeClientSecret: Bool = true) -> AuthResult? {
     var result: AuthResult?
 
-    if config.items["device_code"] != nil && checkAccessData("user_code") {
-      let userCode = config.items["user_code"]!
-      let deviceCode = config.items["device_code"]!
+    if configFile.items["device_code"] != nil && checkAccessData("user_code") {
+      let userCode = configFile.items["user_code"]!
+      let deviceCode = configFile.items["device_code"]!
 
       result = AuthResult(userCode: userCode, deviceCode: deviceCode)
     } else {
@@ -103,9 +99,9 @@ extension EtvnetApiClient {
           self.authClient.getActivationCodes(includeClientSecret: includeClientSecret)
         }) {
           if let userCode = response.userCode, let deviceCode = response.deviceCode {
-            self.config.items["user_code"] = userCode
-            self.config.items["device_code"] = deviceCode
-            self.config.items["activation_url"] = authClient.getActivationUrl()
+            self.configFile.items["user_code"] = userCode
+            self.configFile.items["device_code"] = deviceCode
+            self.configFile.items["activation_url"] = authClient.getActivationUrl()
 
             self.saveConfig()
 
@@ -125,15 +121,15 @@ extension EtvnetApiClient {
 
     if checkAccessData("access_token") {
       ok = true
-    } else if config.items["refresh_token"] != nil {
+    } else if configFile.items["refresh_token"] != nil {
       ok = tryUpdateToken()
     }
 
     if !ok {
       //var ok = false
 
-      if config.items["device_code"] != nil {
-        let deviceCode = config.items["device_code"]
+      if configFile.items["device_code"] != nil {
+        let deviceCode = configFile.items["device_code"]
 
         do {
           if let deviceCode = deviceCode,
@@ -143,7 +139,7 @@ extension EtvnetApiClient {
 
             ok = true
 
-            self.config.items = response.asConfigurationItems()
+            self.configFile.items = response.asConfigurationItems()
             self.saveConfig()
           }
         } catch {
@@ -174,7 +170,7 @@ extension EtvnetApiClient {
           if done {
             result = response
 
-            self.config.items = response.asConfigurationItems()
+            self.configFile.items = response.asConfigurationItems()
             saveConfig()
           }
         }
@@ -193,14 +189,14 @@ extension EtvnetApiClient {
   func tryUpdateToken() -> Bool {
     var ok = false
 
-    let refreshToken = config.items["refresh_token"]
+    let refreshToken = configFile.items["refresh_token"]
 
     do {
       if let refreshToken = refreshToken,
          let (response, _) = try await({
            self.authClient.updateToken(refreshToken: refreshToken)
          }) {
-        self.config.items = response.asConfigurationItems()
+        self.configFile.items = response.asConfigurationItems()
         self.saveConfig()
 
         ok = true
@@ -213,8 +209,8 @@ extension EtvnetApiClient {
   }
 
   func checkAccessData(_ key: String) -> Bool {
-    return (config.items[key] != nil) && (config.items["expires"] != nil) &&
-      config.items["expires"]! >= String(Int(Date().timeIntervalSince1970))
+    return (configFile.items[key] != nil) && (configFile.items["expires"] != nil) &&
+      configFile.items["expires"]! >= String(Int(Date().timeIntervalSince1970))
   }
 }
 
@@ -225,7 +221,7 @@ extension EtvnetApiClient {
 
     checkAuthorization()
 
-    if let accessToken = config.items["access_token"] {
+    if let accessToken = configFile.items["access_token"] {
       let queryItems = addAccessToken(params: params, accessToken: accessToken)
 
       var headers: [HttpHeader] = []

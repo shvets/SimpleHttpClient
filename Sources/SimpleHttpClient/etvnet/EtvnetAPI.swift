@@ -53,10 +53,6 @@ open class EtvnetAPI {
     loadConfig(config: config)
   }
 
-  public func authorize(authorizeCallback: @escaping () -> Void) {
-    self.authorizeCallback = authorizeCallback
-  }
-
   public func resetToken() {
     _ = config.remove("access_token")
     _ = config.remove("refresh_token")
@@ -91,6 +87,15 @@ open class EtvnetAPI {
     }
   }
 
+  func checkAccessData(_ key: String) -> Bool {
+    return (config.items[key] != nil) && (config.items["expires"] != nil) &&
+      config.items["expires"]! >= String(Int(Date().timeIntervalSince1970))
+  }
+
+  public func authorize(authorizeCallback: @escaping () -> Void) {
+    self.authorizeCallback = authorizeCallback
+  }
+
   public func authorization(includeClientSecret: Bool=true) -> AuthResult? {
     var result: AuthResult?
 
@@ -122,62 +127,6 @@ open class EtvnetAPI {
     return result
   }
 
-  public func checkToken() -> Bool {
-    var ok = false
-
-    if checkAccessData("access_token") {
-      ok = true
-    } else if config.items["refresh_token"] != nil {
-      let refreshToken = config.items["refresh_token"]
-
-      do {
-        if let refreshToken = refreshToken,
-           let (response, _) = try ApiClient.await({
-          self.authClient.updateToken(refreshToken: refreshToken)
-        }) {
-          self.config.items = response.asConfigurationItems()
-          self.saveConfig()
-
-          ok = true
-        }
-      }
-      catch {
-        print(error)
-      }
-    }
-
-    return ok
-  }
-
-  public func checkDeviceCode() -> Bool {
-    var ok = false
-
-    if config.items["device_code"] != nil {
-      let deviceCode = config.items["device_code"]
-
-      do {
-        if let deviceCode = deviceCode,
-           let (response, _) = try ApiClient.await({ self.authClient.createToken(deviceCode: deviceCode) }) {
-
-          ok = true
-
-          self.config.items = response.asConfigurationItems()
-          self.saveConfig()
-        }
-      }
-      catch {
-        print(error)
-      }
-    }
-
-    return ok
-  }
-
-  func checkAccessData(_ key: String) -> Bool {
-    return (config.items[key] != nil) && (config.items["expires"] != nil) &&
-      config.items["expires"]! >= String(Int(Date().timeIntervalSince1970))
-  }
-
   func fullRequest<T: Decodable>(path: String, to type: T.Type, method: HttpMethod = .get,
                                   params: [URLQueryItem] = [], unauthorized: Bool=false) -> FullValue<T>? {
     var result: FullValue<T>?
@@ -187,33 +136,72 @@ open class EtvnetAPI {
     if let accessToken = config.items["access_token"] {
       let queryItems = apiClient.addAccessToken(params: params, accessToken: accessToken)
 
-      if let apiResponse = apiClient.request(path: path, to: type, method: method, queryItems: queryItems,
-        unauthorized: unauthorized) {
-        result = apiResponse
-        // todo
-        //let statusCode = apiResponse.response?.statusCode {
-//          if (statusCode == 401 || statusCode == 400) && !unauthorized {
-//            let refreshToken = config.items["refresh_token"]
-//
-//            if let refreshToken = refreshToken, tryUpdateToken(refreshToken: refreshToken) {
-//              response = fullRequest(path: path, method: method, parameters: parameters, unauthorized: true)
-//            }
-//            else {
-//              print("error")
-//            }
-//          }
-//          else {
-//            response = apiResponse
-//          }
-      }
+      var headers: [HttpHeader] = []
+      headers.append(HttpHeader(field: "User-agent", value: EtvnetAPI.UserAgent))
 
+      let request = ApiRequest(path: path, queryItems: queryItems, method: method, headers: headers)
+
+      let semaphore = DispatchSemaphore.init(value: 0)
+
+      let disposable = apiClient.fetchRx(request, to: type).subscribe(onNext: { r in
+        result = r
+
+        let statusCode = r.response.statusCode
+
+        if (statusCode == 401 || statusCode == 400) && !unauthorized {
+          if self.tryUpdateToken() {
+            result = self.fullRequest(path: path, to: type, method: method, params: params, unauthorized: true)
+          }
+        }
+
+        semaphore.signal()
+      },
+        onError: { (error) -> Void in
+          semaphore.signal()
+        })
+
+      _ = semaphore.wait(timeout: DispatchTime.distantFuture)
+
+      disposable.dispose()
     }
 
     return result
   }
 
   func checkAuthorization() {
-    if !checkToken() && !checkDeviceCode() {
+    var ok = false
+
+    if checkAccessData("access_token") {
+      ok = true
+    } else if config.items["refresh_token"] != nil {
+      ok = tryUpdateToken()
+    }
+
+    if !ok {
+      //var ok = false
+
+      if config.items["device_code"] != nil {
+        let deviceCode = config.items["device_code"]
+
+        do {
+          if let deviceCode = deviceCode,
+             let (response, _) = try ApiClient.await({ self.authClient.createToken(deviceCode: deviceCode) }) {
+
+            ok = true
+
+            self.config.items = response.asConfigurationItems()
+            self.saveConfig()
+          }
+        }
+        catch {
+          print(error)
+        }
+      }
+
+      //return ok
+    }
+
+    if !ok {
       authorizeCallback()
     }
   }
@@ -250,6 +238,31 @@ open class EtvnetAPI {
     return result
   }
 
+  func tryUpdateToken() -> Bool {
+    var ok = false
+
+    let refreshToken = config.items["refresh_token"]
+
+    do {
+      if let refreshToken = refreshToken,
+         let (response, _) = try ApiClient.await({
+           self.authClient.updateToken(refreshToken: refreshToken)
+         }) {
+        self.config.items = response.asConfigurationItems()
+        self.saveConfig()
+
+        ok = true
+      }
+    }
+    catch {
+      print(error)
+    }
+
+    return ok
+  }
+}
+
+extension EtvnetAPI {
   public func getChannels(today: Bool = false) -> [Name] {
     let path = "video/channels.json"
 
@@ -303,7 +316,7 @@ open class EtvnetAPI {
     var params: [URLQueryItem] = []
 
     if let parentId = parentId {
-      params.append(URLQueryItem(name: "parent", value: parentId)) 
+      params.append(URLQueryItem(name: "parent", value: parentId))
     }
 
     if today {
@@ -457,14 +470,14 @@ open class EtvnetAPI {
   }
 
   public func getLiveChannelUrl(_ channelId: Int, format: String="mp4", mediaProtocol: String="hls",
-                                 bitrate: String? = nil, otherServer: String? = nil, offset: String? = nil) -> [String: String] {
+                                bitrate: String? = nil, otherServer: String? = nil, offset: String? = nil) -> [String: String] {
     return getUrl(0, format: format, mediaProtocol: mediaProtocol, bitrate: bitrate, otherServer: otherServer,
       offset: offset, live: true, channelId: channelId, preview: false)
   }
 
   public func getUrl(_ mediaId: Int, format: String="mp4", mediaProtocol: String="hls", bitrate: String? = nil,
-                      otherServer: String? = nil, offset: String? = nil, live: Bool=false,
-                      channelId: Int? = nil, preview: Bool=false) -> [String: String] {
+                     otherServer: String? = nil, offset: String? = nil, live: Bool=false,
+                     channelId: Int? = nil, preview: Bool=false) -> [String: String] {
     var newFormat = format
     var newMediaProtocol: String? = mediaProtocol
 
@@ -749,5 +762,4 @@ open class EtvnetAPI {
 
     return []
   }
-
 }

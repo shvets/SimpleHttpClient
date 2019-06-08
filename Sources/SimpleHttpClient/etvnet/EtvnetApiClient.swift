@@ -1,4 +1,5 @@
 import Foundation
+import RxSwift
 
 open class EtvnetApiClient: ApiClient {
   let userAgent: String
@@ -21,30 +22,30 @@ open class EtvnetApiClient: ApiClient {
     return queryItems
   }
 
-  func request<T: Decodable>(path: String, to type: T.Type, method: HttpMethod = .get,
-                             queryItems: [URLQueryItem] = [], unauthorized: Bool=false) -> (T, ApiResponse)? {
-    var result: (T, ApiResponse)?
-
-    var headers: [HttpHeader] = []
-    headers.append(HttpHeader(field: "User-agent", value: userAgent))
-
-    let request = ApiRequest(path: path, queryItems: queryItems, method: method, headers: headers)
-
-    let semaphore = DispatchSemaphore.init(value: 0)
-
-    let disposable = fetchRx(request, to: type).subscribe(onNext: { r in
-      result = r
-
-      semaphore.signal()
-    },
-      onError: { (error) -> Void in
-        semaphore.signal()
-      })
-
-    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
-
-    disposable.dispose()
-
-    return result
-  }
+//  func request<T: Decodable>(path: String, to type: T.Type, method: HttpMethod = .get,
+//                             queryItems: [URLQueryItem] = [], unauthorized: Bool=false) -> Observable<FullValue<T>> {
+//    //var result: (T, ApiResponse)?
+//
+//    var headers: [HttpHeader] = []
+//    headers.append(HttpHeader(field: "User-agent", value: userAgent))
+//
+//    let request = ApiRequest(path: path, queryItems: queryItems, method: method, headers: headers)
+//
+////    let semaphore = DispatchSemaphore.init(value: 0)
+////
+////    let disposable = fetchRx(request, to: type).subscribe(onNext: { r in
+////      result = r
+////
+////      semaphore.signal()
+////    },
+////      onError: { (error) -> Void in
+////        semaphore.signal()
+////      })
+////
+////    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
+////
+////    disposable.dispose()
+//
+//    return fetchRx(request, to: type)
+//  }
 }

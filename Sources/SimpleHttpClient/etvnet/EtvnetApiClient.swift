@@ -23,10 +23,18 @@ open class EtvnetApiClient: ApiClient {
 
   public var configFile: ConfigFile<String>!
 
+//  public var configFile: ConfigFile<String> {
+//    get {
+//      return self
+//    }
+//    set {
+//      self = newValue
+//    }
+//  }
+
   let authClient: AuthApiClient!
 
-  public var authorizeCallback: () -> Void = {
-  }
+  public var authorizeCallback: () -> Void = {}
 
   init(_ url: String, authUrl: String) {
     authClient = AuthApiClient(authUrl: authUrl, clientId: ClientId, clientSecret: ClientSecret,
@@ -37,9 +45,11 @@ open class EtvnetApiClient: ApiClient {
 }
 
 extension EtvnetApiClient {
-  func loadConfiguration(configFile: ConfigFile<String>) {
+  func setConfigFile(_ configFile: ConfigFile<String>) {
     self.configFile = configFile
+  }
 
+  func loadConfig() {
     if (configFile.exists()) {
       do {
         try await {
@@ -53,9 +63,9 @@ extension EtvnetApiClient {
 
   func saveConfig() {
     do {
-      try await({
+      try await {
         self.configFile.write()
-      })
+      }
     } catch {
       print(error)
     }
@@ -95,10 +105,13 @@ extension EtvnetApiClient {
       result = AuthResult(userCode: userCode, deviceCode: deviceCode)
     } else {
       do {
-        if let (response, _) = try await({
+        let fullResponse = try await {
           self.authClient.getActivationCodes(includeClientSecret: includeClientSecret)
-        }) {
-          if let userCode = response.userCode, let deviceCode = response.deviceCode {
+        }
+
+        if let fullResponse = fullResponse {
+          if let userCode = fullResponse.value.userCode,
+             let deviceCode = fullResponse.value.deviceCode {
             self.configFile.items["user_code"] = userCode
             self.configFile.items["device_code"] = deviceCode
             self.configFile.items["activation_url"] = authClient.getActivationUrl()
@@ -132,15 +145,17 @@ extension EtvnetApiClient {
         let deviceCode = configFile.items["device_code"]
 
         do {
-          if let deviceCode = deviceCode,
-             let (response, _) = try await({
-               self.authClient.createToken(deviceCode: deviceCode)
-             }) {
+          if let deviceCode = deviceCode {
+            let fullResponse = try await {
+              self.authClient.createToken(deviceCode: deviceCode)
+            }
 
-            ok = true
+            if let fullResponse = fullResponse {
+              ok = true
 
-            self.configFile.items = response.asConfigurationItems()
-            self.saveConfig()
+              self.configFile.items = fullResponse.value.asConfigurationItems()
+              self.saveConfig()
+            }
           }
         } catch {
           print(error)
@@ -164,13 +179,17 @@ extension EtvnetApiClient {
 
     while !done {
       do {
-        if let (response, _) = try await({ self.authClient.createToken(deviceCode: deviceCode) }) {
-          done = response.accessToken != nil
+        let fullResponse = try await {
+          self.authClient.createToken(deviceCode: deviceCode)
+        }
+
+        if let fullResponse = fullResponse {
+          done = fullResponse.value.accessToken != nil
 
           if done {
-            result = response
+            result = fullResponse.value
 
-            self.configFile.items = response.asConfigurationItems()
+            self.configFile.items = fullResponse.value.asConfigurationItems()
             saveConfig()
           }
         }
@@ -192,14 +211,17 @@ extension EtvnetApiClient {
     let refreshToken = configFile.items["refresh_token"]
 
     do {
-      if let refreshToken = refreshToken,
-         let (response, _) = try await({
-           self.authClient.updateToken(refreshToken: refreshToken)
-         }) {
-        self.configFile.items = response.asConfigurationItems()
-        self.saveConfig()
+      if let refreshToken = refreshToken {
+        let fullResponse = try await {
+          self.authClient.updateToken(refreshToken: refreshToken)
+        }
 
-        ok = true
+        if let fullResponse = fullResponse {
+          self.configFile.items = fullResponse.value.asConfigurationItems()
+          self.saveConfig()
+
+          ok = true
+        }
       }
     } catch {
       print(error)

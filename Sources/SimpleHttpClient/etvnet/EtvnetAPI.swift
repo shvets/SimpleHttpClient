@@ -22,7 +22,9 @@ open class EtvnetAPI {
   let apiClient = EtvnetApiClient(EtvnetAPI.ApiUrl, authUrl: EtvnetAPI.AuthUrl)
 
   public init(configFile: ConfigFile<String>) {
-    apiClient.loadConfiguration(configFile: configFile)
+    apiClient.setConfigFile(configFile)
+
+    apiClient.loadConfig()
   }
 
   public func authorize(authorizeCallback: @escaping () -> Void) {

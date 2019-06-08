@@ -40,7 +40,7 @@ open class ApiClient {
     return urlComponents.url?.appendingPathComponent(request.path)
   }
 
-  func await0<T: Decodable>(_ handler: @escaping () -> Result<T, ApiError>) -> Result<T, ApiError> {
+  static func await0<T: Decodable>(_ handler: @escaping () -> Result<T, ApiError>) -> Result<T, ApiError> {
     let semaphore = DispatchSemaphore.init(value: 0)
 
     let result: Result<T, ApiError> = handler()
@@ -53,7 +53,7 @@ open class ApiClient {
   }
 
   @discardableResult
-  func await<T>(_ handler: @escaping () -> Observable<T>) throws -> T? {
+  static func await<T>(_ handler: @escaping () -> Observable<T>) throws -> T? {
     var result: T?
     var error: Error?
 

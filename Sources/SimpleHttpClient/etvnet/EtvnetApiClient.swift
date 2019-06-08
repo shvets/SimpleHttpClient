@@ -57,7 +57,9 @@ extension EtvnetApiClient {
 
   func saveConfig() {
     do {
-      try Await.await({ self.config.write() })
+      try Await.await({
+        self.config.write()
+      })
     } catch {
       print(error)
     }
@@ -135,7 +137,9 @@ extension EtvnetApiClient {
 
         do {
           if let deviceCode = deviceCode,
-             let (response, _) = try Await.await({ self.authClient.createToken(deviceCode: deviceCode) }) {
+             let (response, _) = try Await.await({
+               self.authClient.createToken(deviceCode: deviceCode)
+             }) {
 
             ok = true
 

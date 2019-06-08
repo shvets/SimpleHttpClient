@@ -94,7 +94,7 @@ open class EtvnetAPI {
   public func authorization(includeClientSecret: Bool=true) -> AuthResult? {
     var result: AuthResult?
 
-    if checkAccessData("device_code") && checkAccessData("user_code") {
+    if config.items["device_code"] != nil && checkAccessData("user_code") {
       let userCode = config.items["user_code"]!
       let deviceCode = config.items["device_code"]!
 
@@ -127,15 +127,21 @@ open class EtvnetAPI {
 
     if checkAccessData("access_token") {
       ok = true
-    }
-    else if config.items["refresh_token"] != nil {
+    } else if config.items["refresh_token"] != nil {
       let refreshToken = config.items["refresh_token"]
 
       if let refreshToken = refreshToken, tryUpdateToken(refreshToken: refreshToken) {
         ok = true
       }
     }
-    else if checkAccessData("device_code") {
+
+    return ok
+  }
+
+  public func checkDeviceCode() -> Bool {
+    var ok = false
+
+    if config.items["device_code"] != nil {
       let deviceCode = config.items["device_code"]
 
       do {
@@ -173,33 +179,28 @@ open class EtvnetAPI {
   }
 
   func checkAccessData(_ key: String) -> Bool {
-    if key == "device_code" {
-      return (config.items[key] != nil)
-    }
-    else {
-      return (config.items[key] != nil) && (config.items["expires"] != nil) &&
-        config.items["expires"]! >= String(Int(Date().timeIntervalSince1970))
-    }
+    return (config.items[key] != nil) && (config.items["expires"] != nil) &&
+      config.items["expires"]! >= String(Int(Date().timeIntervalSince1970))
   }
 
   func fullRequest<T: Decodable>(path: String, to type: T.Type, method: HttpMethod = .get,
                                   params: [URLQueryItem] = [], unauthorized: Bool=false) -> T? {
     var result: T?
 
-    if !checkToken() {
+    if !checkToken() && !checkDeviceCode() {
       authorizeCallback()
     }
 
     if let accessToken = config.items["access_token"] {
-      var queryItems2: [URLQueryItem] = []
+      var queryItems: [URLQueryItem] = []
 
       for param in params {
-        queryItems2.append(param)
+        queryItems.append(param)
       }
 
-      queryItems2.append(URLQueryItem(name: "access_token", value: accessToken))
+      queryItems.append(URLQueryItem(name: "access_token", value: accessToken))
 
-      result = apiService.fullRequest(path: path, to: type, method: method, params: queryItems2, unauthorized: unauthorized)
+      result = apiService.fullRequest(path: path, to: type, method: method, params: queryItems, unauthorized: unauthorized)
     }
 
     return result

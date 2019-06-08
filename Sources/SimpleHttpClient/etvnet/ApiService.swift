@@ -1,5 +1,4 @@
 import Foundation
-import RxSwift
 
 open class ApiService: ApiClient {
   let apiUrl: String

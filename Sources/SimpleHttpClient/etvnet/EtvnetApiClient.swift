@@ -120,7 +120,7 @@ extension EtvnetApiClient {
     return result
   }
 
-  func checkAuthorization() {
+  func checkAuthorization() -> Bool {
     var ok = false
 
     if checkAccessData("access_token") {
@@ -130,8 +130,6 @@ extension EtvnetApiClient {
     }
 
     if !ok {
-      //var ok = false
-
       if configFile.items["device_code"] != nil {
         let deviceCode = configFile.items["device_code"]
 
@@ -152,13 +150,9 @@ extension EtvnetApiClient {
           print(error)
         }
       }
-
-      //return ok
     }
 
-    if !ok {
-      authorizeCallback()
-    }
+    return ok
   }
 
   func tryCreateToken(userCode: String, deviceCode: String) -> AuthProperties? {
@@ -232,7 +226,9 @@ extension EtvnetApiClient {
                                  params: [URLQueryItem] = [], unauthorized: Bool=false) -> FullValue<T>? {
     var result: FullValue<T>?
 
-    checkAuthorization()
+    if !checkAuthorization() {
+      authorizeCallback()
+    }
 
     if let accessToken = configFile.items["access_token"] {
       let queryItems = addAccessToken(params: params, accessToken: accessToken)

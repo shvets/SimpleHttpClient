@@ -15,10 +15,10 @@ class AuthAPITests: XCTestCase {
   var subject = EtvnetAPI(config: config)
   
   func testGetActivationCodes() throws {
-    if let result = try subject.authService.await({ self.subject.authService.getActivationCodes() }) {
+    if let result = try subject.authService0.await({ self.subject.authService0.getActivationCodes() }) {
       XCTAssertNotNil(result)
 
-      print("Activation url: \(self.subject.authService.getActivationUrl())")
+      print("Activation url: \(self.subject.authService0.getActivationUrl())")
       print("Activation code: \(result.userCode!)")
       print("Device code: \(result.deviceCode!)")
     }
@@ -28,7 +28,7 @@ class AuthAPITests: XCTestCase {
   }
   
   func testCreateToken() {
-    if let result = subject.authorization() {
+    if let result = subject.apiService.authorization() {
       if let response = subject.tryCreateToken(userCode: result.userCode, deviceCode: result.deviceCode) {
         XCTAssertNotNil(response.accessToken)
         XCTAssertNotNil(response.refreshToken)
@@ -45,16 +45,16 @@ class AuthAPITests: XCTestCase {
   }
   
   func testUpdateToken() throws {
-    let refreshToken = subject.config.items["refresh_token"]!
+    let refreshToken = subject.apiService.config.items["refresh_token"]!
 
-    if let result = try subject.authService.await({ self.subject.authService.updateToken(refreshToken: refreshToken) }) {
+    if let result = try subject.authService0.await({ self.subject.authService0.updateToken(refreshToken: refreshToken) }) {
       XCTAssertNotNil(result.accessToken)
 
       print("Result: \(result)")
 
-      subject.config.items = result.asConfigurationItems()
+      subject.apiService.config.items = result.asConfigurationItems()
 
-      if let _ = try subject.authService.await({ self.subject.config.write() }) {
+      if let _ = try subject.authService0.await({ self.subject.apiService.config.write() }) {
         print("Config saved.")
       }
       else {

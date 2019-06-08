@@ -2,25 +2,23 @@ import Foundation
 import RxSwift
 
 open class ApiService: ApiClient {
-  public var config: ConfigFile<String>
+  public var config: ConfigFile<String>!
 
   public var authorizeCallback: () -> Void = {}
 
   let apiUrl: String
   let userAgent: String
-  let authService: AuthService
+  var authService: AuthService!
 
-  init(config: ConfigFile<String>, apiUrl: String, userAgent: String, authService: AuthService) {
-    self.config = config
+  init(apiUrl: String, userAgent: String) {
     self.apiUrl = apiUrl
     self.userAgent = userAgent
-    self.authService = authService
 
     super.init(URL(string: apiUrl)!)
+  }
 
-    if (config.exists()) {
-      self.loadConfig()
-    }
+  public func setAuth(authService: AuthService) {
+    self.authService = authService
   }
 
   public func authorize(authorizeCallback: @escaping () -> Void) {
@@ -37,14 +35,18 @@ open class ApiService: ApiClient {
     saveConfig()
   }
 
-  func loadConfig() {
-    do {
-      try authService.await {
-        self.config.read()
+  func loadConfig(config: ConfigFile<String>) {
+    self.config = config
+
+    if (config.exists()) {
+      do {
+        try authService.await {
+          self.config.read()
+        }
       }
-    }
-    catch {
-      print(error)
+      catch {
+        print(error)
+      }
     }
   }
 
@@ -148,7 +150,7 @@ open class ApiService: ApiClient {
     return ok
   }
 
-  func fullRequest<T: Decodable>(url: String, path: String, to type: T.Type, method: HttpMethod = .get,
+  func fullRequest<T: Decodable>( path: String, to type: T.Type, method: HttpMethod = .get,
                                  params: [URLQueryItem] = [], unauthorized: Bool=false) -> T? {
     var result: T?
 
@@ -168,7 +170,7 @@ open class ApiService: ApiClient {
         var headers: [HttpHeader] = []
         headers.append(HttpHeader(field: "User-agent", value: userAgent))
 
-        if let apiResponse = httpRequest(url: url, path: path, to: type, method: method, queryItems: queryItems,
+        if let apiResponse = httpRequest(path: path, to: type, method: method, queryItems: queryItems,
           headers: headers) {
 
           result = apiResponse
@@ -194,11 +196,11 @@ open class ApiService: ApiClient {
     return result
   }
 
-  public func httpRequest<T: Decodable>(url: String, path: String, to type: T.Type, method: HttpMethod = .get,
+  public func httpRequest<T: Decodable>(path: String, to type: T.Type, method: HttpMethod = .get,
                                         queryItems: [URLQueryItem] = [], headers: [HttpHeader] = []) -> T? {
     //var result: T?
 
-    let client = ApiClient(URL(string: url)!)
+    let client = ApiClient(URL(string: apiUrl)!)
 
     let request = ApiRequest(path: path, queryItems: queryItems, headers: headers)
 

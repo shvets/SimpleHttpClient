@@ -1,7 +1,7 @@
 import Foundation
 import RxSwift
 
-open class EtvnetAPI: ApiService {
+open class EtvnetAPI {
   public static let PER_PAGE = 15
 
   public static let ApiUrl = "https://secure.etvnet.com/api/v3.0/"
@@ -41,13 +41,17 @@ open class EtvnetAPI: ApiService {
     clientSecret: EtvnetAPI.ClientSecret,
     grantType: EtvnetAPI.GrantType, scope: EtvnetAPI.Scope)
 
+  let apiService = ApiService(apiUrl: EtvnetAPI.ApiUrl, userAgent: EtvnetAPI.UserAgent)
+
   public init(config: ConfigFile<String>) {
-    super.init(config: config, apiUrl: EtvnetAPI.ApiUrl, userAgent: EtvnetAPI.UserAgent,
-      authService: authService0)
+    apiService.setAuth(authService: authService0)
+    apiService.loadConfig(config: config)
+//    super.init(config: config, apiUrl: EtvnetAPI.ApiUrl, userAgent: EtvnetAPI.UserAgent,
+//      authService: authService0)
   }
 
   func tryCreateToken(userCode: String, deviceCode: String) -> AuthProperties? {
-    print("Register activation code on web site \(authService.getActivationUrl()): \(userCode)")
+    print("Register activation code on web site \(authService0.getActivationUrl()): \(userCode)")
 
     var result: AuthProperties?
 
@@ -55,14 +59,14 @@ open class EtvnetAPI: ApiService {
 
     while !done {
       do {
-        if let response = try authService.await({ self.authService.createToken(deviceCode: deviceCode) }) {
+        if let response = try self.authService0.await({ self.authService0.createToken(deviceCode: deviceCode) }) {
           done = response.accessToken != nil
 
           if done {
             result = response
 
-            self.config.items = response.asConfigurationItems()
-            self.saveConfig()
+            self.apiService.config.items = response.asConfigurationItems()
+            apiService.saveConfig()
           }
         }
       }
@@ -85,7 +89,7 @@ open class EtvnetAPI: ApiService {
       URLQueryItem(name: "today", value: String(today))
     ]
 
-    if let response = fullRequest(url: apiUrl, path: path, to: MediaResponse.self, params: params) {
+    if let response = apiService.fullRequest(path: path, to: MediaResponse.self, params: params) {
       if case .names(let channels) = response.data {
         return channels
       }
@@ -115,7 +119,7 @@ open class EtvnetAPI: ApiService {
     params.append(URLQueryItem(name: "per_page", value: String(perPage)))
     params.append(URLQueryItem(name: "page", value: String(page)))
 
-    if let response = fullRequest(url: apiUrl, path: path, to: MediaResponse.self, params: params) {
+    if let response = apiService.fullRequest(path: path, to: MediaResponse.self, params: params) {
       if case .paginatedMedia(let value) = response.data {
         return value
       }
@@ -146,7 +150,7 @@ open class EtvnetAPI: ApiService {
       params.append(URLQueryItem(name: "format", value: format))
     }
 
-    if let response = fullRequest(url: apiUrl, path: path, to: MediaResponse.self, params: params) {
+    if let response = apiService.fullRequest(path: path, to: MediaResponse.self, params: params) {
       if case .genres(let genres) = response.data {
         // regroup genres
 
@@ -229,7 +233,7 @@ open class EtvnetAPI: ApiService {
     params.append(URLQueryItem(name: "page", value: String(page)))
     params.append(URLQueryItem(name: "dir", value: dir))
 
-    if let response = fullRequest(url: apiUrl, path: path, to: MediaResponse.self, params: params) {
+    if let response = apiService.fullRequest(path: path, to: MediaResponse.self, params: params) {
       if case .paginatedMedia(let value) = response.data {
         return value
       }
@@ -259,7 +263,7 @@ open class EtvnetAPI: ApiService {
     params.append(URLQueryItem(name: "per_page", value: String(perPage)))
     params.append(URLQueryItem(name: "page", value: String(page)))
 
-    if let response = fullRequest(url: apiUrl, path: path, to: MediaResponse.self, params: params) {
+    if let response = apiService.fullRequest(path: path, to: MediaResponse.self, params: params) {
       if case .paginatedMedia(let value) = response.data {
         return value
       }
@@ -275,7 +279,7 @@ open class EtvnetAPI: ApiService {
     params.append(URLQueryItem(name: "per_page", value: String(perPage)))
     params.append(URLQueryItem(name: "page", value: String(page)))
 
-    if let response = fullRequest(url: apiUrl, path: path, to: MediaResponse.self, params: params) {
+    if let response = apiService.fullRequest(path: path, to: MediaResponse.self, params: params) {
       if case .paginatedMedia(let value) = response.data {
         return value
       }
@@ -346,7 +350,7 @@ open class EtvnetAPI: ApiService {
       }
     }
 
-    if let response = fullRequest(url: apiUrl, path: path, to: MediaResponse.self, params: params) {
+    if let response = apiService.fullRequest(path: path, to: MediaResponse.self, params: params) {
       if case .url(let value) = response.data {
         var urlInfo = [String: String]()
 
@@ -372,7 +376,7 @@ open class EtvnetAPI: ApiService {
     params.append(URLQueryItem(name: "page", value: String(page)))
     params.append(URLQueryItem(name: "dir", value: dir))
 
-    if let response = fullRequest(url: apiUrl, path: path, to: MediaResponse.self, params: params) {
+    if let response = apiService.fullRequest(path: path, to: MediaResponse.self, params: params) {
       if case .paginatedChildren(let value) = response.data {
         return value
       }
@@ -395,7 +399,7 @@ open class EtvnetAPI: ApiService {
     params.append(URLQueryItem(name: "per_page", value: String(perPage)))
     params.append(URLQueryItem(name: "page", value: String(page)))
 
-    if let response = fullRequest(url: apiUrl, path: path, to: MediaResponse.self, params: params) {
+    if let response = apiService.fullRequest(path: path, to: MediaResponse.self, params: params) {
       if case .paginatedBookmarks(let value) = response.data {
         return value
       }
@@ -415,7 +419,7 @@ open class EtvnetAPI: ApiService {
   public func getBookmark(id: Int) -> Media? {
     let path = "video/bookmarks/items/\(id).json"
 
-    if let response = fullRequest(url: apiUrl, path: path, to: MediaResponse.self) {
+    if let response = apiService.fullRequest(path: path, to: MediaResponse.self) {
       if case .paginatedBookmarks(let value) = response.data {
         return value.bookmarks[0]
       }
@@ -427,7 +431,7 @@ open class EtvnetAPI: ApiService {
   public func addBookmark(id: Int) -> Bool {
     let path = "video/bookmarks/items/\(id).json"
 
-    if let response = fullRequest(url: apiUrl, path: path, to: Bool.self, method: .post) {
+    if let response = apiService.fullRequest(path: path, to: Bool.self, method: .post) {
 //      let statusCode = response.response!.statusCode
 //      let data = response.data
 //
@@ -444,7 +448,7 @@ open class EtvnetAPI: ApiService {
   public func removeBookmark(id: Int) -> Bool {
     let path = "video/bookmarks/items/\(id).json"
 
-    if let response = fullRequest(url: apiUrl, path: path, to: Bool.self, method: .delete) {
+    if let response = apiService.fullRequest(path: path, to: Bool.self, method: .delete) {
 //      let statusCode = response.response!.statusCode
 //      let data = response.data
 //
@@ -465,7 +469,7 @@ open class EtvnetAPI: ApiService {
     params.append(URLQueryItem(name: "per_page", value: String(perPage)))
     params.append(URLQueryItem(name: "page", value: String(page)))
 
-    if let response = fullRequest(url: apiUrl, path: path, to: MediaResponse.self, params: params) {
+    if let response = apiService.fullRequest(path: path, to: MediaResponse.self, params: params) {
       if case .paginatedMedia(let value) = response.data {
         return value
       }
@@ -488,7 +492,7 @@ open class EtvnetAPI: ApiService {
       params.append(URLQueryItem(name: "offset", value: offset))
     }
 
-    if let response = fullRequest(url: apiUrl, path: path, to: MediaResponse.self, params: params) {
+    if let response = apiService.fullRequest(path: path, to: MediaResponse.self, params: params) {
       if case .liveChannels(let liveChannels) = response.data {
         return liveChannels
       }
@@ -511,7 +515,7 @@ open class EtvnetAPI: ApiService {
       params.append(URLQueryItem(name: "offset", value: offset))
     }
 
-    if let response = fullRequest(url: apiUrl, path: path, to: MediaResponse.self, params: params) {
+    if let response = apiService.fullRequest(path: path, to: MediaResponse.self, params: params) {
       if case .liveChannels(let liveChannels) = response.data {
         return liveChannels
       }
@@ -523,7 +527,7 @@ open class EtvnetAPI: ApiService {
   public func addFavoriteChannel(id: Int) -> Bool {
     let path = "video/live/\(id)/favorite.json"
 
-    let _ = fullRequest(url: apiUrl, path: path, to: Bool.self, method: .post)
+    let _ = apiService.fullRequest(path: path, to: Bool.self, method: .post)
 
     return true
   }
@@ -531,7 +535,7 @@ open class EtvnetAPI: ApiService {
   public func removeFavoriteChannel(id: Int) -> Bool {
     let path = "video/live/\(id)/favorite.json"
 
-    let _ = fullRequest(url: apiUrl, path: path, to: Bool.self, method: .delete)
+    let _ = apiService.fullRequest(path: path, to: Bool.self, method: .delete)
 
     return true
   }
@@ -547,7 +551,7 @@ open class EtvnetAPI: ApiService {
     let path = "video/live/schedule/\(liveChannelId).json"
 
     // todo
-    let response = fullRequest(url: apiUrl, path: path, to: String.self)
+    let response = apiService.fullRequest(path: path, to: String.self)
 
     return response
   }
@@ -555,7 +559,7 @@ open class EtvnetAPI: ApiService {
   public func getLiveCategories() -> [Name] {
     let path = "video/live/category.json"
 
-    if let response = fullRequest(url: apiUrl, path: path, to: MediaResponse.self) {
+    if let response = apiService.fullRequest(path: path, to: MediaResponse.self) {
       if case .names(let categories) = response.data {
         // regroup categories
 

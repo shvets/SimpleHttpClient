@@ -37,19 +37,24 @@ open class EtvnetAPI {
 
   public static let Topics = ["etvslider/main", "newmedias", "best", "top", "newest", "now_watched", "recommend"]
 
+  public var authorizeCallback: () -> Void = {}
+
   public var config: ConfigFile<String>!
 
-  let authService = AuthService(authUrl: EtvnetAPI.AuthUrl, clientId: EtvnetAPI.ClientId,
-    clientSecret: EtvnetAPI.ClientSecret,
-    grantType: EtvnetAPI.GrantType, scope: EtvnetAPI.Scope)
+  let authService: AuthService!
 
   let apiService = ApiService(apiUrl: EtvnetAPI.ApiUrl, userAgent: EtvnetAPI.UserAgent)
 
   public init(config: ConfigFile<String>) {
-    //apiService.setAuth(authService: authService)
-    loadConfig(config: config)
+    authService = AuthService(authUrl: EtvnetAPI.AuthUrl, clientId: EtvnetAPI.ClientId,
+      clientSecret: EtvnetAPI.ClientSecret,
+      grantType: EtvnetAPI.GrantType, scope: EtvnetAPI.Scope)
 
-    authService.setConfig(config: config)
+    loadConfig(config: config)
+  }
+
+  public func authorize(authorizeCallback: @escaping () -> Void) {
+    self.authorizeCallback = authorizeCallback
   }
 
   public func resetToken() {
@@ -89,7 +94,7 @@ open class EtvnetAPI {
   public func authorization(includeClientSecret: Bool=true) -> AuthResult? {
     var result: AuthResult?
 
-    if authService.checkAccessData("device_code") && authService.checkAccessData("user_code") {
+    if checkAccessData("device_code") && checkAccessData("user_code") {
       let userCode = config.items["user_code"]!
       let deviceCode = config.items["device_code"]!
 
@@ -117,12 +122,72 @@ open class EtvnetAPI {
     return result
   }
 
+  public func checkToken() -> Bool {
+    var ok = false
+
+    if checkAccessData("access_token") {
+      ok = true
+    }
+    else if config.items["refresh_token"] != nil {
+      let refreshToken = config.items["refresh_token"]
+
+      if let refreshToken = refreshToken, tryUpdateToken(refreshToken: refreshToken) {
+        ok = true
+      }
+    }
+    else if checkAccessData("device_code") {
+      let deviceCode = config.items["device_code"]
+
+      do {
+        if let deviceCode = deviceCode,
+           let response = try apiService.await({ self.authService.createToken(deviceCode: deviceCode) }) {
+
+          self.config.items = response.asConfigurationItems()
+          self.saveConfig()
+        }
+      }
+      catch {
+        print(error)
+      }
+    }
+
+    return ok
+  }
+
+  func tryUpdateToken(refreshToken: String) -> Bool {
+    var ok = false
+
+    do {
+      if let response = try apiService.await({ self.authService.updateToken(refreshToken: refreshToken) }) {
+        self.config.items = response.asConfigurationItems()
+        self.saveConfig()
+
+        ok = true
+      }
+    }
+    catch {
+      print(error)
+    }
+
+    return ok
+  }
+
+  func checkAccessData(_ key: String) -> Bool {
+    if key == "device_code" {
+      return (config.items[key] != nil)
+    }
+    else {
+      return (config.items[key] != nil) && (config.items["expires"] != nil) &&
+        config.items["expires"]! >= String(Int(Date().timeIntervalSince1970))
+    }
+  }
+
   func fullRequest<T: Decodable>(path: String, to type: T.Type, method: HttpMethod = .get,
                                   params: [URLQueryItem] = [], unauthorized: Bool=false) -> T? {
     var result: T?
 
-    if !authService.checkToken() {
-      authService.authorizeCallback()
+    if !checkToken() {
+      authorizeCallback()
     }
 
     if let accessToken = config.items["access_token"] {

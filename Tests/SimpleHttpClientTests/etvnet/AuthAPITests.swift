@@ -15,10 +15,10 @@ class AuthAPITests: XCTestCase {
   var subject = EtvnetAPI(config: config)
   
   func testGetActivationCodes() throws {
-    if let (result, _) = try ApiClient.await({ self.subject.authService.getActivationCodes() }) {
+    if let (result, _) = try ApiClient.await({ self.subject.authClient.getActivationCodes() }) {
       XCTAssertNotNil(result)
 
-      print("Activation url: \(self.subject.authService.getActivationUrl())")
+      print("Activation url: \(self.subject.authClient.getActivationUrl())")
       print("Activation code: \(result.userCode!)")
       print("Device code: \(result.deviceCode!)")
     }
@@ -47,7 +47,7 @@ class AuthAPITests: XCTestCase {
   func testUpdateToken() throws {
     let refreshToken = subject.config.items["refresh_token"]!
 
-    if let (result, _) = try ApiClient.await({ self.subject.authService.updateToken(refreshToken: refreshToken) }) {
+    if let (result, _) = try ApiClient.await({ self.subject.authClient.updateToken(refreshToken: refreshToken) }) {
       XCTAssertNotNil(result.accessToken)
 
       print("Result: \(result)")

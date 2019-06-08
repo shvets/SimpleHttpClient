@@ -1,6 +1,6 @@
 import Foundation
 
-open class ApiService: ApiClient {
+open class EtvnetApiClient: ApiClient {
   let apiUrl: String
   let userAgent: String
 

@@ -7,8 +7,6 @@ open class EtvnetAPI {
   public static let ApiUrl = "https://secure.etvnet.com/api/v3.0/"
   public static let AuthUrl = "https://accounts.etvnet.com/auth/oauth/"
 
-  public static let UserAgent = "Etvnet User Agent"
-
   public static let TimeShift = [
     "0": 0,  // Moscow
     "1": 2,  // Berlin

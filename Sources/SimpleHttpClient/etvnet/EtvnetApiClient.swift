@@ -2,6 +2,8 @@ import Foundation
 import RxSwift
 
 open class EtvnetApiClient: ApiClient {
+  public let UserAgent = "Etvnet User Agent"
+
   public let ClientId = "a332b9d61df7254dffdc81a260373f25592c94c9"
   public let ClientSecret = "744a52aff20ec13f53bcfd705fc4b79195265497"
 
@@ -44,7 +46,7 @@ extension EtvnetApiClient {
 
     if (config.exists()) {
       do {
-        try ApiClient.await {
+        try Await.await {
           self.config.read()
         }
       } catch {
@@ -55,7 +57,7 @@ extension EtvnetApiClient {
 
   func saveConfig() {
     do {
-      try ApiClient.await({ self.config.write() })
+      try Await.await({ self.config.write() })
     } catch {
       print(error)
     }
@@ -95,7 +97,7 @@ extension EtvnetApiClient {
       result = AuthResult(userCode: userCode, deviceCode: deviceCode)
     } else {
       do {
-        if let (response, _) = try ApiClient.await({
+        if let (response, _) = try Await.await({
           self.authClient.getActivationCodes(includeClientSecret: includeClientSecret)
         }) {
           if let userCode = response.userCode, let deviceCode = response.deviceCode {
@@ -133,7 +135,7 @@ extension EtvnetApiClient {
 
         do {
           if let deviceCode = deviceCode,
-             let (response, _) = try ApiClient.await({ self.authClient.createToken(deviceCode: deviceCode) }) {
+             let (response, _) = try Await.await({ self.authClient.createToken(deviceCode: deviceCode) }) {
 
             ok = true
 
@@ -162,7 +164,7 @@ extension EtvnetApiClient {
 
     while !done {
       do {
-        if let (response, _) = try ApiClient.await({ self.authClient.createToken(deviceCode: deviceCode) }) {
+        if let (response, _) = try Await.await({ self.authClient.createToken(deviceCode: deviceCode) }) {
           done = response.accessToken != nil
 
           if done {
@@ -191,7 +193,7 @@ extension EtvnetApiClient {
 
     do {
       if let refreshToken = refreshToken,
-         let (response, _) = try ApiClient.await({
+         let (response, _) = try Await.await({
            self.authClient.updateToken(refreshToken: refreshToken)
          }) {
         self.config.items = response.asConfigurationItems()
@@ -223,7 +225,7 @@ extension EtvnetApiClient {
       let queryItems = addAccessToken(params: params, accessToken: accessToken)
 
       var headers: [HttpHeader] = []
-      headers.append(HttpHeader(field: "User-agent", value: EtvnetAPI.UserAgent))
+      headers.append(HttpHeader(field: "User-agent", value: UserAgent))
 
       let request = ApiRequest(path: path, queryItems: queryItems, method: method, headers: headers)
 

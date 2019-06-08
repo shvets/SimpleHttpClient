@@ -239,7 +239,7 @@ class EtvnetAPITests: XCTestCase {
   func testAddBookmark() throws {
     let id = 760894
 
-    let result = subject.addBookmark(id: id)
+    let _ = subject.addBookmark(id: id)
 
     //XCTAssertTrue(result)
   }
@@ -247,7 +247,7 @@ class EtvnetAPITests: XCTestCase {
   func testRemoveBookmark() throws {
     let id = 760894
 
-    let result = subject.removeBookmark(id: id)
+    let _ = subject.removeBookmark(id: id)
 
     //XCTAssertTrue(result)
   }
@@ -315,7 +315,7 @@ class EtvnetAPITests: XCTestCase {
 
     //print(String(decoding: list, as: UTF8.self))
 
-    print(result)
+    print(result as Any)
 
     //XCTAssertNotNil(list)
 //    XCTAssert(list.count > 0)

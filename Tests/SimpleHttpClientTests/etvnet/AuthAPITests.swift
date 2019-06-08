@@ -28,7 +28,7 @@ class AuthAPITests: XCTestCase {
   }
   
   func testCreateToken() {
-    if let result = subject.apiService.authorization() {
+    if let result = subject.authorization() {
       if let response = subject.tryCreateToken(userCode: result.userCode, deviceCode: result.deviceCode) {
         XCTAssertNotNil(response.accessToken)
         XCTAssertNotNil(response.refreshToken)
@@ -45,16 +45,16 @@ class AuthAPITests: XCTestCase {
   }
   
   func testUpdateToken() throws {
-    let refreshToken = subject.apiService.config.items["refresh_token"]!
+    let refreshToken = subject.config.items["refresh_token"]!
 
     if let result = try subject.authService.await({ self.subject.authService.updateToken(refreshToken: refreshToken) }) {
       XCTAssertNotNil(result.accessToken)
 
       print("Result: \(result)")
 
-      subject.apiService.config.items = result.asConfigurationItems()
+      subject.config.items = result.asConfigurationItems()
 
-      if let _ = try subject.authService.await({ self.subject.apiService.config.write() }) {
+      if let _ = try subject.authService.await({ self.subject.config.write() }) {
         print("Config saved.")
       }
       else {

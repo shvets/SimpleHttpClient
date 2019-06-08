@@ -23,15 +23,6 @@ open class EtvnetApiClient: ApiClient {
 
   public var configFile: ConfigFile<String>!
 
-//  public var configFile: ConfigFile<String> {
-//    get {
-//      return self
-//    }
-//    set {
-//      self = newValue
-//    }
-//  }
-
   let authClient: AuthApiClient!
 
   public var authorizeCallback: () -> Void = {}

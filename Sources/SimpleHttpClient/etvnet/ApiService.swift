@@ -19,9 +19,9 @@ open class ApiService: ApiClient {
     var headers: [HttpHeader] = []
     headers.append(HttpHeader(field: "User-agent", value: userAgent))
 
-    if let apiResponse = httpRequest(path: path, to: type, method: method, queryItems: params,
-      headers: headers) {
+    let request = ApiRequest(path: path, queryItems: params, method: method, headers: headers)
 
+    if let apiResponse = fetch(request, to: type) {
       result = apiResponse
 
       // todo
@@ -43,14 +43,4 @@ open class ApiService: ApiClient {
 
     return result
   }
-
-  public func httpRequest<T: Decodable>(path: String, to type: T.Type, method: HttpMethod = .get,
-                                        queryItems: [URLQueryItem] = [], headers: [HttpHeader] = []) -> T? {
-    let client = ApiClient(URL(string: apiUrl)!)
-
-    let request = ApiRequest(path: path, queryItems: queryItems, headers: headers)
-
-    return client.fetch(request, to: type)
-  }
-
 }

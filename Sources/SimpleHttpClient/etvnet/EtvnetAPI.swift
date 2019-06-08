@@ -102,7 +102,7 @@ open class EtvnetAPI {
     }
     else {
       do {
-        if let response = try ApiClient.await({ self.authService.getActivationCodes(includeClientSecret: includeClientSecret) }) {
+        if let (response, _) = try ApiClient.await({ self.authService.getActivationCodes(includeClientSecret: includeClientSecret) }) {
           if let userCode = response.userCode, let deviceCode = response.deviceCode {
             self.config.items["user_code"] = userCode
             self.config.items["device_code"] = deviceCode
@@ -132,7 +132,7 @@ open class EtvnetAPI {
 
       do {
         if let refreshToken = refreshToken,
-           let response = try ApiClient.await({
+           let (response, _) = try ApiClient.await({
           self.authService.updateToken(refreshToken: refreshToken)
         }) {
           self.config.items = response.asConfigurationItems()
@@ -157,7 +157,7 @@ open class EtvnetAPI {
 
       do {
         if let deviceCode = deviceCode,
-           let response = try ApiClient.await({ self.authService.createToken(deviceCode: deviceCode) }) {
+           let (response, _) = try ApiClient.await({ self.authService.createToken(deviceCode: deviceCode) }) {
 
           self.config.items = response.asConfigurationItems()
           self.saveConfig()
@@ -212,7 +212,7 @@ open class EtvnetAPI {
 
     while !done {
       do {
-        if let response = try ApiClient.await({ self.authService.createToken(deviceCode: deviceCode) }) {
+        if let (response, _) = try ApiClient.await({ self.authService.createToken(deviceCode: deviceCode) }) {
           done = response.accessToken != nil
 
           if done {

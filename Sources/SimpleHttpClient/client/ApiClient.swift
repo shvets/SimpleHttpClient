@@ -12,10 +12,10 @@ enum ApiError: Error {
 
 protocol HttpFetcher {
   func fetchAsync<T: Decodable>(_ request: ApiRequest, to type: T.Type,
-                           _ handler: @escaping (Result<T, ApiError>) -> Void)
+                           _ handler: @escaping (Result<(T, ApiResponse), ApiError>) -> Void)
 
   @discardableResult
-  func fetchRx<T: Decodable>(_ request: ApiRequest, to type: T.Type) -> Observable<T>
+  func fetchRx<T: Decodable>(_ request: ApiRequest, to type: T.Type) -> Observable<(T, ApiResponse)>
 
   func fetch<T: Decodable>(_ request: ApiRequest, to type: T.Type) -> T?
 }
@@ -101,7 +101,7 @@ open class ApiClient {
 
 extension ApiClient: HttpFetcher {
   func fetchAsync<T: Decodable>(_ request: ApiRequest, to type: T.Type,
-                           _ handler: @escaping (Result<T, ApiError>) -> Void) {
+                                _ handler: @escaping (Result<(T, ApiResponse), ApiError>) -> Void) {
     if let url = buildUrl(request) {
       do {
         let urlRequest = try buildUrlRequest(url: url, request: request)
@@ -111,15 +111,14 @@ extension ApiClient: HttpFetcher {
             handler(.failure(.genericError(error: error)))
           }
           else if let httpResponse = response as? HTTPURLResponse {
-            let response = ApiResponse(statusCode: httpResponse.statusCode, body: data)
-
-            if let data = response.body {
+            if let data = data {
               do {
                 let decoder = JSONDecoder()
 
                 let value = try decoder.decode(T.self, from: data)
+                let response = ApiResponse(statusCode: httpResponse.statusCode, body: data)
 
-                handler(.success(value))
+                handler(.success((value, response)))
               }
               catch {
                 handler(.failure(.bodyDecodingFailed))
@@ -145,7 +144,7 @@ extension ApiClient: HttpFetcher {
   }
 
   @discardableResult
-  func fetchRx<T: Decodable>(_ request: ApiRequest, to type: T.Type) -> Observable<T> {
+  func fetchRx<T: Decodable>(_ request: ApiRequest, to type: T.Type) -> Observable<(T, ApiResponse)> {
     return Observable.create { observer -> Disposable in
       if let url = self.buildUrl(request) {
         do {
@@ -156,15 +155,14 @@ extension ApiClient: HttpFetcher {
               observer.onError(ApiError.genericError(error: error))
             }
             else if let httpResponse = response as? HTTPURLResponse {
-              //let response = ApiResponse(statusCode: httpResponse.statusCode, body: data)
-
               if let data = data {
                 do {
                   let decoder = JSONDecoder()
 
                   let value = try decoder.decode(T.self, from: data)
+                  let response = ApiResponse(statusCode: httpResponse.statusCode, body: data)
 
-                  observer.on(.next(value))
+                  observer.on(.next((value, response)))
                   observer.on(.completed)
                 }
                 catch {
@@ -199,8 +197,8 @@ extension ApiClient: HttpFetcher {
 
     let semaphore = DispatchSemaphore.init(value: 0)
 
-    _ = fetchRx(request, to: type).subscribe(onNext: { response in
-      result = response
+    let disposable = fetchRx(request, to: type).subscribe(onNext: { r, _ in
+      result = r
 
       semaphore.signal()
     },
@@ -209,6 +207,8 @@ extension ApiClient: HttpFetcher {
     })
 
     _ = semaphore.wait(timeout: DispatchTime.distantFuture)
+
+    disposable.dispose()
 
     return result
   }

@@ -1,6 +1,6 @@
 import Foundation
 
-struct ApiResponse {
+public struct ApiResponse {
   let statusCode: Int
   let body: Data?
 }

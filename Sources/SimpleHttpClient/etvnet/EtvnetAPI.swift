@@ -130,8 +130,19 @@ open class EtvnetAPI {
     } else if config.items["refresh_token"] != nil {
       let refreshToken = config.items["refresh_token"]
 
-      if let refreshToken = refreshToken, tryUpdateToken(refreshToken: refreshToken) {
-        ok = true
+      do {
+        if let refreshToken = refreshToken,
+           let response = try ApiClient.await({
+          self.authService.updateToken(refreshToken: refreshToken)
+        }) {
+          self.config.items = response.asConfigurationItems()
+          self.saveConfig()
+
+          ok = true
+        }
+      }
+      catch {
+        print(error)
       }
     }
 
@@ -160,24 +171,6 @@ open class EtvnetAPI {
     return ok
   }
 
-  func tryUpdateToken(refreshToken: String) -> Bool {
-    var ok = false
-
-    do {
-      if let response = try ApiClient.await({ self.authService.updateToken(refreshToken: refreshToken) }) {
-        self.config.items = response.asConfigurationItems()
-        self.saveConfig()
-
-        ok = true
-      }
-    }
-    catch {
-      print(error)
-    }
-
-    return ok
-  }
-
   func checkAccessData(_ key: String) -> Bool {
     return (config.items[key] != nil) && (config.items["expires"] != nil) &&
       config.items["expires"]! >= String(Int(Date().timeIntervalSince1970))
@@ -187,9 +180,7 @@ open class EtvnetAPI {
                                   params: [URLQueryItem] = [], unauthorized: Bool=false) -> T? {
     var result: T?
 
-    if !checkToken() && !checkDeviceCode() {
-      authorizeCallback()
-    }
+    checkAuthorization()
 
     if let accessToken = config.items["access_token"] {
       var queryItems: [URLQueryItem] = []
@@ -204,6 +195,12 @@ open class EtvnetAPI {
     }
 
     return result
+  }
+
+  func checkAuthorization() {
+    if !checkToken() && !checkDeviceCode() {
+      authorizeCallback()
+    }
   }
 
   func tryCreateToken(userCode: String, deviceCode: String) -> AuthProperties? {

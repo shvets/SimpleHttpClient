@@ -23,7 +23,7 @@ open class AuthApiClient: ApiClient {
   }
   
   func getActivationCodes(includeClientSecret: Bool = true, includeClientId: Bool = false) ->
-    Observable<(ActivationCodesProperties, ApiResponse)> {
+    Observable<(value: ActivationCodesProperties, response: ApiResponse)> {
 
     var queryItems: [URLQueryItem] = []
 
@@ -45,7 +45,7 @@ open class AuthApiClient: ApiClient {
   }
 
   @discardableResult
-  public func createToken(deviceCode: String) -> Observable<(AuthProperties, ApiResponse)> {
+  public func createToken(deviceCode: String) -> Observable<(value: AuthProperties, response: ApiResponse)> {
     var queryItems: [URLQueryItem] = []
 
     queryItems.append(URLQueryItem(name: "grant_type", value: grantType))
@@ -59,7 +59,7 @@ open class AuthApiClient: ApiClient {
   }
 
   @discardableResult
-  func updateToken(refreshToken: String) -> Observable<(AuthProperties, ApiResponse)> {
+  func updateToken(refreshToken: String) -> Observable<(value: AuthProperties, response: ApiResponse)> {
     var queryItems: [URLQueryItem] = []
 
     queryItems.append(URLQueryItem(name: "grant_type", value: "refresh_token"))

@@ -1,44 +1,49 @@
 import Foundation
 
 open class EtvnetApiClient: ApiClient {
-  let apiUrl: String
   let userAgent: String
 
-  init(apiUrl: String, userAgent: String) {
-    self.apiUrl = apiUrl
+  init(_ url: String, userAgent: String) {
     self.userAgent = userAgent
 
-    super.init(URL(string: apiUrl)!)
+    super.init(URL(string: url)!)
   }
 
-  func fullRequest<T: Decodable>(path: String, to type: T.Type, method: HttpMethod = .get,
-                                 params: [URLQueryItem] = [], unauthorized: Bool=false) -> T? {
-    var result: T?
+  func addAccessToken(params: [URLQueryItem], accessToken: String) -> [URLQueryItem] {
+    var queryItems: [URLQueryItem] = []
+
+    for param in params {
+      queryItems.append(param)
+    }
+
+    queryItems.append(URLQueryItem(name: "access_token", value: accessToken))
+
+    return queryItems
+  }
+
+  func request<T: Decodable>(path: String, to type: T.Type, method: HttpMethod = .get,
+                             queryItems: [URLQueryItem] = [], unauthorized: Bool=false) -> (T, ApiResponse)? {
+    var result: (T, ApiResponse)?
 
     var headers: [HttpHeader] = []
     headers.append(HttpHeader(field: "User-agent", value: userAgent))
 
-    let request = ApiRequest(path: path, queryItems: params, method: method, headers: headers)
+    let request = ApiRequest(path: path, queryItems: queryItems, method: method, headers: headers)
 
-    if let apiResponse = fetch(request, to: type) {
-      result = apiResponse
+    let semaphore = DispatchSemaphore.init(value: 0)
 
-      // todo
-       //let statusCode = apiResponse.response?.statusCode {
-//          if (statusCode == 401 || statusCode == 400) && !unauthorized {
-//            let refreshToken = config.items["refresh_token"]
-//
-//            if let refreshToken = refreshToken, tryUpdateToken(refreshToken: refreshToken) {
-//              response = fullRequest(path: path, method: method, parameters: parameters, unauthorized: true)
-//            }
-//            else {
-//              print("error")
-//            }
-//          }
-//          else {
-//            response = apiResponse
-//          }
-    }
+    let disposable = fetchRx(request, to: type).subscribe(onNext: { r in
+      result = r
+
+      semaphore.signal()
+    },
+      onError: { (error) -> Void in
+        semaphore.signal()
+      })
+
+    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
+
+    disposable.dispose()
 
     return result
   }

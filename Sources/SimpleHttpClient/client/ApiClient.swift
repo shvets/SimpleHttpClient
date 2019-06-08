@@ -10,14 +10,16 @@ enum ApiError: Error {
   case emptyResponse
 }
 
+typealias FullValue<T> = (value: T, response: ApiResponse)
+
 protocol HttpFetcher {
   func fetchAsync<T: Decodable>(_ request: ApiRequest, to type: T.Type,
-                           _ handler: @escaping (Result<(T, ApiResponse), ApiError>) -> Void)
+                           _ handler: @escaping (Result<FullValue<T>, ApiError>) -> Void)
 
   @discardableResult
-  func fetchRx<T: Decodable>(_ request: ApiRequest, to type: T.Type) -> Observable<(T, ApiResponse)>
+  func fetchRx<T: Decodable>(_ request: ApiRequest, to type: T.Type) -> Observable<FullValue<T>>
 
-  func fetch<T: Decodable>(_ request: ApiRequest, to type: T.Type) -> T?
+  func fetch<T: Decodable>(_ request: ApiRequest, to type: T.Type) -> FullValue<T>?
 }
 
 open class ApiClient {
@@ -101,7 +103,7 @@ open class ApiClient {
 
 extension ApiClient: HttpFetcher {
   func fetchAsync<T: Decodable>(_ request: ApiRequest, to type: T.Type,
-                                _ handler: @escaping (Result<(T, ApiResponse), ApiError>) -> Void) {
+                                _ handler: @escaping (Result<FullValue<T>, ApiError>) -> Void) {
     if let url = buildUrl(request) {
       do {
         let urlRequest = try buildUrlRequest(url: url, request: request)
@@ -144,7 +146,7 @@ extension ApiClient: HttpFetcher {
   }
 
   @discardableResult
-  func fetchRx<T: Decodable>(_ request: ApiRequest, to type: T.Type) -> Observable<(T, ApiResponse)> {
+  func fetchRx<T: Decodable>(_ request: ApiRequest, to type: T.Type) -> Observable<FullValue<T>> {
     return Observable.create { observer -> Disposable in
       if let url = self.buildUrl(request) {
         do {
@@ -192,13 +194,13 @@ extension ApiClient: HttpFetcher {
   }
 
   @discardableResult
-  func fetch<T: Decodable>(_ request: ApiRequest, to type: T.Type) -> T? {
-    var result: T?
+  func fetch<T: Decodable>(_ request: ApiRequest, to type: T.Type) -> FullValue<T>? {
+    var result: FullValue<T>?
 
     let semaphore = DispatchSemaphore.init(value: 0)
 
-    let disposable = fetchRx(request, to: type).subscribe(onNext: { r, _ in
-      result = r
+    let disposable = fetchRx(request, to: type).subscribe(onNext: { response in
+      result = response
 
       semaphore.signal()
     },

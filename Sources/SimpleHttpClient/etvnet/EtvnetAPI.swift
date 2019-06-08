@@ -617,7 +617,7 @@ extension EtvnetAPI {
       let statusCode = response.response.statusCode
       let data = response.value
 
-      if statusCode == 201 && data != nil {
+      if statusCode == 201 {
         return data.status == "Created"
       }
     }
@@ -630,9 +630,8 @@ extension EtvnetAPI {
 
     if let response = fullRequest(path: path, to: BookmarkResponse.self, method: .delete) {
       let statusCode = response.response.statusCode
-      let data = response.value
 
-      if statusCode == 204 && data != nil {
+      if statusCode == 204 {
         return true
       }
     }
@@ -718,7 +717,7 @@ extension EtvnetAPI {
     return true
   }
 
-  public func getLiveSchedule(liveChannelId: String, date: Date = Date()) -> Any {
+  public func getLiveSchedule(liveChannelId: String, date: Date = Date()) -> (value: String, response: ApiResponse)? {
 //    let dateFormatter = DateFormatter()
 //    dateFormatter.dateFormat = "yyyy-MM-dd@nbsp;HH:mm"
 //
@@ -728,10 +727,7 @@ extension EtvnetAPI {
 
     let path = "video/live/schedule/\(liveChannelId).json"
 
-    // todo
-    let response = fullRequest(path: path, to: String.self)
-
-    return response
+    return fullRequest(path: path, to: String.self)
   }
 
   public func getLiveCategories() -> [Name] {

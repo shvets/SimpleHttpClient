@@ -46,7 +46,7 @@ extension EtvnetApiClient {
 
     if (config.exists()) {
       do {
-        try Await.await {
+        try await {
           self.config.read()
         }
       } catch {
@@ -57,7 +57,7 @@ extension EtvnetApiClient {
 
   func saveConfig() {
     do {
-      try Await.await({
+      try await({
         self.config.write()
       })
     } catch {
@@ -99,7 +99,7 @@ extension EtvnetApiClient {
       result = AuthResult(userCode: userCode, deviceCode: deviceCode)
     } else {
       do {
-        if let (response, _) = try Await.await({
+        if let (response, _) = try await({
           self.authClient.getActivationCodes(includeClientSecret: includeClientSecret)
         }) {
           if let userCode = response.userCode, let deviceCode = response.deviceCode {
@@ -137,7 +137,7 @@ extension EtvnetApiClient {
 
         do {
           if let deviceCode = deviceCode,
-             let (response, _) = try Await.await({
+             let (response, _) = try await({
                self.authClient.createToken(deviceCode: deviceCode)
              }) {
 
@@ -168,7 +168,7 @@ extension EtvnetApiClient {
 
     while !done {
       do {
-        if let (response, _) = try Await.await({ self.authClient.createToken(deviceCode: deviceCode) }) {
+        if let (response, _) = try await({ self.authClient.createToken(deviceCode: deviceCode) }) {
           done = response.accessToken != nil
 
           if done {
@@ -197,7 +197,7 @@ extension EtvnetApiClient {
 
     do {
       if let refreshToken = refreshToken,
-         let (response, _) = try Await.await({
+         let (response, _) = try await({
            self.authClient.updateToken(refreshToken: refreshToken)
          }) {
         self.config.items = response.asConfigurationItems()

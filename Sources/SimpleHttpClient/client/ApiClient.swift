@@ -176,4 +176,9 @@ extension ApiClient: HttpFetcher {
 
     return result
   }
+
+  @discardableResult
+  func await<T>(_ handler: @escaping () -> Observable<T>) throws -> T? {
+    return try Await.await(handler)
+  }
 }

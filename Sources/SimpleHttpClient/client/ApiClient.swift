@@ -159,6 +159,8 @@ extension ApiClient: HttpFetcher {
             else if let httpResponse = response as? HTTPURLResponse {
               if let data = data {
                 do {
+                  print("Result: \(String(data: data, encoding: .utf8))")
+
                   let decoder = JSONDecoder()
 
                   let value = try decoder.decode(T.self, from: data)

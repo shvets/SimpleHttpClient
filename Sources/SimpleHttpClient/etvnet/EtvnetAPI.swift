@@ -157,6 +157,7 @@ open class EtvnetAPI {
         semaphore.signal()
       },
         onError: { (error) -> Void in
+          print("Error: \(error)")
           semaphore.signal()
         })
 
@@ -612,15 +613,13 @@ extension EtvnetAPI {
   public func addBookmark(id: Int) -> Bool {
     let path = "video/bookmarks/items/\(id).json"
 
-    if let response = fullRequest(path: path, to: Bool.self, method: .post) {
-//      let statusCode = response.response!.statusCode
-//      let data = response.data
-//
-//      if statusCode == 201 && data != nil {
-//        if let result = (data!.decoded() as BookmarkResponse) {
-//          return result.status == "Created"
-//        }
-//      }
+    if let response = fullRequest(path: path, to: BookmarkResponse.self, method: .post) {
+      let statusCode = response.response.statusCode
+      let data = response.value
+
+      if statusCode == 201 && data != nil {
+        return data.status == "Created"
+      }
     }
 
     return false
@@ -629,15 +628,13 @@ extension EtvnetAPI {
   public func removeBookmark(id: Int) -> Bool {
     let path = "video/bookmarks/items/\(id).json"
 
-    if let response = fullRequest(path: path, to: Bool.self, method: .delete) {
-//      let statusCode = response.response!.statusCode
-//      let data = response.data
-//
-//      if statusCode == 204 && data != nil {
-//        //let result = decoder.decode(BookmarkResponse.self, from: data!)
-//
-//        return true
-//      }
+    if let response = fullRequest(path: path, to: BookmarkResponse.self, method: .delete) {
+      let statusCode = response.response.statusCode
+      let data = response.value
+
+      if statusCode == 204 && data != nil {
+        return true
+      }
     }
 
     return false

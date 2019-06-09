@@ -1,0 +1,25 @@
+{
+  "name": "crypto-demo",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "abooks0": "node audioknigi_test.js",
+    "abooks": "ts-node audioknigi-test.ts",
+    "tsc": "tsc"
+  },
+  "author": "",
+  "description": "",
+
+  "dependencies": {
+    "crypto-js": "~3.1.9-1",
+    "body-parser": "~1.18.3",
+    "ts-node": "~8.0.3",
+    "typescript": "~3.4.2",
+    "axios": "~0.18.0",
+    "request": "~2.88.0"
+  },
+  "devDependencies": {
+    "@types/node": "~11.13.0"
+  }
+}

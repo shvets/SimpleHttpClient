@@ -325,14 +325,12 @@ class EtvnetAPITests: XCTestCase {
   }
 
   func testGetLiveSchedule() throws {
-    let result = try subject.getLiveSchedule(liveChannelId: "59")
+    let list = try subject.getLiveSchedule(liveChannelId: "59")
 
-    //print(String(decoding: list, as: UTF8.self))
+    print(try list.prettify())
 
-    print(result as Any)
-
-    //XCTAssertNotNil(list)
-//    XCTAssert(list.count > 0)
+    XCTAssertNotNil(list)
+    XCTAssert(list.count > 0)
   }
 
   func testGetLiveCategories() throws {

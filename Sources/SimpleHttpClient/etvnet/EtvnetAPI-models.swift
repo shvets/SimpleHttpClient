@@ -244,6 +244,30 @@ extension EtvnetAPI {
     }
   }
 
+  public struct LiveSchedule: Codable {
+    public let channel: Int
+    public let name: String
+    public let startTime: String
+    public let finishTime: String
+    public let description: String
+    public let rating: String
+    public let week: String?
+    public let mediaId: String?
+    public let currentShow: Bool
+
+    enum CodingKeys: String, CodingKey {
+      case channel
+      case name
+      case startTime = "start_time"
+      case finishTime = "finish_time"
+      case description
+      case rating
+      case week = "efir_week"
+      case mediaId = "media_id"
+      case currentShow = "current_show"
+    }
+  }
+
   public struct Pagination: Codable {
     public let pages: Int
     public let page: Int
@@ -288,6 +312,7 @@ extension EtvnetAPI {
     case names([Name])
     case genres([Genre])
     case liveChannels([LiveChannel])
+    case liveSchedules([LiveSchedule])
     case url(UrlType)
     case none
 
@@ -327,6 +352,7 @@ extension EtvnetAPI {
       let genres = try? container.decodeIfPresent([Genre].self, forKey: .data)
       let names = try? container.decodeIfPresent([Name].self, forKey: .data)
       let liveChannels = try? container.decodeIfPresent([LiveChannel].self, forKey: .data)
+      let liveSchedules = try? container.decodeIfPresent([LiveSchedule].self, forKey: .data)
       let url = try? container.decodeIfPresent(UrlType.self, forKey: .data)
 
       var data: MediaData?
@@ -345,6 +371,9 @@ extension EtvnetAPI {
       }
       else if let value = liveChannels {
         data = MediaData.liveChannels(value)
+      }
+      else if let value = liveSchedules {
+        data = MediaData.liveSchedules(value)
       }
       else if let value = names {
         data = MediaData.names(value)

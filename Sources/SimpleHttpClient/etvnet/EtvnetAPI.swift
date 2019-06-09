@@ -448,7 +448,8 @@ open class EtvnetAPI {
     return []
   }
 
-  public func getLiveChannelsByCategory(favoriteOnly: Bool=false, offset: String? = nil, category: Int=0) throws -> [LiveChannel] {
+  public func getLiveChannelsByCategory(favoriteOnly: Bool=false, offset: String? = nil, category: Int=0)
+         throws -> [LiveChannel] {
     let format = "mp4"
 
     let path = "video/live/category/\(category).json"
@@ -487,17 +488,24 @@ open class EtvnetAPI {
     return true
   }
 
-  public func getLiveSchedule(liveChannelId: String, date: Date = Date()) throws -> FullValue<MediaResponse>? {
-//    let dateFormatter = DateFormatter()
-//    dateFormatter.dateFormat = "yyyy-MM-dd@nbsp;HH:mm"
-//
-//    let dateString = dateFormatter.string(from: date)
-//
-//    let params = ["date": dateString]
+  public func getLiveSchedule(liveChannelId: String, date: Date = Date()) throws -> [LiveSchedule] {
+    let dateFormatter = DateFormatter()
+    dateFormatter.dateFormat = "yyyy-MM-ddTHH:mm:ss"
+
+    let dateString = dateFormatter.string(from: date)
 
     let path = "video/live/schedule/\(liveChannelId).json"
 
-    return try apiClient.fullRequest(path: path, to: MediaResponse.self)
+    var params: [URLQueryItem] = []
+    params.append(URLQueryItem(name: "date", value: dateString))
+
+    if let response = try apiClient.fullRequest(path: path, to: MediaResponse.self, params: params) {
+      if case .liveSchedules(let liveSchedules) = response.value.data {
+        return liveSchedules
+      }
+    }
+
+    return []
   }
 
   public func getLiveCategories() throws -> [Name] {

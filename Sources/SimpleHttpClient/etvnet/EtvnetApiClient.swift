@@ -210,11 +210,6 @@ extension EtvnetApiClient {
         self.fetchRx(request, to: type)
       }
 
-//      let semaphore = DispatchSemaphore.init(value: 0)
-//
-//      let disposable = fetchRx(request, to: type).subscribe(onNext: { r in
-//        result = r
-
       if let r = result {
         let statusCode = r.response.statusCode
 
@@ -235,17 +230,6 @@ extension EtvnetApiClient {
           }
         }
       }
-
-//        semaphore.signal()
-//      },
-//        onError: { (error) -> Void in
-//          print("Error: \(error)")
-//          semaphore.signal()
-//        })
-
-//      _ = semaphore.wait(timeout: DispatchTime.distantFuture)
-//
-//      disposable.dispose()
     }
 
     return result

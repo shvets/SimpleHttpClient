@@ -14,8 +14,12 @@ class EtvnetAPITests: XCTestCase {
     // Put setup code here. This method is called before the invocation of each test method in the class.
 
     subject.authorize {
-      if let result = self.subject.apiClient.authorization() {
-        _ = self.subject.apiClient.tryCreateToken(userCode: result.userCode, deviceCode: result.deviceCode)
+      do {
+        if let result = try self.subject.apiClient.authorization() {
+          _ = self.subject.apiClient.tryCreateToken(userCode: result.userCode, deviceCode: result.deviceCode)
+        }
+      } catch {
+        XCTFail("Error: \(error)")
       }
     }
   }

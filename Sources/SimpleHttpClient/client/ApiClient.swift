@@ -23,7 +23,7 @@ protocol HttpFetcher {
 }
 
 open class ApiClient {
-  private let baseURL: URL
+  let baseURL: URL
   private let session: URLSession
 
   init(_ baseURL: URL, session: URLSession = URLSession.shared) {

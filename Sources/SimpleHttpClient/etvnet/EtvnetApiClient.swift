@@ -4,23 +4,6 @@ import RxSwift
 open class EtvnetApiClient: ApiClient {
   public let UserAgent = "Etvnet User Agent"
 
-  public let ClientId = "a332b9d61df7254dffdc81a260373f25592c94c9"
-  public let ClientSecret = "744a52aff20ec13f53bcfd705fc4b79195265497"
-
-  public let Scope = [
-    "com.etvnet.media.browse",
-    "com.etvnet.media.watch",
-    "com.etvnet.media.bookmarks",
-    "com.etvnet.media.history",
-    "com.etvnet.media.live",
-    "com.etvnet.media.fivestar",
-    "com.etvnet.media.comments",
-    "com.etvnet.persons",
-    "com.etvnet.notifications"
-  ].joined(separator: " ")
-
-  public let GrantType = "http://oauth.net/grant_type/device/1.0"
-
   public var configFile: ConfigFile<String>!
 
   let authClient: AuthApiClient!
@@ -28,8 +11,7 @@ open class EtvnetApiClient: ApiClient {
   public var authorizeCallback: () -> Void = {}
 
   init(_ url: String, authUrl: String) {
-    authClient = AuthApiClient(authUrl: authUrl, clientId: ClientId, clientSecret: ClientSecret,
-      grantType: GrantType, scope: Scope)
+    authClient = AuthApiClient(URL(string: authUrl)!)
 
     super.init(URL(string: url)!)
   }
@@ -75,18 +57,18 @@ extension EtvnetApiClient {
   }
 
   func addAccessToken(params: [URLQueryItem], accessToken: String) -> [URLQueryItem] {
-    var queryItems: [URLQueryItem] = []
+    var newParams: [URLQueryItem] = []
 
     for param in params {
-      queryItems.append(param)
+      newParams.append(param)
     }
 
-    queryItems.append(URLQueryItem(name: "access_token", value: accessToken))
+    newParams.append(URLQueryItem(name: "access_token", value: accessToken))
 
-    return queryItems
+    return newParams
   }
 
-  public func authorization(includeClientSecret: Bool = true) -> AuthResult? {
+  public func authorization(includeClientSecret: Bool = true) throws -> AuthResult? {
     var result: AuthResult?
 
     if configFile.items["device_code"] != nil && checkAccessData("user_code") {
@@ -95,25 +77,21 @@ extension EtvnetApiClient {
 
       result = AuthResult(userCode: userCode, deviceCode: deviceCode)
     } else {
-      do {
-        let fullResponse = try await {
-          self.authClient.getActivationCodes(includeClientSecret: includeClientSecret)
+      let fullResponse = try await {
+        self.authClient.getActivationCodes(includeClientSecret: includeClientSecret)
+      }
+
+      if let fullResponse = fullResponse {
+        if let userCode = fullResponse.value.userCode,
+           let deviceCode = fullResponse.value.deviceCode {
+          self.configFile.items["user_code"] = userCode
+          self.configFile.items["device_code"] = deviceCode
+          self.configFile.items["activation_url"] = authClient.getActivationUrl()
+
+          self.saveConfig()
+
+          result = AuthResult(userCode: userCode, deviceCode: deviceCode)
         }
-
-        if let fullResponse = fullResponse {
-          if let userCode = fullResponse.value.userCode,
-             let deviceCode = fullResponse.value.deviceCode {
-            self.configFile.items["user_code"] = userCode
-            self.configFile.items["device_code"] = deviceCode
-            self.configFile.items["activation_url"] = authClient.getActivationUrl()
-
-            self.saveConfig()
-
-            result = AuthResult(userCode: userCode, deviceCode: deviceCode)
-          }
-        }
-      } catch {
-        print(error)
       }
     }
 

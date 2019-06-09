@@ -2,24 +2,24 @@ import Foundation
 import RxSwift
 
 open class AuthApiClient: ApiClient {
-  let authUrl: String
-  let clientId: String
-  let clientSecret: String
-  let grantType: String
-  let scope: String
+  private let ClientId = "a332b9d61df7254dffdc81a260373f25592c94c9"
+  private let ClientSecret = "744a52aff20ec13f53bcfd705fc4b79195265497"
+  private let GrantType = "http://oauth.net/grant_type/device/1.0"
 
-  init(authUrl: String, clientId: String, clientSecret: String, grantType: String, scope: String) {
-    self.authUrl = authUrl
-    self.clientId = clientId
-    self.clientSecret = clientSecret
-    self.grantType = grantType
-    self.scope = scope
-
-    super.init(URL(string: authUrl)!)
-  }
+  public let Scope = [
+    "com.etvnet.media.browse",
+    "com.etvnet.media.watch",
+    "com.etvnet.media.bookmarks",
+    "com.etvnet.media.history",
+    "com.etvnet.media.live",
+    "com.etvnet.media.fivestar",
+    "com.etvnet.media.comments",
+    "com.etvnet.persons",
+    "com.etvnet.notifications"
+  ].joined(separator: " ")
 
   func getActivationUrl() -> String {
-    return "\(authUrl)device/usercode"
+    return "\(baseURL)device/usercode"
   }
   
   func getActivationCodes(includeClientSecret: Bool = true, includeClientId: Bool = false) ->
@@ -27,17 +27,15 @@ open class AuthApiClient: ApiClient {
 
     var queryItems: [URLQueryItem] = []
 
-    queryItems.append(URLQueryItem(name: "scope", value: scope))
+    queryItems.append(URLQueryItem(name: "scope", value: Scope))
 
     if includeClientSecret {
-      queryItems.append(URLQueryItem(name: "client_secret", value: clientSecret))
+      queryItems.append(URLQueryItem(name: "client_secret", value: ClientSecret))
     }
     
     if includeClientId {
-      queryItems.append(URLQueryItem(name: "client_id", value: clientId))
+      queryItems.append(URLQueryItem(name: "client_id", value: ClientId))
     }
-
-    queryItems.append(URLQueryItem(name: "client_id", value: clientId))
 
     let request = ApiRequest(path: "device/code", queryItems: queryItems)
 
@@ -48,10 +46,10 @@ open class AuthApiClient: ApiClient {
   public func createToken(deviceCode: String) -> Observable<(value: AuthProperties, response: ApiResponse)> {
     var queryItems: [URLQueryItem] = []
 
-    queryItems.append(URLQueryItem(name: "grant_type", value: grantType))
+    queryItems.append(URLQueryItem(name: "grant_type", value: GrantType))
     queryItems.append(URLQueryItem(name: "code", value: deviceCode))
-    queryItems.append(URLQueryItem(name: "client_secret", value: clientSecret))
-    queryItems.append(URLQueryItem(name: "client_id", value: clientId))
+    queryItems.append(URLQueryItem(name: "client_secret", value: ClientSecret))
+    queryItems.append(URLQueryItem(name: "client_id", value: ClientId))
 
     let request = ApiRequest(path: "token", queryItems: queryItems)
 
@@ -64,8 +62,8 @@ open class AuthApiClient: ApiClient {
 
     queryItems.append(URLQueryItem(name: "grant_type", value: "refresh_token"))
     queryItems.append(URLQueryItem(name: "refresh_token", value: refreshToken))
-    queryItems.append(URLQueryItem(name: "client_secret", value: clientSecret))
-    queryItems.append(URLQueryItem(name: "client_id", value: clientId))
+    queryItems.append(URLQueryItem(name: "client_secret", value: ClientSecret))
+    queryItems.append(URLQueryItem(name: "client_id", value: ClientId))
 
     let request = ApiRequest(path: "token", queryItems: queryItems)
 

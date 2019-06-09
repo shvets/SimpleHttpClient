@@ -29,8 +29,8 @@ class AuthAPITests: XCTestCase {
     }
   }
   
-  func testCreateToken() {
-    if let result = subject.apiClient.authorization() {
+  func testCreateToken() throws {
+    if let result = try subject.apiClient.authorization() {
       if let response = subject.apiClient.tryCreateToken(userCode: result.userCode, deviceCode: result.deviceCode) {
         XCTAssertNotNil(response.accessToken)
         XCTAssertNotNil(response.refreshToken)

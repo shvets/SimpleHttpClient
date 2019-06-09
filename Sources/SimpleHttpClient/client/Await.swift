@@ -9,7 +9,7 @@ class Await {
 
     let semaphore = DispatchSemaphore.init(value: 0)
 
-    let disposable = handler().subscribe(onNext: { response in
+    let subscription = handler().subscribe(onNext: { response in
       result = response
       semaphore.signal()
     },
@@ -21,7 +21,7 @@ class Await {
 
     _ = semaphore.wait(timeout: DispatchTime.distantFuture)
 
-    disposable.dispose()
+    subscription.dispose()
 
     if let error = error {
       throw error
@@ -30,7 +30,7 @@ class Await {
     return result
   }
 
-  static func await0<T: Decodable>(_ handler: @escaping () -> Result<T, ApiError>) -> Result<T, ApiError> {
+  static func awaitAsync<T: Decodable>(_ handler: @escaping () -> Result<T, ApiError>) -> Result<T, ApiError> {
     let semaphore = DispatchSemaphore.init(value: 0)
 
     let result: Result<T, ApiError> = handler()

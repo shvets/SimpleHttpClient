@@ -19,7 +19,7 @@ protocol HttpFetcher {
   @discardableResult
   func fetchRx<T: Decodable>(_ request: ApiRequest, to type: T.Type) -> Observable<FullValue<T>>
 
-  func fetch<T: Decodable>(_ request: ApiRequest, to type: T.Type) -> FullValue<T>?
+  func fetch<T: Decodable>(_ request: ApiRequest, to type: T.Type) throws -> FullValue<T>?
 }
 
 open class ApiClient {
@@ -75,10 +75,18 @@ extension ApiClient: HttpFetcher {
           else if let httpResponse = response as? HTTPURLResponse {
             if let data = data {
               do {
-                let decoder = JSONDecoder()
+                let value: T
 
-                let value = try decoder.decode(T.self, from: data)
                 let response = ApiResponse(statusCode: httpResponse.statusCode, body: data)
+
+                if data.isEmpty {
+                  value = "" as! T
+                }
+                else {
+                  let decoder = JSONDecoder()
+
+                  value = try decoder.decode(T.self, from: data)
+                }
 
                 handler(.success((value, response)))
               }
@@ -119,12 +127,20 @@ extension ApiClient: HttpFetcher {
             else if let httpResponse = response as? HTTPURLResponse {
               if let data = data {
                 do {
-                  // print("Result: \(String(data: data, encoding: .utf8)!)")
+                  print("Result: \(String(data: data, encoding: .utf8)!)")
 
-                  let decoder = JSONDecoder()
+                  let value: T
 
-                  let value = try decoder.decode(T.self, from: data)
                   let response = ApiResponse(statusCode: httpResponse.statusCode, body: data)
+
+                  if data.isEmpty {
+                    value = "" as! T
+                  }
+                  else {
+                    let decoder = JSONDecoder()
+
+                    value = try decoder.decode(T.self, from: data)
+                  }
 
                   observer.on(.next((value, response)))
                   observer.on(.completed)
@@ -156,25 +172,10 @@ extension ApiClient: HttpFetcher {
   }
 
   @discardableResult
-  func fetch<T: Decodable>(_ request: ApiRequest, to type: T.Type) -> FullValue<T>? {
-    var result: FullValue<T>?
-
-    let semaphore = DispatchSemaphore.init(value: 0)
-
-    let disposable = fetchRx(request, to: type).subscribe(onNext: { response in
-      result = response
-
-      semaphore.signal()
-    },
-    onError: { (error) -> Void in
-      semaphore.signal()
-    })
-
-    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
-
-    disposable.dispose()
-
-    return result
+  func fetch<T: Decodable>(_ request: ApiRequest, to type: T.Type) throws -> FullValue<T>? {
+    return try await {
+      self.fetchRx(request, to: type)
+    }
   }
 
   @discardableResult

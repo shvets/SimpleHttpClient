@@ -109,7 +109,7 @@ extension EtvnetApiClient {
 
         if let refreshToken = refreshToken {
           if let result = try updateToken(refreshToken) {
-            self.configFile.items = result
+            self.configFile.items = result.value.asConfigurationItems()
             self.saveConfig()
           }
         }
@@ -177,25 +177,10 @@ extension EtvnetApiClient {
     return result
   }
 
-  func updateToken(_ refreshToken: String) throws -> ConfigurationItems<String>? {
-    var result: ConfigurationItems<String>?
-
-    let semaphore = DispatchSemaphore.init(value: 0)
-
-    let disposable = self.authClient.updateToken(refreshToken: refreshToken).subscribe(onNext: { response in
-      result = response.value.asConfigurationItems()
-      semaphore.signal()
-    },
-      onError: { (e) -> Void in
-        semaphore.signal()
-      }
-    )
-
-    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
-
-    disposable.dispose()
-
-    return result
+  func updateToken(_ refreshToken: String) throws -> FullValue<AuthProperties>? {
+    return try await {
+      self.authClient.updateToken(refreshToken: refreshToken)
+    }
   }
 
   func checkAccessData(_ key: String) -> Bool {
@@ -206,7 +191,7 @@ extension EtvnetApiClient {
 
 extension EtvnetApiClient {
   func fullRequest<T: Decodable>(path: String, to type: T.Type, method: HttpMethod = .get,
-                                 params: [URLQueryItem] = [], unauthorized: Bool=false) -> FullValue<T>? {
+                                 params: [URLQueryItem] = [], unauthorized: Bool=false) throws -> FullValue<T>? {
     var result: FullValue<T>?
 
     if !checkAuthorization() {
@@ -221,11 +206,16 @@ extension EtvnetApiClient {
 
       let request = ApiRequest(path: path, queryItems: queryItems, method: method, headers: headers)
 
-      let semaphore = DispatchSemaphore.init(value: 0)
+      result = try await {
+        self.fetchRx(request, to: type)
+      }
 
-      let disposable = fetchRx(request, to: type).subscribe(onNext: { r in
-        result = r
+//      let semaphore = DispatchSemaphore.init(value: 0)
+//
+//      let disposable = fetchRx(request, to: type).subscribe(onNext: { r in
+//        result = r
 
+      if let r = result {
         let statusCode = r.response.statusCode
 
         if (statusCode == 401 || statusCode == 400) && !unauthorized {
@@ -234,27 +224,28 @@ extension EtvnetApiClient {
 
             if let refreshToken = refreshToken {
               if let updateResult = try self.updateToken(refreshToken) {
-                self.configFile.items = updateResult
+                self.configFile.items = updateResult.value.asConfigurationItems()
                 self.saveConfig()
 
-                result = self.fullRequest(path: path, to: type, method: method, params: params, unauthorized: true)
+                result = try self.fullRequest(path: path, to: type, method: method, params: params, unauthorized: true)
               }
             }
           } catch {
             print(error)
           }
         }
+      }
 
-        semaphore.signal()
-      },
-        onError: { (error) -> Void in
-          print("Error: \(error)")
-          semaphore.signal()
-        })
+//        semaphore.signal()
+//      },
+//        onError: { (error) -> Void in
+//          print("Error: \(error)")
+//          semaphore.signal()
+//        })
 
-      _ = semaphore.wait(timeout: DispatchTime.distantFuture)
-
-      disposable.dispose()
+//      _ = semaphore.wait(timeout: DispatchTime.distantFuture)
+//
+//      disposable.dispose()
     }
 
     return result

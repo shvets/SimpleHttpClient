@@ -10,7 +10,7 @@ enum ApiError: Error {
   case emptyResponse
 }
 
-typealias FullValue<T> = (value: T, response: ApiResponse)
+public typealias FullValue<T> = (value: T, response: ApiResponse)
 
 protocol HttpFetcher {
   func fetchAsync<T: Decodable>(_ request: ApiRequest, to type: T.Type,

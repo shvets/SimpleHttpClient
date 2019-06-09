@@ -31,7 +31,9 @@ class AuthAPITests: XCTestCase {
   
   func testCreateToken() throws {
     if let result = try subject.apiClient.authorization() {
-      if let response = subject.apiClient.tryCreateToken(userCode: result.userCode, deviceCode: result.deviceCode) {
+      print("Register activation code on web site \(subject.apiClient.authClient.getActivationUrl()): \(result.userCode)")
+
+      if let response = subject.apiClient.createToken(userCode: result.userCode, deviceCode: result.deviceCode) {
         XCTAssertNotNil(response.accessToken)
         XCTAssertNotNil(response.refreshToken)
 

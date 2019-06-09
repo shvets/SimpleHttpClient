@@ -16,7 +16,14 @@ class EtvnetAPITests: XCTestCase {
     subject.authorize {
       do {
         if let result = try self.subject.apiClient.authorization() {
-          _ = self.subject.apiClient.tryCreateToken(userCode: result.userCode, deviceCode: result.deviceCode)
+          print("Register activation code on web site \(self.subject.apiClient.authClient.getActivationUrl()): \(result.userCode)")
+
+          if let response = self.subject.apiClient.createToken(userCode: result.userCode, deviceCode: result.deviceCode) {
+            XCTAssertNotNil(response.accessToken)
+            XCTAssertNotNil(response.refreshToken)
+
+            print("Result: \(result)")
+          }
         }
       } catch {
         XCTFail("Error: \(error)")

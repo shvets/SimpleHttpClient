@@ -104,7 +104,18 @@ extension EtvnetApiClient {
     if checkAccessData("access_token") {
       ok = true
     } else if configFile.items["refresh_token"] != nil {
-      ok = tryUpdateToken()
+      do {
+        let refreshToken = configFile.items["refresh_token"]
+
+        if let refreshToken = refreshToken {
+          if let result = try updateToken(refreshToken) {
+            self.configFile.items = result
+            self.saveConfig()
+          }
+        }
+      } catch {
+        print(error)
+      }
     }
 
     if !ok {
@@ -133,9 +144,7 @@ extension EtvnetApiClient {
     return ok
   }
 
-  func tryCreateToken(userCode: String, deviceCode: String) -> AuthProperties? {
-    print("Register activation code on web site \(authClient.getActivationUrl()): \(userCode)")
-
+  func createToken(userCode: String, deviceCode: String) -> AuthProperties? {
     var result: AuthProperties?
 
     var done = false
@@ -168,29 +177,25 @@ extension EtvnetApiClient {
     return result
   }
 
-  func tryUpdateToken() -> Bool {
-    var ok = false
+  func updateToken(_ refreshToken: String) throws -> ConfigurationItems<String>? {
+    var result: ConfigurationItems<String>?
 
-    let refreshToken = configFile.items["refresh_token"]
+    let semaphore = DispatchSemaphore.init(value: 0)
 
-    do {
-      if let refreshToken = refreshToken {
-        let fullResponse = try await {
-          self.authClient.updateToken(refreshToken: refreshToken)
-        }
-
-        if let fullResponse = fullResponse {
-          self.configFile.items = fullResponse.value.asConfigurationItems()
-          self.saveConfig()
-
-          ok = true
-        }
+    let disposable = self.authClient.updateToken(refreshToken: refreshToken).subscribe(onNext: { response in
+      result = response.value.asConfigurationItems()
+      semaphore.signal()
+    },
+      onError: { (e) -> Void in
+        semaphore.signal()
       }
-    } catch {
-      print(error)
-    }
+    )
 
-    return ok
+    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
+
+    disposable.dispose()
+
+    return result
   }
 
   func checkAccessData(_ key: String) -> Bool {
@@ -224,8 +229,19 @@ extension EtvnetApiClient {
         let statusCode = r.response.statusCode
 
         if (statusCode == 401 || statusCode == 400) && !unauthorized {
-          if self.tryUpdateToken() {
-            result = self.fullRequest(path: path, to: type, method: method, params: params, unauthorized: true)
+          do {
+            let refreshToken = self.configFile.items["refresh_token"]
+
+            if let refreshToken = refreshToken {
+              if let updateResult = try self.updateToken(refreshToken) {
+                self.configFile.items = updateResult
+                self.saveConfig()
+
+                result = self.fullRequest(path: path, to: type, method: method, params: params, unauthorized: true)
+              }
+            }
+          } catch {
+            print(error)
           }
         }
 

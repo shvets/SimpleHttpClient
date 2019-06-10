@@ -4,20 +4,21 @@ import Files
 @testable import SimpleHttpClient
 
 class AudioKnigiAPITests: XCTestCase {
-//  var subject = AudioKnigiAPI()
-//
-////  func testGetAuthorsLetters() throws {
-////    let result = try subject.getAuthorsLetters()
-////
-////    print(result as Any)
-////
-////    XCTAssert(result.count > 0)
-////  }
-//
+  var subject = AudioKnigiAPI()
+
 //  func testGetAuthorsLetters() throws {
-//    let exp = expectation(description: "Gets authors letters")
+//    let result = try subject.getAuthorsLetters()
 //
-//    _ = subject.getAuthorsLetters().subscribe(onNext: { result in
+//    print(result as Any)
+//
+//    XCTAssert(result.count > 0)
+//  }
+
+  func testGetAuthorsLetters() throws {
+    //let exp = expectation(description: "Gets authors letters")
+
+    //let result = subject.getAuthorsLetters()
+//      .subscribe(onNext: { result in
 //      print(result as Any)
 //
 //      XCTAssert(result.count > 0)
@@ -29,8 +30,8 @@ class AudioKnigiAPITests: XCTestCase {
 //    })
 //
 //    waitForExpectations(timeout: 10, handler: nil)
-//  }
-//
+  }
+
 ////  func testGetPerformersLetters() throws {
 ////    let result = try subject.getPerformersLetters()
 ////

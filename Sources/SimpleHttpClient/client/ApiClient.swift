@@ -171,6 +171,26 @@ extension ApiClient: HttpFetcher {
     }
   }
 
+  func decode<T: Decodable>(_ data: Data, to type: T.Type) -> T? {
+    var value: T?
+
+    do {
+      if data.isEmpty {
+        value = "" as! T
+      }
+      else {
+        let decoder = JSONDecoder()
+
+        value = try decoder.decode(T.self, from: data)
+      }
+    }
+    catch {
+      print(error)
+    }
+
+    return value
+  }
+
   @discardableResult
   func fetch<T: Decodable>(_ request: ApiRequest, to type: T.Type) throws -> FullValue<T>? {
     return try await {

@@ -1,28 +1,32 @@
 import Foundation
-//import SwiftSoup
+import SwiftSoup
 //import Files
 //import RxSwift
 
 open class AudioKnigiAPI {
   public static let SiteUrl = "https://audioknigi.club"
 
-//  func getPagePath(path: String, page: Int=1) -> String {
-//    if page == 1 {
-//      return path
-//    }
-//    else {
-//      return "\(path)page\(page)/"
-//    }
-//  }
-//
-//  public func getAuthorsLetters() -> Observable<[Any]> {
-//    let url = AudioKnigiAPI.SiteUrl + "/authors/"
-//
-//    return httpRequestRx(url).map { [weak self] data in
+  let apiClient = ApiClient(URL(string: SiteUrl)!)
+
+  func getPagePath(path: String, page: Int=1) -> String {
+    if page == 1 {
+      return path
+    }
+    else {
+      return "\(path)page\(page)/"
+    }
+  }
+
+  public func getAuthorsLetters() -> [Any] {
+    let path = "/authors/"
+
+    //return try apiClient.fullRequest(path: path, to: Data.self)
+    return []
+//      httpRequestRx(url).map { [weak self] data in
 //      return (try self?.buildLetters(data, filter: "author-prefix-filter"))!
 //    }
-//  }
-//
+  }
+
 //  func getLetters(path: String, filter: String) throws -> Observable<[Any]> {
 //    let url = AudioKnigiAPI.SiteUrl + path
 //
@@ -30,23 +34,23 @@ open class AudioKnigiAPI {
 //      return try self!.buildLetters(data, filter: filter)
 //    }
 //  }
-//
-//  func buildLetters(_ data: Data, filter: String) throws -> [Any] {
-//    var result = [Any]()
-//
-//    let document = try toDocument(data)
-//
-//    let items = try document!.select("ul[id='" + filter + "'] li a")
-//
-//    for item in items.array() {
-//      let name = try item.text()
-//
-//      result.append(name)
-//    }
-//
-//    return result
-//  }
-//
+
+  func buildLetters(_ data: Data, filter: String) throws -> [Any] {
+    var result = [Any]()
+
+    let document = try toDocument(data)
+
+    let items = try document!.select("ul[id='" + filter + "'] li a")
+
+    for item in items.array() {
+      let name = try item.text()
+
+      result.append(name)
+    }
+
+    return result
+  }
+
 //  public func getNewBooks(page: Int=1) -> Observable<[String: Any]> {
 //    return getBooks(path: "/index/", page: page)
 //  }
@@ -479,4 +483,14 @@ open class AudioKnigiAPI {
 //    return items
 //  }
 
+  public func toDocument(_ data: Data?, encoding: String.Encoding = .utf8) throws -> Document? {
+    var document: Document?
+
+    if let data = data,
+       let html = String(data: data, encoding: encoding) {
+      document = try SwiftSoup.parse(html)
+    }
+
+    return document
+  }
 }

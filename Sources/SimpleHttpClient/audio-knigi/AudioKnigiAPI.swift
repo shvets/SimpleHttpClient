@@ -17,11 +17,10 @@ open class AudioKnigiAPI {
     }
   }
 
-  public func getAuthorsLetters() -> [Any] {
+  public func getAuthorsLetters() throws -> [String] {
     let path = "/authors/"
 
-    //return try apiClient.fullRequest(path: path, to: Data.self)
-    return []
+    return try apiClient.request(path, to: [String].self)!.value
 //      httpRequestRx(url).map { [weak self] data in
 //      return (try self?.buildLetters(data, filter: "author-prefix-filter"))!
 //    }

@@ -108,7 +108,7 @@ extension ApiClient: HttpFetcher {
               if let data = data {
                 let response = ApiResponse(statusCode: httpResponse.statusCode, body: data)
 
-                print("Result: \(String(data: data, encoding: .utf8)!)")
+                //print("Result: \(String(data: data, encoding: .utf8)!)")
 
                 observer.on(.next(response))
                 observer.on(.completed)
@@ -140,6 +140,23 @@ extension ApiClient: HttpFetcher {
     return try await {
       self.fetchRx(request)
     }
+  }
+
+  func request<T: Decodable>(_ path: String, to type: T.Type, method: HttpMethod = .get,
+                             queryItems: [URLQueryItem] = [], headers: [HttpHeader] = [],
+                             unauthorized: Bool=false) throws ->
+    (value: T, response: ApiResponse)? {
+    var result: (value: T, response: ApiResponse)?
+
+    let request = ApiRequest(path: path, queryItems: queryItems, method: method, headers: headers)
+
+    result = try await {
+      self.fetchRx(request).map {response in
+        return (value: self.decode(response.body!, to: type)!, response: response)
+      }
+    }
+
+    return result
   }
 
   func decode<T: Decodable>(_ data: Data, to type: T.Type) -> T? {

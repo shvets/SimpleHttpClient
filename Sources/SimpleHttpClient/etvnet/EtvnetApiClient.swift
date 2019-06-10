@@ -205,13 +205,7 @@ extension EtvnetApiClient {
       var headers: [HttpHeader] = []
       headers.append(HttpHeader(field: "User-agent", value: UserAgent))
 
-      let request = ApiRequest(path: path, queryItems: queryItems, method: method, headers: headers)
-
-      result = try await {
-        self.fetchRx(request).map {response in
-          return (value: self.decode(response.body!, to: type)!, response: response)
-        }
-      }
+      result = try request(path, to: type, method: method, queryItems: queryItems, headers: headers)
 
       if let r = result {
         let statusCode = r.response.statusCode

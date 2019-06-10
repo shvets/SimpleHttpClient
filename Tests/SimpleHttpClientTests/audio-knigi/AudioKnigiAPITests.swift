@@ -17,7 +17,7 @@ class AudioKnigiAPITests: XCTestCase {
   func testGetAuthorsLetters() throws {
     //let exp = expectation(description: "Gets authors letters")
 
-    //let result = subject.getAuthorsLetters()
+    let result = try subject.getAuthorsLetters()
 //      .subscribe(onNext: { result in
 //      print(result as Any)
 //

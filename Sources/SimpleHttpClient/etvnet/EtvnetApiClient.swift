@@ -205,7 +205,9 @@ extension EtvnetApiClient {
       var headers: [HttpHeader] = []
       headers.append(HttpHeader(field: "User-agent", value: UserAgent))
 
-      result = try request(path, to: type, method: method, queryItems: queryItems, headers: headers)
+      let response = try request(path, to: type, method: method, queryItems: queryItems, headers: headers)
+
+      result = (value: self.decode(response!.body!, to: type)!, response: response!)
 
       if let r = result {
         let statusCode = r.response.statusCode

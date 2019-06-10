@@ -144,19 +144,14 @@ extension ApiClient: HttpFetcher {
 
   func request<T: Decodable>(_ path: String, to type: T.Type, method: HttpMethod = .get,
                              queryItems: [URLQueryItem] = [], headers: [HttpHeader] = [],
-                             unauthorized: Bool=false) throws ->
-    (value: T, response: ApiResponse)? {
+                             unauthorized: Bool=false) throws -> ApiResponse? {
     var result: (value: T, response: ApiResponse)?
 
     let request = ApiRequest(path: path, queryItems: queryItems, method: method, headers: headers)
 
-    result = try await {
-      self.fetchRx(request).map {response in
-        return (value: self.decode(response.body!, to: type)!, response: response)
-      }
+    return try await {
+      self.fetchRx(request)
     }
-
-    return result
   }
 
   func decode<T: Decodable>(_ data: Data, to type: T.Type) -> T? {

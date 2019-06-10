@@ -20,9 +20,11 @@ open class AudioKnigiAPI {
   public func getAuthorsLetters() throws -> [String] {
     let path = "/authors/"
 
-    return try apiClient.request(path, to: [String].self)!.value
+    let response = try apiClient.request(path, to: [String].self)!
+
+    //return []
 //      httpRequestRx(url).map { [weak self] data in
-//      return (try self?.buildLetters(data, filter: "author-prefix-filter"))!
+      return (try self.buildLetters(response.body!, filter: "author-prefix-filter"))
 //    }
   }
 
@@ -34,8 +36,8 @@ open class AudioKnigiAPI {
 //    }
 //  }
 
-  func buildLetters(_ data: Data, filter: String) throws -> [Any] {
-    var result = [Any]()
+  func buildLetters(_ data: Data, filter: String) throws -> [String] {
+    var result = [String]()
 
     let document = try toDocument(data)
 

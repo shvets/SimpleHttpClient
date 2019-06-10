@@ -10,15 +10,13 @@ enum ApiError: Error {
   case emptyResponse
 }
 
-public typealias FullValue<T> = (value: T, response: ApiResponse)
-
 protocol HttpFetcher {
   func fetchAsync(_ request: ApiRequest, _ handler: @escaping (Result<ApiResponse, ApiError>) -> Void)
 
   @discardableResult
   func fetchRx(_ request: ApiRequest) -> Observable<ApiResponse>
 
-  func fetch<T: Decodable>(_ request: ApiRequest, to type: T.Type) throws -> ApiResponse?
+  func fetch(_ request: ApiRequest) throws -> ApiResponse?
 }
 
 open class ApiClient {
@@ -110,6 +108,8 @@ extension ApiClient: HttpFetcher {
               if let data = data {
                 let response = ApiResponse(statusCode: httpResponse.statusCode, body: data)
 
+                print("Result: \(String(data: data, encoding: .utf8)!)")
+
                 observer.on(.next(response))
                 observer.on(.completed)
               }
@@ -136,7 +136,7 @@ extension ApiClient: HttpFetcher {
   }
 
   @discardableResult
-  func fetch<T: Decodable>(_ request: ApiRequest, to type: T.Type) throws -> ApiResponse? {
+  func fetch(_ request: ApiRequest) throws -> ApiResponse? {
     return try await {
       self.fetchRx(request)
     }

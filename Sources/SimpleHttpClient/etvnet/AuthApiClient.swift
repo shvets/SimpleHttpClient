@@ -23,7 +23,7 @@ open class AuthApiClient: ApiClient {
   }
   
   func getActivationCodes(includeClientSecret: Bool = true, includeClientId: Bool = false) ->
-    Observable<FullValue<ActivationCodesProperties>> {
+    Observable<ActivationCodesProperties> {
 
     var queryItems: [URLQueryItem] = []
 
@@ -40,12 +40,12 @@ open class AuthApiClient: ApiClient {
     let request = ApiRequest(path: "device/code", queryItems: queryItems)
 
     return self.fetchRx(request).map {response in
-      (value: self.decode(response.body!, to: ActivationCodesProperties.self)!, response: response)
+      self.decode(response.body!, to: ActivationCodesProperties.self)!
     }
   }
 
   @discardableResult
-  public func createToken(deviceCode: String) -> Observable<FullValue<AuthProperties>> {
+  public func createToken(deviceCode: String) -> Observable<AuthProperties> {
     var queryItems: [URLQueryItem] = []
 
     queryItems.append(URLQueryItem(name: "grant_type", value: GrantType))
@@ -56,12 +56,12 @@ open class AuthApiClient: ApiClient {
     let request = ApiRequest(path: "token", queryItems: queryItems)
 
     return self.fetchRx(request).map {response in
-      (value: self.decode(response.body!, to: AuthProperties.self)!, response: response)
+      self.decode(response.body!, to: AuthProperties.self)!
     }
   }
 
   @discardableResult
-  func updateToken(refreshToken: String) -> Observable<FullValue<AuthProperties>> {
+  func updateToken(refreshToken: String) -> Observable<AuthProperties> {
     var queryItems: [URLQueryItem] = []
 
     queryItems.append(URLQueryItem(name: "grant_type", value: "refresh_token"))
@@ -72,7 +72,7 @@ open class AuthApiClient: ApiClient {
     let request = ApiRequest(path: "token", queryItems: queryItems)
 
     return self.fetchRx(request).map {response in
-      (value: self.decode(response.body!, to: AuthProperties.self)!, response: response)
+      self.decode(response.body!, to: AuthProperties.self)!
     }
   }
 }

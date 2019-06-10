@@ -77,13 +77,13 @@ extension EtvnetApiClient {
 
       result = AuthResult(userCode: userCode, deviceCode: deviceCode)
     } else {
-      let fullResponse = try await {
+      let value = try await {
         self.authClient.getActivationCodes(includeClientSecret: includeClientSecret)
       }
 
-      if let fullResponse = fullResponse {
-        if let userCode = fullResponse.value.userCode,
-           let deviceCode = fullResponse.value.deviceCode {
+      if let value = value {
+        if let userCode = value.userCode,
+           let deviceCode = value.deviceCode {
           self.configFile.items["user_code"] = userCode
           self.configFile.items["device_code"] = deviceCode
           self.configFile.items["activation_url"] = authClient.getActivationUrl()
@@ -108,8 +108,8 @@ extension EtvnetApiClient {
         let refreshToken = configFile.items["refresh_token"]
 
         if let refreshToken = refreshToken {
-          if let result = try updateToken(refreshToken) {
-            self.configFile.items = result.value.asConfigurationItems()
+          if let value = try updateToken(refreshToken) {
+            self.configFile.items = value.asConfigurationItems()
             self.saveConfig()
           }
         }
@@ -124,14 +124,14 @@ extension EtvnetApiClient {
 
         do {
           if let deviceCode = deviceCode {
-            let fullResponse = try await {
+            let value = try await {
               self.authClient.createToken(deviceCode: deviceCode)
             }
 
-            if let fullResponse = fullResponse {
+            if let value = value {
               ok = true
 
-              self.configFile.items = fullResponse.value.asConfigurationItems()
+              self.configFile.items = value.asConfigurationItems()
               self.saveConfig()
             }
           }
@@ -151,17 +151,17 @@ extension EtvnetApiClient {
 
     while !done {
       do {
-        let fullResponse = try await {
+        let value = try await {
           self.authClient.createToken(deviceCode: deviceCode)
         }
 
-        if let fullResponse = fullResponse {
-          done = fullResponse.value.accessToken != nil
+        if let value = value {
+          done = value.accessToken != nil
 
           if done {
-            result = fullResponse.value
+            result = value
 
-            self.configFile.items = fullResponse.value.asConfigurationItems()
+            self.configFile.items = value.asConfigurationItems()
             saveConfig()
           }
         }
@@ -177,7 +177,7 @@ extension EtvnetApiClient {
     return result
   }
 
-  func updateToken(_ refreshToken: String) throws -> FullValue<AuthProperties>? {
+  func updateToken(_ refreshToken: String) throws -> AuthProperties? {
     return try await {
       self.authClient.updateToken(refreshToken: refreshToken)
     }
@@ -191,8 +191,9 @@ extension EtvnetApiClient {
 
 extension EtvnetApiClient {
   func fullRequest<T: Decodable>(path: String, to type: T.Type, method: HttpMethod = .get,
-                                 params: [URLQueryItem] = [], unauthorized: Bool=false) throws -> FullValue<T>? {
-    var result: FullValue<T>?
+                                 params: [URLQueryItem] = [], unauthorized: Bool=false) throws ->
+    (value: T, response: ApiResponse)? {
+    var result: (value: T, response: ApiResponse)?
 
     if !checkAuthorization() {
       authorizeCallback()
@@ -220,8 +221,8 @@ extension EtvnetApiClient {
             let refreshToken = self.configFile.items["refresh_token"]
 
             if let refreshToken = refreshToken {
-              if let updateResult = try self.updateToken(refreshToken) {
-                self.configFile.items = updateResult.value.asConfigurationItems()
+              if let fullValue = try self.updateToken(refreshToken) {
+                self.configFile.items = fullValue.asConfigurationItems()
                 self.saveConfig()
 
                 result = try self.fullRequest(path: path, to: type, method: method, params: params, unauthorized: true)

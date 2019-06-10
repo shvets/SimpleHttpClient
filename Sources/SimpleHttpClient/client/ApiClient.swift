@@ -13,13 +13,12 @@ enum ApiError: Error {
 public typealias FullValue<T> = (value: T, response: ApiResponse)
 
 protocol HttpFetcher {
-  func fetchAsync<T: Decodable>(_ request: ApiRequest, to type: T.Type,
-                           _ handler: @escaping (Result<FullValue<T>, ApiError>) -> Void)
+  func fetchAsync(_ request: ApiRequest, _ handler: @escaping (Result<ApiResponse, ApiError>) -> Void)
 
   @discardableResult
-  func fetchRx<T: Decodable>(_ request: ApiRequest, to type: T.Type) -> Observable<FullValue<T>>
+  func fetchRx(_ request: ApiRequest) -> Observable<ApiResponse>
 
-  func fetch<T: Decodable>(_ request: ApiRequest, to type: T.Type) throws -> FullValue<T>?
+  func fetch<T: Decodable>(_ request: ApiRequest, to type: T.Type) throws -> ApiResponse?
 }
 
 open class ApiClient {
@@ -62,8 +61,7 @@ open class ApiClient {
 }
 
 extension ApiClient: HttpFetcher {
-  func fetchAsync<T: Decodable>(_ request: ApiRequest, to type: T.Type,
-                                _ handler: @escaping (Result<FullValue<T>, ApiError>) -> Void) {
+  func fetchAsync(_ request: ApiRequest, _ handler: @escaping (Result<ApiResponse, ApiError>) -> Void) {
     if let url = buildUrl(request) {
       do {
         let urlRequest = try buildUrlRequest(url: url, request: request)
@@ -74,25 +72,9 @@ extension ApiClient: HttpFetcher {
           }
           else if let httpResponse = response as? HTTPURLResponse {
             if let data = data {
-              do {
-                let value: T
+              let response = ApiResponse(statusCode: httpResponse.statusCode, body: data)
 
-                let response = ApiResponse(statusCode: httpResponse.statusCode, body: data)
-
-                if data.isEmpty {
-                  value = "" as! T
-                }
-                else {
-                  let decoder = JSONDecoder()
-
-                  value = try decoder.decode(T.self, from: data)
-                }
-
-                handler(.success((value, response)))
-              }
-              catch {
-                handler(.failure(.bodyDecodingFailed))
-              }
+              handler(.success(response))
             }
             else {
               handler(.failure(.emptyResponse))
@@ -114,7 +96,7 @@ extension ApiClient: HttpFetcher {
   }
 
   @discardableResult
-  func fetchRx<T: Decodable>(_ request: ApiRequest, to type: T.Type) -> Observable<FullValue<T>> {
+  func fetchRx(_ request: ApiRequest) -> Observable<ApiResponse> {
     return Observable.create { observer -> Disposable in
       if let url = self.buildUrl(request) {
         do {
@@ -126,28 +108,10 @@ extension ApiClient: HttpFetcher {
             }
             else if let httpResponse = response as? HTTPURLResponse {
               if let data = data {
-                do {
-                  print("Result: \(String(data: data, encoding: .utf8)!)")
+                let response = ApiResponse(statusCode: httpResponse.statusCode, body: data)
 
-                  let value: T
-
-                  let response = ApiResponse(statusCode: httpResponse.statusCode, body: data)
-
-                  if data.isEmpty {
-                    value = "" as! T
-                  }
-                  else {
-                    let decoder = JSONDecoder()
-
-                    value = try decoder.decode(T.self, from: data)
-                  }
-
-                  observer.on(.next((value, response)))
-                  observer.on(.completed)
-                }
-                catch {
-                  observer.on(.error(ApiError.bodyDecodingFailed))
-                }
+                observer.on(.next(response))
+                observer.on(.completed)
               }
               else {
                 observer.on(.error(ApiError.emptyResponse))
@@ -171,6 +135,13 @@ extension ApiClient: HttpFetcher {
     }
   }
 
+  @discardableResult
+  func fetch<T: Decodable>(_ request: ApiRequest, to type: T.Type) throws -> ApiResponse? {
+    return try await {
+      self.fetchRx(request)
+    }
+  }
+
   func decode<T: Decodable>(_ data: Data, to type: T.Type) -> T? {
     var value: T?
 
@@ -189,13 +160,6 @@ extension ApiClient: HttpFetcher {
     }
 
     return value
-  }
-
-  @discardableResult
-  func fetch<T: Decodable>(_ request: ApiRequest, to type: T.Type) throws -> FullValue<T>? {
-    return try await {
-      self.fetchRx(request, to: type)
-    }
   }
 
   @discardableResult

@@ -207,7 +207,9 @@ extension EtvnetApiClient {
       let request = ApiRequest(path: path, queryItems: queryItems, method: method, headers: headers)
 
       result = try await {
-        self.fetchRx(request, to: type)
+        self.fetchRx(request).map {response in
+          return (value: self.decode(response.body!, to: type)!, response: response)
+        }
       }
 
       if let r = result {

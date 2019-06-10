@@ -39,7 +39,9 @@ open class AuthApiClient: ApiClient {
 
     let request = ApiRequest(path: "device/code", queryItems: queryItems)
 
-    return self.fetchRx(request, to: ActivationCodesProperties.self)
+    return self.fetchRx(request).map {response in
+      (value: self.decode(response.body!, to: ActivationCodesProperties.self)!, response: response)
+    }
   }
 
   @discardableResult
@@ -53,7 +55,9 @@ open class AuthApiClient: ApiClient {
 
     let request = ApiRequest(path: "token", queryItems: queryItems)
 
-    return self.fetchRx(request, to: AuthProperties.self)
+    return self.fetchRx(request).map {response in
+      (value: self.decode(response.body!, to: AuthProperties.self)!, response: response)
+    }
   }
 
   @discardableResult
@@ -67,6 +71,8 @@ open class AuthApiClient: ApiClient {
 
     let request = ApiRequest(path: "token", queryItems: queryItems)
 
-    return self.fetchRx(request, to: AuthProperties.self)
+    return self.fetchRx(request).map {response in
+      (value: self.decode(response.body!, to: AuthProperties.self)!, response: response)
+    }
   }
 }

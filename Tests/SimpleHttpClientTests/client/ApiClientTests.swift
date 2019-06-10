@@ -21,17 +21,18 @@ class ApiClientTests: XCTestCase {
 
     let request = ApiRequest(path: "posts")
 
-    subject.fetchAsync(request, to: [Post].self) { (result) in
+    subject.fetchAsync(request) { (result) in
       switch result {
-      case .success(let posts, _):
-        print("Received posts: \(posts.first?.title ?? "")")
+        case .success(let response):
+          let posts = self.subject.decode(response.body!, to: [Post].self)!
+          print("Received posts: \(posts.first?.title ?? "")")
 
-        XCTAssertEqual(posts.count, 100)
+          XCTAssertEqual(posts.count, 100)
 
-        exp.fulfill()
-      case .failure(let error):
-        XCTFail("Error during request: \(error)")
-      }
+          exp.fulfill()
+        case .failure(let error):
+          XCTFail("Error during request: \(error)")
+        }
     }
 
     waitForExpectations(timeout: 10)
@@ -42,12 +43,15 @@ class ApiClientTests: XCTestCase {
 
     let request = ApiRequest(path: "posts")
 
-    _ = subject.fetchRx(request, to: [Post].self).subscribe(onNext: { result, _ in
-      exp.fulfill()
+    _ = subject.fetchRx(request).map {response in
+      (value: self.subject.decode(response.body!, to: [Post].self)!, response: response)
+    }.subscribe(onNext: { result, _ in
 
       print("Received posts: \(result.first?.title ?? "")")
 
       XCTAssertEqual(result.count, 100)
+
+      exp.fulfill()
     }, onError: { (error) -> Void in
       exp.fulfill()
       XCTFail("Error during request: \(error)")

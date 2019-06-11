@@ -191,7 +191,7 @@ extension EtvnetApiClient {
 
 extension EtvnetApiClient {
   func fullRequest<T: Decodable>(path: String, to type: T.Type, method: HttpMethod = .get,
-                                 params: [URLQueryItem] = [], unauthorized: Bool=false) throws ->
+                                 queryItems: [URLQueryItem] = [], unauthorized: Bool=false) throws ->
     (value: T, response: ApiResponse)? {
     var result: (value: T, response: ApiResponse)?
 
@@ -200,12 +200,12 @@ extension EtvnetApiClient {
     }
 
     if let accessToken = configFile.items["access_token"] {
-      let queryItems = addAccessToken(params: params, accessToken: accessToken)
+      let newQueryItems = addAccessToken(params: queryItems, accessToken: accessToken)
 
       var headers: [HttpHeader] = []
       headers.append(HttpHeader(field: "User-agent", value: UserAgent))
 
-      let response = try request(path, to: type, method: method, queryItems: queryItems, headers: headers)
+      let response = try request(path, to: type, method: method, queryItems: newQueryItems, headers: headers)
 
       result = (value: self.decode(response!.body!, to: type)!, response: response!)
 
@@ -221,7 +221,7 @@ extension EtvnetApiClient {
                 self.configFile.items = fullValue.asConfigurationItems()
                 self.saveConfig()
 
-                result = try self.fullRequest(path: path, to: type, method: method, params: params, unauthorized: true)
+                result = try self.fullRequest(path: path, to: type, method: method, queryItems: queryItems, unauthorized: true)
               }
             }
           } catch {

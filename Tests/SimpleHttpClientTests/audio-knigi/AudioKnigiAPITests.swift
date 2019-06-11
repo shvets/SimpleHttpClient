@@ -6,56 +6,21 @@ import Files
 class AudioKnigiAPITests: XCTestCase {
   var subject = AudioKnigiAPI()
 
-//  func testGetAuthorsLetters() throws {
-//    let result = try subject.getAuthorsLetters()
-//
-//    print(result as Any)
-//
-//    XCTAssert(result.count > 0)
-//  }
-
   func testGetAuthorsLetters() throws {
-    //let exp = expectation(description: "Gets authors letters")
-
     let result = try subject.getAuthorsLetters()
 
-    print(result)
-
-//      .subscribe(onNext: { result in
-//      print(result as Any)
-//
-//      XCTAssert(result.count > 0)
-//
-//      exp.fulfill()
-//    },
-//    onError: { error in
-//      print("Received error:", error)
-//    })
-//
-//    waitForExpectations(timeout: 10, handler: nil)
+    print(try result.prettify())
   }
 
-////  func testGetPerformersLetters() throws {
-////    let result = try subject.getPerformersLetters()
-////
-////    //print(result as Any)
-////
-////    XCTAssert(result.count > 0)
-////  }
-//
-//  func testGetNewBooks() throws {
-//    let exp = expectation(description: "Gets new books")
-//
-//    _ = subject.getNewBooks().subscribe(onNext: { result in
-//      print(result as Any)
-//
-//      XCTAssert(result.count > 0)
-//
-//      exp.fulfill()
-//    })
-//
-//    waitForExpectations(timeout: 10, handler: nil)
-//  }
+  func testGetNewBooks() throws {
+    let result = try subject.getNewBooks()
+
+    //print(try result.prettify())
+    print(result)
+
+    XCTAssert(result.count > 0)
+  }
+
 //
 //  func testGetBestBooksByWeek() throws {
 //    let exp = expectation(description: "Gets best books by week")
@@ -103,7 +68,7 @@ class AudioKnigiAPITests: XCTestCase {
 //    let exp = expectation(description: "Gets author books")
 //
 //    _ = subject.getAuthors().subscribe(onNext: { result in
-//      let items = result["movies"] as! [Any]
+//      let items = result["items"] as! [Any]
 //
 //      let id = (items[0] as! [String: String])["id"]!
 //
@@ -123,7 +88,7 @@ class AudioKnigiAPITests: XCTestCase {
 //    let exp = expectation(description: "Gets performers books")
 //
 //    _ = subject.getPerformers().subscribe(onNext: { result in
-//      let items = result["movies"] as! [Any]
+//      let items = result["items"] as! [Any]
 //
 //      let id = (items[0] as! [String: String])["id"]!
 //
@@ -193,7 +158,7 @@ class AudioKnigiAPITests: XCTestCase {
 //    let exp = expectation(description: "Gets all genres")
 //
 //    _ = subject.getGenres(page: 1).subscribe(onNext: { result in
-//      let items = result["movies"] as! [Any]
+//      let items = result["items"] as! [Any]
 //
 //      let id = (items[0] as! [String: Any])["id"] as? String
 //
@@ -338,7 +303,7 @@ class AudioKnigiAPITests: XCTestCase {
 //    let semaphore1 = DispatchSemaphore.init(value: 0)
 //
 //    _ = subject.getAuthors().subscribe(onNext: { result in
-//      list += (result["movies"] as! [Any])
+//      list += (result["items"] as! [Any])
 //
 //      let pagination = result["pagination"] as! [String: Any]
 //
@@ -348,7 +313,7 @@ class AudioKnigiAPITests: XCTestCase {
 //
 //      for page in (2...pages) {
 //        _ = self.subject.getAuthors(page: page).subscribe(onNext: { result in
-//          list += (result["movies"] as! [Any])
+//          list += (result["items"] as! [Any])
 //
 //          semaphore2.signal()
 //        })
@@ -372,7 +337,7 @@ class AudioKnigiAPITests: XCTestCase {
 //    let semaphore1 = DispatchSemaphore.init(value: 0)
 //
 //    _ = subject.getPerformers().subscribe(onNext: { result in
-//      list += (result["movies"] as! [Any])
+//      list += (result["items"] as! [Any])
 //
 //      let pagination = result["pagination"] as! [String: Any]
 //
@@ -382,7 +347,7 @@ class AudioKnigiAPITests: XCTestCase {
 //
 //      for page in (2...pages) {
 //        _ = self.subject.getPerformers(page: page).subscribe(onNext: { result in
-//          list += (result["movies"] as! [Any])
+//          list += (result["items"] as! [Any])
 //
 //          semaphore2.signal()
 //        })

@@ -3,6 +3,8 @@ import SwiftSoup
 //import Files
 //import RxSwift
 
+//public typealias ItemsList = [String: [String]]
+
 open class AudioKnigiAPI {
   public static let SiteUrl = "https://audioknigi.club"
 
@@ -18,14 +20,29 @@ open class AudioKnigiAPI {
   }
 
   public func getAuthorsLetters() throws -> [String] {
+    var result = [String]()
+
     let path = "/authors/"
 
     let response = try apiClient.request(path, to: [String].self)!
 
-    //return []
-//      httpRequestRx(url).map { [weak self] data in
-      return (try self.buildLetters(response.body!, filter: "author-prefix-filter"))
-//    }
+    if let data = response.body {
+      let document = try toDocument(data)
+
+      let filter = "author-prefix-filter"
+
+      let items = try document!.select("ul[id='" + filter + "'] li a")
+
+      for item in items.array() {
+        let name = try item.text()
+
+        result.append(name)
+      }
+    }
+
+    return result
+
+    //return (try self.buildLetters(response.body!, filter: "author-prefix-filter"))
   }
 
 //  func getLetters(path: String, filter: String) throws -> Observable<[Any]> {
@@ -36,70 +53,72 @@ open class AudioKnigiAPI {
 //    }
 //  }
 
-  func buildLetters(_ data: Data, filter: String) throws -> [String] {
-    var result = [String]()
+//  func buildLetters(_ data: Data, filter: String) throws -> [String] {
+//    var result = [String]()
+//
+//    let document = try toDocument(data)
+//
+//    let items = try document!.select("ul[id='" + filter + "'] li a")
+//
+//    for item in items.array() {
+//      let name = try item.text()
+//
+//      result.append(name)
+//    }
+//
+//    return result
+//  }
 
-    let document = try toDocument(data)
+  public func getNewBooks(page: Int=1) throws -> [String: Any] {
+    return try getBooks(path: "/index/", page: page)
+  }
 
-    let items = try document!.select("ul[id='" + filter + "'] li a")
+  public func getBestBooks(period: String, page: Int=1) throws -> [String: Any] {
+    return try getBooks(path: "/index/views/", period: period, page: page)
+  }
 
-    for item in items.array() {
-      let name = try item.text()
+  public func getBooks(path: String, period: String="", page: Int=1) throws -> [String: Any] {
+    var result: [String: Any] = [:]
 
-      result.append(name)
+    let encodedPath = path.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
+
+    var pagePath = getPagePath(path: encodedPath, page: page)
+
+    var queryItems: [URLQueryItem] = []
+
+    if !period.isEmpty {
+      queryItems.append(URLQueryItem(name: "period", value: period))
+    }
+
+    let response = try apiClient.request(pagePath, to: [String].self, queryItems: queryItems)!
+
+    if let document = try toDocument(response.body!) {
+      result = try self.getBookItems(document, path: encodedPath, page: page)
     }
 
     return result
   }
 
-//  public func getNewBooks(page: Int=1) -> Observable<[String: Any]> {
-//    return getBooks(path: "/index/", page: page)
-//  }
-//
-//  public func getBestBooks(period: String, page: Int=1) -> Observable<[String: Any]> {
-//    return getBooks(path: "/index/views/", period: period, page: page)
-//  }
-//
-//  public func getBooks(path: String, period: String="", page: Int=1) -> Observable<[String: Any]> {
-//    let encodedPath = path.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
-//
-//    var pagePath = getPagePath(path: encodedPath, page: page)
-//
-//    if !period.isEmpty {
-//      pagePath = "\(pagePath)?period=\(period)"
-//    }
-//
-//    let url = AudioKnigiAPI.SiteUrl + pagePath
-//
-//    return httpRequestRx(url).map { data in
-//      if let document = try self.toDocument(data) {
-//        return try self.getBookItems(document, path: encodedPath, page: page)
-//      }
-//
-//      return [:]
-//    }
-//  }
-//
-//  func getBookItems(_ document: Document, path: String, page: Int) throws -> [String: Any] {
-//    var data = [Any]()
-//
-//    let items = try document.select("article")
-//
-//    for item: Element in items.array() {
-//      let link = try item.select("header h3 a")
-//      let name = try link.text()
-//      let href = try link.attr("href")
-//      let thumb = try item.select("img").attr("src")
-//      let description = try item.select("div[class='topic-content text']").text()
-//
-//      data.append(["type": "book", "id": href, "name": name, "thumb": thumb, "description": description ])
-//    }
-//
-//    let paginationData = try extractPaginationData(document: document, path: path, page: page)
-//
-//    return ["movies": data, "pagination": paginationData]
-//  }
-//
+  func getBookItems(_ document: Document, path: String, page: Int) throws -> [String: Any] {
+    var data = [Any]()
+
+    let items = try document.select("article")
+
+    for item: Element in items.array() {
+      let link = try item.select("header h3 a")
+      let name = try link.text()
+      let href = try link.attr("href")
+      let thumb = try item.select("img").attr("src")
+      let description = try item.select("div[class='topic-content text']").text()
+
+      data.append(["type": "book", "id": href, "name": name, "thumb": thumb, "description": description ])
+    }
+
+    let paginationData = try extractPaginationData(document: document, path: path, page: page)
+
+    return ["items": data, "pagination": paginationData]
+  }
+
 //  public func getAuthors(page: Int=1) -> Observable<[String: Any]> {
 //    return getCollection(path: "/authors/", page: page)
 //  }
@@ -139,7 +158,7 @@ open class AudioKnigiAPI {
 //          paginationData = try self.extractPaginationData(document: document, path: path, page: page)
 //        }
 //
-//        return ["movies": collection, "pagination": paginationData]
+//        return ["items": collection, "pagination": paginationData]
 //      }
 //
 //      return [:]
@@ -156,7 +175,7 @@ open class AudioKnigiAPI {
 //    return httpRequestRx(url).map { data in
 //      if let document = try self.toDocument(data) {
 //        var data = [Any]()
-//        var paginationData = ItemsList()
+//        var paginationData = [String: Any]()
 //
 //        let items = try document.select("td[class=cell-name]")
 //
@@ -178,7 +197,7 @@ open class AudioKnigiAPI {
 //          paginationData = try self.extractPaginationData(document: document, path: path, page: page)
 //        }
 //
-//        return ["movies": data, "pagination": paginationData]
+//        return ["items": data, "pagination": paginationData]
 //      }
 //
 //      return [:]
@@ -188,68 +207,68 @@ open class AudioKnigiAPI {
 //  func getGenre(path: String, page: Int=1) -> Observable<[String: Any]> {
 //    return getBooks(path: path, page: page)
 //  }
+
+  func extractPaginationData(document: Document, path: String, page: Int) throws -> [String: Any] {
+    var pages = 1
+
+    let paginationRoot = try document.select("ul[class='pagination']")
+
+    if paginationRoot.size() > 0 {
+      let paginationBlock = paginationRoot.get(0)
+
+      let items = try paginationBlock.select("ul li")
+
+      var lastLink = try items.get(items.size() - 1).select("a")
+
+      if lastLink.size() == 1 {
+        lastLink = try items.get(items.size() - 2).select("a")
+
+        if try lastLink.text() == "последняя" {
+          let link = try lastLink.select("a").attr("href")
+
+          let index1 = link.find("page")
+          let index2 = link.find("?")
+
+          let index3 = link.index(index1!, offsetBy: "page".count)
+          var index4: String.Index?
+
+          if index2 == nil {
+            index4 = link.index(link.endIndex, offsetBy: -1)
+          }
+          else {
+            index4 = link.index(index2!, offsetBy: -1)
+          }
+
+          pages = Int(link[index3..<index4!])!
+        }
+        else {
+          pages = try Int(lastLink.text())!
+        }
+      }
+      else {
+//        let href = try items.attr("href")
 //
-//  func extractPaginationData(document: Document, path: String, page: Int) throws -> ItemsList {
-//    var pages = 1
+//        let pattern = path + "page"
 //
-//    let paginationRoot = try document.select("ul[class='pagination']")
-//
-//    if paginationRoot.size() > 0 {
-//      let paginationBlock = paginationRoot.get(0)
-//
-//      let items = try paginationBlock.select("ul li")
-//
-//      var lastLink = try items.get(items.size() - 1).select("a")
-//
-//      if lastLink.size() == 1 {
-//        lastLink = try items.get(items.size() - 2).select("a")
-//
-//        if try lastLink.text() == "последняя" {
-//          let link = try lastLink.select("a").attr("href")
-//
-//          let index1 = link.find("page")
-//          let index2 = link.find("?")
-//
-//          let index3 = link.index(index1!, offsetBy: "page".count)
-//          var index4: String.Index?
-//
-//          if index2 == nil {
-//            index4 = link.index(link.endIndex, offsetBy: -1)
-//          }
-//          else {
-//            index4 = link.index(index2!, offsetBy: -1)
-//          }
-//
-//          pages = Int(link[index3..<index4!])!
+//        let index1 = href.find(pattern)
+//        let index2 = href.find("/?")
+
+//        if index2 != nil {
+//          index2 = href.endIndex-1
 //        }
-//        else {
-//          pages = try Int(lastLink.text())!
-//        }
-//      }
-//      else {
-////        let href = try items.attr("href")
-////
-////        let pattern = path + "page"
-////
-////        let index1 = href.find(pattern)
-////        let index2 = href.find("/?")
-//
-////        if index2 != nil {
-////          index2 = href.endIndex-1
-////        }
-//
-//        //pages = href[index1+pattern.length..index2].to_i
-//      }
-//    }
-//
-//    return [
-//      "page": page,
-//      "pages": pages,
-//      "has_previous": page > 1,
-//      "has_next": page < pages
-//    ]
-//  }
-//
+
+        //pages = href[index1+pattern.length..index2].to_i
+      }
+    }
+
+    return [
+      "page": page,
+      "pages": pages,
+      "has_previous": page > 1,
+      "has_next": page < pages
+    ]
+  }
+
 //  public func search(_ query: String, page: Int=1) -> Observable<[String: Any]> {
 //    let path = "/search/books/"
 //

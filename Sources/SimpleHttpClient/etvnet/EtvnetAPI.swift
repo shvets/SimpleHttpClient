@@ -34,11 +34,11 @@ open class EtvnetAPI {
   public func getChannels(today: Bool = false) throws -> [Name] {
     let path = "video/channels.json"
 
-    let params: [URLQueryItem] = [
+    let queryItems: [URLQueryItem] = [
       URLQueryItem(name: "today", value: String(today))
     ]
 
-    if let response = try apiClient.fullRequest(path: path, to: MediaResponse.self, params: params) {
+    if let response = try apiClient.fullRequest(path: path, to: MediaResponse.self, queryItems: queryItems) {
       if case .names(let channels) = response.value.data {
         return channels
       }
@@ -64,11 +64,11 @@ open class EtvnetAPI {
       path = "video/media/archive.json"
     }
 
-    var params: [URLQueryItem] = []
-    params.append(URLQueryItem(name: "per_page", value: String(perPage)))
-    params.append(URLQueryItem(name: "page", value: String(page)))
+    var queryItems: [URLQueryItem] = []
+    queryItems.append(URLQueryItem(name: "per_page", value: String(perPage)))
+    queryItems.append(URLQueryItem(name: "page", value: String(page)))
 
-    if let response = try apiClient.fullRequest(path: path, to: MediaResponse.self, params: params) {
+    if let response = try apiClient.fullRequest(path: path, to: MediaResponse.self, queryItems: queryItems) {
       if case .paginatedMedia(let value) = response.value.data {
         return value
       }
@@ -82,25 +82,25 @@ open class EtvnetAPI {
     [Genre] {
     let path = "video/genres.json"
 
-    var params: [URLQueryItem] = []
+    var queryItems: [URLQueryItem] = []
 
     if let parentId = parentId {
-      params.append(URLQueryItem(name: "parent", value: parentId))
+      queryItems.append(URLQueryItem(name: "parent", value: parentId))
     }
 
     if today {
-      params.append(URLQueryItem(name: "today", value: "yes"))
+      queryItems.append(URLQueryItem(name: "today", value: "yes"))
     }
 
     if let channelId = channelId {
-      params.append(URLQueryItem(name: "channel", value: channelId))
+      queryItems.append(URLQueryItem(name: "channel", value: channelId))
     }
 
     if let format = format {
-      params.append(URLQueryItem(name: "format", value: format))
+      queryItems.append(URLQueryItem(name: "format", value: format))
     }
 
-    if let response = try apiClient.fullRequest(path: path, to: MediaResponse.self, params: params) {
+    if let response = try apiClient.fullRequest(path: path, to: MediaResponse.self, queryItems: queryItems) {
       if case .genres(let genres) = response.value.data {
         // regroup genres
 
@@ -176,14 +176,14 @@ open class EtvnetAPI {
 
     let path = "video/media/search.json"
 
-    var params: [URLQueryItem] = []
+    var queryItems: [URLQueryItem] = []
 
-    params.append(URLQueryItem(name: "q", value: query))
-    params.append(URLQueryItem(name: "per_page", value: String(perPage)))
-    params.append(URLQueryItem(name: "page", value: String(page)))
-    params.append(URLQueryItem(name: "dir", value: dir))
+    queryItems.append(URLQueryItem(name: "q", value: query))
+    queryItems.append(URLQueryItem(name: "per_page", value: String(perPage)))
+    queryItems.append(URLQueryItem(name: "page", value: String(page)))
+    queryItems.append(URLQueryItem(name: "dir", value: dir))
 
-    if let response = try apiClient.fullRequest(path: path, to: MediaResponse.self, params: params) {
+    if let response = try apiClient.fullRequest(path: path, to: MediaResponse.self, queryItems: queryItems) {
       if case .paginatedMedia(let value) = response.value.data {
         return value
       }
@@ -209,11 +209,11 @@ open class EtvnetAPI {
       path = "video/media/new_arrivals.json"
     }
 
-    var params: [URLQueryItem] = []
-    params.append(URLQueryItem(name: "per_page", value: String(perPage)))
-    params.append(URLQueryItem(name: "page", value: String(page)))
+    var queryItems: [URLQueryItem] = []
+    queryItems.append(URLQueryItem(name: "per_page", value: String(perPage)))
+    queryItems.append(URLQueryItem(name: "page", value: String(page)))
 
-    if let response = try apiClient.fullRequest(path: path, to: MediaResponse.self, params: params) {
+    if let response = try apiClient.fullRequest(path: path, to: MediaResponse.self, queryItems: queryItems) {
       if case .paginatedMedia(let value) = response.value.data {
         return value
       }
@@ -225,11 +225,11 @@ open class EtvnetAPI {
   public func getHistory(perPage: Int=PER_PAGE, page: Int=1) throws -> PaginatedMediaData? {
     let path = "video/media/history.json"
 
-    var params: [URLQueryItem] = []
-    params.append(URLQueryItem(name: "per_page", value: String(perPage)))
-    params.append(URLQueryItem(name: "page", value: String(page)))
+    var queryItems: [URLQueryItem] = []
+    queryItems.append(URLQueryItem(name: "per_page", value: String(perPage)))
+    queryItems.append(URLQueryItem(name: "page", value: String(page)))
 
-    if let response = try apiClient.fullRequest(path: path, to: MediaResponse.self, params: params) {
+    if let response = try apiClient.fullRequest(path: path, to: MediaResponse.self, queryItems: queryItems) {
       if case .paginatedMedia(let value) = response.value.data {
         return value
       }
@@ -257,23 +257,23 @@ open class EtvnetAPI {
 
     let path: String
 
-    var params: [URLQueryItem] = []
+    var queryItems: [URLQueryItem] = []
 
-    params.append(URLQueryItem(name: "format", value: newFormat))
+    queryItems.append(URLQueryItem(name: "format", value: newFormat))
 
     if let bitrate = bitrate {
-      params.append(URLQueryItem(name: "bitrate", value: bitrate))
+      queryItems.append(URLQueryItem(name: "bitrate", value: bitrate))
     }
 
     if let otherServer = otherServer {
-      params.append(URLQueryItem(name: "other_server", value: otherServer))
+      queryItems.append(URLQueryItem(name: "other_server", value: otherServer))
     }
 
     if live {
       path = "video/live/watch/\(channelId!).json"
 
       if let offset = offset {
-        params.append(URLQueryItem(name: "offset", value: offset))
+        queryItems.append(URLQueryItem(name: "offset", value: offset))
       }
     }
     else {
@@ -297,11 +297,11 @@ open class EtvnetAPI {
       path = "video/media/\(mediaId)/\(link_type).json"
 
       if let newMediaProtocol = newMediaProtocol {
-        params.append(URLQueryItem(name: "protocol", value: newMediaProtocol))
+        queryItems.append(URLQueryItem(name: "protocol", value: newMediaProtocol))
       }
     }
 
-    if let response = try apiClient.fullRequest(path: path, to: MediaResponse.self, params: params) {
+    if let response = try apiClient.fullRequest(path: path, to: MediaResponse.self, queryItems: queryItems) {
       if case .url(let value) = response.value.data {
         var urlInfo = [String: String]()
 
@@ -322,12 +322,12 @@ open class EtvnetAPI {
   public func getChildren(_ mediaId: Int, perPage: Int=PER_PAGE, page: Int=1, dir: String?=nil) throws -> PaginatedChildrenData? {
     let path = "video/media/\(mediaId)/children.json"
 
-    var params: [URLQueryItem] = []
-    params.append(URLQueryItem(name: "per_page", value: String(perPage)))
-    params.append(URLQueryItem(name: "page", value: String(page)))
-    params.append(URLQueryItem(name: "dir", value: dir))
+    var queryItems: [URLQueryItem] = []
+    queryItems.append(URLQueryItem(name: "per_page", value: String(perPage)))
+    queryItems.append(URLQueryItem(name: "page", value: String(page)))
+    queryItems.append(URLQueryItem(name: "dir", value: dir))
 
-    if let response = try apiClient.fullRequest(path: path, to: MediaResponse.self, params: params) {
+    if let response = try apiClient.fullRequest(path: path, to: MediaResponse.self, queryItems: queryItems) {
       if case .paginatedChildren(let value) = response.value.data {
         return value
       }
@@ -346,11 +346,11 @@ open class EtvnetAPI {
       path = "video/bookmarks/items.json"
     }
 
-    var params: [URLQueryItem] = []
-    params.append(URLQueryItem(name: "per_page", value: String(perPage)))
-    params.append(URLQueryItem(name: "page", value: String(page)))
+    var queryItems: [URLQueryItem] = []
+    queryItems.append(URLQueryItem(name: "per_page", value: String(perPage)))
+    queryItems.append(URLQueryItem(name: "page", value: String(page)))
 
-    if let response = try apiClient.fullRequest(path: path, to: MediaResponse.self, params: params) {
+    if let response = try apiClient.fullRequest(path: path, to: MediaResponse.self, queryItems: queryItems) {
       if case .paginatedBookmarks(let value) = response.value.data {
         return value
       }
@@ -412,11 +412,11 @@ open class EtvnetAPI {
   public func getTopicItems(_ id: String="best", perPage: Int=PER_PAGE, page: Int=1) throws -> PaginatedMediaData? {
     let path = "video/media/\(id).json"
 
-    var params: [URLQueryItem] = []
-    params.append(URLQueryItem(name: "per_page", value: String(perPage)))
-    params.append(URLQueryItem(name: "page", value: String(page)))
+    var queryItems: [URLQueryItem] = []
+    queryItems.append(URLQueryItem(name: "per_page", value: String(perPage)))
+    queryItems.append(URLQueryItem(name: "page", value: String(page)))
 
-    if let response = try apiClient.fullRequest(path: path, to: MediaResponse.self, params: params) {
+    if let response = try apiClient.fullRequest(path: path, to: MediaResponse.self, queryItems: queryItems) {
       if case .paginatedMedia(let value) = response.value.data {
         return value
       }
@@ -430,16 +430,16 @@ open class EtvnetAPI {
 
     let path = "video/live/channels.json"
 
-    var params: [URLQueryItem] = []
-    params.append(URLQueryItem(name: "format", value: format))
-    params.append(URLQueryItem(name: "allowed_only", value: String(1)))
-    params.append(URLQueryItem(name: "favorite_only", value: String(favoriteOnly)))
+    var queryItems: [URLQueryItem] = []
+    queryItems.append(URLQueryItem(name: "format", value: format))
+    queryItems.append(URLQueryItem(name: "allowed_only", value: String(1)))
+    queryItems.append(URLQueryItem(name: "favorite_only", value: String(favoriteOnly)))
 
     if let offset = offset {
-      params.append(URLQueryItem(name: "offset", value: offset))
+      queryItems.append(URLQueryItem(name: "offset", value: offset))
     }
 
-    if let response = try apiClient.fullRequest(path: path, to: MediaResponse.self, params: params) {
+    if let response = try apiClient.fullRequest(path: path, to: MediaResponse.self, queryItems: queryItems) {
       if case .liveChannels(let liveChannels) = response.value.data {
         return liveChannels
       }
@@ -454,16 +454,16 @@ open class EtvnetAPI {
 
     let path = "video/live/category/\(category).json"
 
-    var params: [URLQueryItem] = []
-    params.append(URLQueryItem(name: "format", value: format))
-    params.append(URLQueryItem(name: "allowed_only", value: String(1)))
-    params.append(URLQueryItem(name: "favorite_only", value: String(favoriteOnly)))
+    var queryItems: [URLQueryItem] = []
+    queryItems.append(URLQueryItem(name: "format", value: format))
+    queryItems.append(URLQueryItem(name: "allowed_only", value: String(1)))
+    queryItems.append(URLQueryItem(name: "favorite_only", value: String(favoriteOnly)))
 
     if let offset = offset {
-      params.append(URLQueryItem(name: "offset", value: offset))
+      queryItems.append(URLQueryItem(name: "offset", value: offset))
     }
 
-    if let response = try apiClient.fullRequest(path: path, to: MediaResponse.self, params: params) {
+    if let response = try apiClient.fullRequest(path: path, to: MediaResponse.self, queryItems: queryItems) {
       if case .liveChannels(let liveChannels) = response.value.data {
         return liveChannels
       }
@@ -496,10 +496,10 @@ open class EtvnetAPI {
 
     let path = "video/live/schedule/\(liveChannelId).json"
 
-    var params: [URLQueryItem] = []
-    params.append(URLQueryItem(name: "date", value: dateString))
+    var queryItems: [URLQueryItem] = []
+    queryItems.append(URLQueryItem(name: "date", value: dateString))
 
-    if let response = try apiClient.fullRequest(path: path, to: MediaResponse.self, params: params) {
+    if let response = try apiClient.fullRequest(path: path, to: MediaResponse.self, queryItems: queryItems) {
       if case .liveSchedules(let liveSchedules) = response.value.data {
         return liveSchedules
       }

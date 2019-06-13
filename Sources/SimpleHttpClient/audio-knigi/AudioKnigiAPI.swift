@@ -283,26 +283,26 @@ open class AudioKnigiAPI {
     return Pagination(page: page, pages: pages, has_previous: page > 1, has_next: page < pages)
   }
 
-//  public func search(_ query: String, page: Int=1) -> Observable<[String: Any]> {
-//    let path = "/search/books/"
-//
-//    let pagePath = getPagePath(path: path, page: page)
-//
-//    var params = [String: String]()
+  public func search(_ query: String, page: Int=1) throws -> BookResults {
+    var result = BookResults()
+
+    let path = "/search/books/"
+
+    let pagePath = getPagePath(path: path, page: page)
+
 //    params["q"] = query.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
-//
-//    let fullPath = buildUrl(path: pagePath, params: params as [String: AnyObject])
-//
-//    let url = AudioKnigiAPI.SiteUrl + fullPath
-//
-//    return httpRequestRx(url).map { data in
-//      if let document = try self.toDocument(data) {
-//        return try self.getBookItems(document, path: path, page: page)
-//      }
-//
-//      return [:]
-//    }
-//  }
+
+    var queryItems: [URLQueryItem] = []
+    queryItems.append(URLQueryItem(name: "q", value: query))
+
+    let response = try apiClient.request(pagePath, to: [String].self, queryItems: queryItems)!
+
+    if let document = try toDocument(response.body!) {
+      result = try self.getBookItems(document, path: path, page: page)
+    }
+
+    return result
+  }
 
 
   public func getAudioTracks(_ path: String) throws -> [Track] {

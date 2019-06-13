@@ -3,7 +3,32 @@ import SwiftSoup
 //import Files
 //import RxSwift
 
-//public typealias ItemsList = [String: [String]]
+public typealias BookItem = [String: String]
+
+public struct Pagination: Codable {
+  let page: Int
+  let pages: Int
+  let has_previous: Bool
+  let has_next: Bool
+
+  init(page: Int = 1, pages: Int = 1, has_previous: Bool = false, has_next: Bool = false) {
+    self.page = page
+    self.pages = pages
+    self.has_previous = has_previous
+    self.has_next = has_next
+  }
+}
+
+public struct BookResults: Codable {
+  let items: [BookItem]
+  let pagination: Pagination?
+
+  init(items: [BookItem] = [], pagination: Pagination? = nil) {
+    self.items = items
+
+    self.pagination = pagination
+  }
+}
 
 open class AudioKnigiAPI {
   public static let SiteUrl = "https://audioknigi.club"
@@ -69,146 +94,140 @@ open class AudioKnigiAPI {
 //    return result
 //  }
 
-  public func getNewBooks(page: Int=1) throws -> [String: Any] {
+  public func getNewBooks(page: Int=1) throws -> BookResults {
     return try getBooks(path: "/index/", page: page)
   }
 
-  public func getBestBooks(period: String, page: Int=1) throws -> [String: Any] {
-    return try getBooks(path: "/index/views/", period: period, page: page)
+  public func getBestBooks(page: Int=1) throws -> BookResults {
+    return try getBooks(path: "/index/top", page: page)
   }
 
-  public func getBooks(path: String, period: String="", page: Int=1) throws -> [String: Any] {
-    var result: [String: Any] = [:]
+  public func getBooks(path: String, page: Int=1) throws -> BookResults {
+    var result = BookResults()
 
-    let encodedPath = path.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
+    //let encodedPath = path.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
 
-    var pagePath = getPagePath(path: encodedPath, page: page)
+    let pagePath = getPagePath(path: path, page: page)
 
-    var queryItems: [URLQueryItem] = []
-
-    if !period.isEmpty {
-      queryItems.append(URLQueryItem(name: "period", value: period))
-    }
-
-    let response = try apiClient.request(pagePath, to: [String].self, queryItems: queryItems)!
+    let response = try apiClient.request(pagePath, to: [String].self)!
 
     if let document = try toDocument(response.body!) {
-      result = try self.getBookItems(document, path: encodedPath, page: page)
+      result = try self.getBookItems(document, path: path, page: page)
     }
 
     return result
   }
 
-  func getBookItems(_ document: Document, path: String, page: Int) throws -> [String: Any] {
-    var data = [Any]()
+  func getBookItems(_ document: Document, path: String, page: Int) throws -> BookResults {
+    var items = [BookItem]()
 
-    let items = try document.select("article")
+    let list = try document.select("article")
 
-    for item: Element in items.array() {
-      let link = try item.select("header h3 a")
+    for element: Element in list.array() {
+      let link = try element.select("header h3 a")
       let name = try link.text()
       let href = try link.attr("href")
-      let thumb = try item.select("img").attr("src")
-      let description = try item.select("div[class='topic-content text']").text()
+      let thumb = try element.select("img").attr("src")
+      let description = try element.select("div[class='topic-content text']").text()
 
-      data.append(["type": "book", "id": href, "name": name, "thumb": thumb, "description": description ])
+      items.append(["type": "book", "id": href, "name": name, "thumb": thumb, "description": description])
     }
 
-    let paginationData = try extractPaginationData(document: document, path: path, page: page)
+    let pagination = try extractPaginationData(document: document, path: path, page: page)
 
-    return ["items": data, "pagination": paginationData]
+    return BookResults(items: items, pagination: pagination)
   }
 
-//  public func getAuthors(page: Int=1) -> Observable<[String: Any]> {
-//    return getCollection(path: "/authors/", page: page)
-//  }
-//
-//  public func getPerformers(page: Int=1) -> Observable<[String: Any]> {
-//    return getCollection(path: "/performers/", page: page)
-//  }
-//
-//  func getCollection(path: String, page: Int=1) -> Observable<[String: Any]> {
-//    var collection = [Any]()
-//    var paginationData = [String: Any]()
-//
-//    let pagePath = getPagePath(path: path, page: page)
-//
-//    let url = AudioKnigiAPI.SiteUrl + pagePath
-//
-//    return httpRequestRx(url).map { data in
-//      if let document = try self.toDocument(data) {
-//        let items = try document.select("td[class=cell-name]")
-//
-//        for item: Element in items.array() {
-//          let link = try item.select("h4 a")
-//          let name = try link.text()
-//          let href = try link.attr("href")
-//          let thumb = "https://audioknigi.club/templates/skin/aclub/images/avatar_blog_48x48.png"
-//          //try link.select("img").attr("src")
-//
-//          let index = href.index(href.startIndex, offsetBy: AudioKnigiAPI.SiteUrl.count)
-//
-//          let id = String(href[index ..< href.endIndex]) + "/"
-//          let filteredId = id.removingPercentEncoding!
-//
-//          collection.append(["type": "collection", "id": filteredId, "name": name, "thumb": thumb])
-//        }
-//
-//        if !items.array().isEmpty {
-//          paginationData = try self.extractPaginationData(document: document, path: path, page: page)
-//        }
-//
-//        return ["items": collection, "pagination": paginationData]
-//      }
-//
-//      return [:]
-//    }
-//  }
-//
-//  public func getGenres(page: Int=1) -> Observable<[String: Any]> {
-//    let path = "/sections/"
-//
-//    let pagePath = getPagePath(path: path, page: page)
-//
-//    let url = AudioKnigiAPI.SiteUrl + pagePath
-//
-//    return httpRequestRx(url).map { data in
-//      if let document = try self.toDocument(data) {
-//        var data = [Any]()
-//        var paginationData = [String: Any]()
-//
-//        let items = try document.select("td[class=cell-name]")
-//
-//        for item: Element in items.array() {
-//          let link = try item.select("a")
-//          let name = try item.select("h4 a").text()
-//          let href = try link.attr("href")
-//
-//          let index = href.index(href.startIndex, offsetBy: AudioKnigiAPI.SiteUrl.count)
-//
-//          let id = String(href[index ..< href.endIndex])
-//
-//          let thumb = try link.select("img").attr("src")
-//
-//          data.append(["type": "genre", "id": id, "name": name, "thumb": thumb])
-//        }
-//
-//        if !items.array().isEmpty {
-//          paginationData = try self.extractPaginationData(document: document, path: path, page: page)
-//        }
-//
-//        return ["items": data, "pagination": paginationData]
-//      }
-//
-//      return [:]
-//    }
-//  }
-//
-//  func getGenre(path: String, page: Int=1) -> Observable<[String: Any]> {
-//    return getBooks(path: path, page: page)
-//  }
+  public func getAuthors(page: Int=1) throws -> BookResults {
+    return try getCollection(path: "/authors/", page: page)
+  }
 
-  func extractPaginationData(document: Document, path: String, page: Int) throws -> [String: Any] {
+  public func getPerformers(page: Int=1) throws -> BookResults {
+    return try getCollection(path: "/performers/", page: page)
+  }
+
+  func getCollection(path: String, page: Int=1) throws -> BookResults {
+    var result = BookResults()
+
+    var collection = [BookItem]()
+    var pagination = Pagination()
+
+    let pagePath = getPagePath(path: path, page: page)
+
+    let response = try apiClient.request(pagePath, to: [String].self)!
+
+    if let data = response.body {
+      if let document = try toDocument(data) {
+        let items = try document.select("td[class=cell-name]")
+
+        for item: Element in items.array() {
+          let link = try item.select("h4 a")
+          let name = try link.text()
+          let href = try link.attr("href")
+          let thumb = "https://audioknigi.club/templates/skin/aclub/images/avatar_blog_48x48.png"
+          //try link.select("img").attr("src")
+
+          let index = href.index(href.startIndex, offsetBy: AudioKnigiAPI.SiteUrl.count)
+
+          let id = String(href[index ..< href.endIndex]) + "/"
+          let filteredId = id.removingPercentEncoding!
+
+          collection.append(["type": "collection", "id": filteredId, "name": name, "thumb": thumb])
+        }
+
+        if !items.array().isEmpty {
+          pagination = try self.extractPaginationData(document: document, path: path, page: page)
+        }
+      }
+    }
+
+    return BookResults(items: collection, pagination: pagination)
+  }
+
+  public func getGenres(page: Int=1) throws -> BookResults {
+    var result = BookResults()
+
+    var collection = [BookItem]()
+    var pagination = Pagination()
+
+    let path = "/sections/"
+
+    let pagePath = getPagePath(path: path, page: page)
+
+    let response = try apiClient.request(pagePath, to: [String].self)!
+
+    if let data = response.body {
+      if let document = try toDocument(data) {
+        let items = try document.select("td[class=cell-name]")
+
+        for item: Element in items.array() {
+          let link = try item.select("a")
+          let name = try item.select("h4 a").text()
+          let href = try link.attr("href")
+
+          let index = href.index(href.startIndex, offsetBy: AudioKnigiAPI.SiteUrl.count)
+
+          let id = String(href[index ..< href.endIndex])
+
+          let thumb = try link.select("img").attr("src")
+
+          collection.append(["type": "genre", "id": id, "name": name, "thumb": thumb])
+        }
+
+        if !items.array().isEmpty {
+          pagination = try self.extractPaginationData(document: document, path: path, page: page)
+        }
+      }
+    }
+
+    return BookResults(items: collection, pagination: pagination)
+  }
+
+  func getGenre(path: String, page: Int=1) throws -> BookResults {
+    return try getBooks(path: path, page: page)
+  }
+
+  func extractPaginationData(document: Document, path: String, page: Int) throws -> Pagination {
     var pages = 1
 
     let paginationRoot = try document.select("ul[class='pagination']")
@@ -261,12 +280,7 @@ open class AudioKnigiAPI {
       }
     }
 
-    return [
-      "page": page,
-      "pages": pages,
-      "has_previous": page > 1,
-      "has_next": page < pages
-    ]
+    return Pagination(page: page, pages: pages, has_previous: page > 1, has_next: page < pages)
   }
 
 //  public func search(_ query: String, page: Int=1) -> Observable<[String: Any]> {
@@ -289,14 +303,11 @@ open class AudioKnigiAPI {
 //      return [:]
 //    }
 //  }
-//
-////  public func getCookie(url: String, headers: HTTPHeaders) -> String? {
-////    let response: DataResponse<Data>? = httpRequest(url, headers: headers)
-////
-////    return response?.response?.allHeaderFields["Set-Cookie"] as? String
-////  }
-//
-//  public func getAudioTracks(_ url: String) throws -> Observable<[Track]> {
+
+
+  public func getAudioTracks(_ path: String) throws -> [Track] {
+    var newTracks = [Track]()
+
 //    let (cookie, response) = getCookie()
 //
 //    var security_ls_key = ""
@@ -313,6 +324,30 @@ open class AudioKnigiAPI {
 //      }
 //    }
 //
+//    let response2 = try apiClient.request(path, to: [String].self)!
+//
+//    if let data = response2.body {
+//      if let document = try toDocument(data) {
+//        var bookId = 0
+//
+//        if let id = try self.getBookId(document: document) {
+//          bookId = id
+//        }
+//
+//        let data = self.getData(bid: bookId, security_ls_key: security_ls_key)
+//
+//        let newUrl = "\(AudioKnigiAPI.SiteUrl)/ajax/bid/\(bookId)"
+//
+//        var newTracks = [Track]()
+//
+//        if let cookie = cookie {
+//          newTracks = self.postRequest(url: newUrl, body: data, cookie: cookie)
+//        }
+//
+//        return newTracks
+//      }
+//    }
+
 //    return httpRequestRx(url).map { data in
 //      if let document = try self.toDocument(data) {
 //        var bookId = 0
@@ -336,8 +371,10 @@ open class AudioKnigiAPI {
 //
 //      return []
 //    }
-//  }
-//
+
+    return newTracks
+  }
+
 //  func getCookie() -> (String?, DataResponse<Data>?)  {
 //    let headers: HTTPHeaders = [
 //      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36"
@@ -355,15 +392,15 @@ open class AudioKnigiAPI {
 //
 //    return (cookie, response)
 //  }
-//
-//  func getBookId(document: Document) throws -> Int? {
-//    let items = try document.select("div[class=player-side js-topic-player]")
-//
-//    let globalId = try items.first()!.attr("data-global-id")
-//
-//    return Int(globalId)
-//  }
-//
+
+  func getBookId(document: Document) throws -> Int? {
+    let items = try document.select("div[class=player-side js-topic-player]")
+
+    let globalId = try items.first()!.attr("data-global-id")
+
+    return Int(globalId)
+  }
+
 //  func getSecurityLsKey(text: String) throws -> String? {
 //    var security_ls_key: String?
 //
@@ -385,40 +422,40 @@ open class AudioKnigiAPI {
 //
 //    return security_ls_key
 //  }
-//
-//  func getData(bid: Int, security_ls_key: String) -> String {
-//    let secretPassphrase = "EKxtcg46V";
-//
-//    let AES = CryptoJS.AES()
-//
-//    let encrypted = AES.encrypt("\"" + security_ls_key + "\"", password: secretPassphrase)
-//
-//    let ct = encrypted[0]
-//    let iv = encrypted[1]
-//    let salt = encrypted[2]
-//
-//    let hashString = "{" +
-//      "\"ct\":\"" + ct + "\"," +
-//      "\"iv\":\"" + iv + "\"," +
-//      "\"s\":\"" + salt + "\"" +
-//      "}"
-//
-//    let hash = hashString
-//      .replacingOccurrences(of: "{", with: "%7B")
-//      .replacingOccurrences(of: "}", with: "%7D")
-//      .replacingOccurrences(of: ",", with: "%2C")
-//      .replacingOccurrences(of: "/", with: "%2F")
-//      .replacingOccurrences(of: "\"", with: "%22")
-//      .replacingOccurrences(of: ":", with: "%3A")
-//      .replacingOccurrences(of: "+", with: "%2B")
-//
-//    return "bid=\(bid)&hash=\(hash)&security_ls_key=\(security_ls_key)"
-//  }
-//
-//  func postRequest(url: String, body: String, cookie: String) -> [Track] {
-//    print(url)
-//    var newTracks = [Track]()
-//
+
+  func getData(bid: Int, security_ls_key: String) -> String {
+    let secretPassphrase = "EKxtcg46V";
+
+    let AES = CryptoJS.AES()
+
+    let encrypted = AES.encrypt("\"" + security_ls_key + "\"", password: secretPassphrase)
+
+    let ct = encrypted[0]
+    let iv = encrypted[1]
+    let salt = encrypted[2]
+
+    let hashString = "{" +
+      "\"ct\":\"" + ct + "\"," +
+      "\"iv\":\"" + iv + "\"," +
+      "\"s\":\"" + salt + "\"" +
+      "}"
+
+    let hash = hashString
+      .replacingOccurrences(of: "{", with: "%7B")
+      .replacingOccurrences(of: "}", with: "%7D")
+      .replacingOccurrences(of: ",", with: "%2C")
+      .replacingOccurrences(of: "/", with: "%2F")
+      .replacingOccurrences(of: "\"", with: "%22")
+      .replacingOccurrences(of: ":", with: "%3A")
+      .replacingOccurrences(of: "+", with: "%2B")
+
+    return "bid=\(bid)&hash=\(hash)&security_ls_key=\(security_ls_key)"
+  }
+
+  func postRequest(url: String, body: String, cookie: String) -> [Track] {
+    print(url)
+    var newTracks = [Track]()
+
 //    var request = URLRequest(url: URL(string: url)!)
 //
 //    request.httpMethod = HTTPMethod.post.rawValue
@@ -450,10 +487,10 @@ open class AudioKnigiAPI {
 //    }
 //
 //    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
-//
-//    return newTracks
-//  }
-//
+
+    return newTracks
+  }
+
 //  func getMatched(_ link: String, matches: [NSTextCheckingResult], index: Int) -> String? {
 //    var matched: String?
 //

@@ -15,27 +15,20 @@ class AudioKnigiAPITests: XCTestCase {
   func testGetNewBooks() throws {
     let result = try subject.getNewBooks()
 
-    //print(try result.prettify())
-    print(result)
+    print(try result.prettify())
 
-    XCTAssert(result.count > 0)
+    XCTAssert(result.items.count > 0)
   }
 
-//
-//  func testGetBestBooksByWeek() throws {
-//    let exp = expectation(description: "Gets best books by week")
-//
-//    _ = subject.getBestBooks(period: "7").subscribe(onNext: { result in
-//      //print(result as Any)
-//
-//      XCTAssert(result.count > 0)
-//
-//      exp.fulfill()
-//    })
-//
-//    waitForExpectations(timeout: 10, handler: nil)
-//  }
-//
+
+  func testGetBestBooks() throws {
+    let result = try subject.getBestBooks()
+
+    print(try result.prettify())
+
+    XCTAssert(result.items.count > 0)
+  }
+
 //  func testGetBestBooksByMonth() throws {
 //    let exp = expectation(description: "Gets best books by month")
 //
@@ -63,169 +56,108 @@ class AudioKnigiAPITests: XCTestCase {
 //
 //    waitForExpectations(timeout: 10, handler: nil)
 //  }
-//
-//  func testGetAuthorBooks() throws {
-//    let exp = expectation(description: "Gets author books")
-//
-//    _ = subject.getAuthors().subscribe(onNext: { result in
-//      let items = result["items"] as! [Any]
-//
-//      let id = (items[0] as! [String: String])["id"]!
-//
-//      _ = self.subject.getBooks(path: id).subscribe(onNext: { books in
-//        // print(books)
-//
-//        XCTAssert(books.count > 0)
-//      })
-//
-//      exp.fulfill()
-//    })
-//
-//    waitForExpectations(timeout: 10, handler: nil)
-//  }
-//
-//  func testGetPerformersBooks() throws {
-//    let exp = expectation(description: "Gets performers books")
-//
-//    _ = subject.getPerformers().subscribe(onNext: { result in
-//      let items = result["items"] as! [Any]
-//
-//      let id = (items[0] as! [String: String])["id"]!
-//
-//      _ = self.subject.getBooks(path: id).subscribe(onNext: { books in
-//        XCTAssert(books.count > 0)
-//
-//        // print(books)
-//      })
-//
-//      exp.fulfill()
-//    })
-//
-//    waitForExpectations(timeout: 10, handler: nil)
-//  }
-//
-//  func testGetAuthors() throws {
-//    let exp = expectation(description: "Gets authors")
-//
-//    _ = subject.getAuthors().subscribe(onNext: { result in
-//      // print(result as Any)
-//
-//      XCTAssert(result.count > 0)
-//
-//      exp.fulfill()
-//    })
-//
-//    waitForExpectations(timeout: 10, handler: nil)
-//  }
-//
-//  func testGetPerformers() throws {
-//    let exp = expectation(description: "Gets performers")
-//
-//    _ = subject.getPerformers().subscribe(onNext: { result in
-//      // print(result as Any)
-//
-//      XCTAssert(result.count > 0)
-//
-//      exp.fulfill()
-//    })
-//
-//    waitForExpectations(timeout: 10, handler: nil)
-//  }
-//
-//  func testGetAllGenres() throws {
-//    let exp = expectation(description: "Gets all genres")
-//
-//    _ = subject.getGenres(page: 1).subscribe(onNext: { result in
-//      print(result)
-//
-//      XCTAssert(result.count > 0)
-//
-//      exp.fulfill()
-//    })
-//
-//    _ = subject.getGenres(page: 2).subscribe(onNext: { result in
-//      print(result)
-//
-//      XCTAssert(result.count > 0)
-//
-//      exp.fulfill()
-//    })
-//
-//    waitForExpectations(timeout: 10, handler: nil)
-//  }
-//
-//  func testGetGenre() throws {
-//    let exp = expectation(description: "Gets all genres")
-//
-//    _ = subject.getGenres(page: 1).subscribe(onNext: { result in
-//      let items = result["items"] as! [Any]
-//
-//      let id = (items[0] as! [String: Any])["id"] as? String
-//
-//      //print(items[0] as? [String: Any])
-//
-//      _ = self.subject.getGenre(path: id!).subscribe(onNext: { result in
-//        //print(result as Any)
-//
-//        XCTAssert(result.count > 0)
-//
-//        exp.fulfill()
-//      })
-//
-//      exp.fulfill()
-//    })
-//
-//    waitForExpectations(timeout: 10, handler: nil)
-//  }
-//
-//  func testPagination() throws {
-//    let exp = expectation(description: "Gets pagination")
-//
-//    _ = subject.getNewBooks(page: 1).subscribe(onNext: { result in
-//      let pagination1 = result["pagination"] as! [String: Any]
-//
-//      XCTAssertEqual(pagination1["has_next"] as! Bool, true)
-//      XCTAssertEqual(pagination1["has_previous"] as! Bool, false)
-//      XCTAssertEqual(pagination1["page"] as! Int, 1)
-//
-//      exp.fulfill()
-//    })
-//
-//    _ = subject.getNewBooks(page: 2).subscribe(onNext: { result in
-//      let pagination2 = result["pagination"] as! [String: Any]
-//
-//      XCTAssertEqual(pagination2["has_next"] as! Bool, true)
-//      XCTAssertEqual(pagination2["has_previous"] as! Bool, true)
-//      XCTAssertEqual(pagination2["page"] as! Int, 2)
-//
-//      exp.fulfill()
-//    })
-//
-//    waitForExpectations(timeout: 10, handler: nil)
-//  }
-//
-//  func testGetAudioTracks() throws {
-//    let path = "http://audioknigi.club/luchshee-yumoristicheskoe-fentezi-antologiya-chast-1"
-//
-//    let exp = expectation(description: "Gets audio tracks")
-//
-//    _ = try subject.getAudioTracks(path).subscribe(onNext: { result in
+
+  func testGetAuthorBooks() throws {
+    let result = try subject.getAuthors()
+
+    if let id = result.items.first!["id"] {
+      let books = try self.subject.getBooks(path: id)
+
+      print(try books.prettify())
+
+      XCTAssert(books.items.count > 0)
+    }
+  }
+
+  func testGetPerformersBooks() throws {
+    let result = try subject.getPerformers()
+
+    if let id = result.items.first!["id"] {
+      let books = try self.subject.getBooks(path: id)
+
+      print(try books.prettify())
+
+      XCTAssert(books.items.count > 0)
+    }
+  }
+
+  func testGetAuthors() throws {
+    let result = try subject.getAuthors()
+
+    print(try result.prettify())
+
+    XCTAssert(result.items.count > 0)
+  }
+
+  func testGetPerformers() throws {
+    let result = try subject.getPerformers()
+
+    print(try result.prettify())
+
+    XCTAssert(result.items.count > 0)
+  }
+
+  func testGetAllGenres() throws {
+    let result = try subject.getGenres(page: 1)
+
+    print(try result.prettify())
+
+    XCTAssert(result.items.count > 0)
+
+    let result2 = try subject.getGenres(page: 2)
+
+    print(try result2.prettify())
+
+    XCTAssert(result2.items.count > 0)
+  }
+
+  func testGetGenre() throws {
+    let genres = try subject.getGenres(page: 1)
+
+    if let item = genres.items.first {
+      if let id = item["id"] {
+        let genre = try self.subject.getGenre(path: id)
+
+        print(try genre.prettify())
+
+        XCTAssert(genre.items.count > 0)
+      }
+    }
+  }
+
+  func testPagination() throws {
+    let result1 = try subject.getNewBooks(page: 1)
+
+    if let pagination1 = result1.pagination {
+      XCTAssertEqual(pagination1.has_next, true)
+      XCTAssertEqual(pagination1.has_previous, false)
+      XCTAssertEqual(pagination1.page, 1)
+    }
+
+    let result2 = try subject.getNewBooks(page: 2)
+
+    if let pagination2 = result2.pagination {
+      XCTAssertEqual(pagination2.has_next, true)
+      XCTAssertEqual(pagination2.has_previous, true)
+      XCTAssertEqual(pagination2.page, 2)
+    }
+  }
+
+  func testGetAudioTracks() throws {
+    let path = "luchshee-yumoristicheskoe-fentezi-antologiya-chast-1"
+
+    let result = try subject.getAudioTracks(path)
 //      do {
 //        print(try result.prettify())
 //      }
 //      catch {
 //
 //      }
-//
-//      XCTAssertNotNil(result)
-//      XCTAssert(result.count > 0)
-//
-//      exp.fulfill()
-//    })
-//
-//    waitForExpectations(timeout: 10, handler: nil)
-//  }
-//
+
+    XCTAssertNotNil(result)
+    XCTAssert(result.count > 0)
+  }
+
 //  func testSearch() throws {
 //    let query = "пратчетт"
 //

@@ -1,7 +1,5 @@
 import Foundation
 import SwiftSoup
-//import Files
-//import RxSwift
 
 public typealias BookItem = [String: String]
 
@@ -66,33 +64,7 @@ open class AudioKnigiAPI {
     }
 
     return result
-
-    //return (try self.buildLetters(response.body!, filter: "author-prefix-filter"))
   }
-
-//  func getLetters(path: String, filter: String) throws -> Observable<[Any]> {
-//    let url = AudioKnigiAPI.SiteUrl + path
-//
-//    return httpRequestRx(url).map { [weak self] data in
-//      return try self!.buildLetters(data, filter: filter)
-//    }
-//  }
-
-//  func buildLetters(_ data: Data, filter: String) throws -> [String] {
-//    var result = [String]()
-//
-//    let document = try toDocument(data)
-//
-//    let items = try document!.select("ul[id='" + filter + "'] li a")
-//
-//    for item in items.array() {
-//      let name = try item.text()
-//
-//      result.append(name)
-//    }
-//
-//    return result
-//  }
 
   public func getNewBooks(page: Int=1) throws -> BookResults {
     return try getBooks(path: "/index/", page: page)
@@ -507,19 +479,7 @@ open class AudioKnigiAPI {
 //
 //    return matched
 //  }
-//
-////  func JSONStringify(value: AnyObject, prettyPrinted: Bool = false) -> String {
-////    var options = prettyPrinted ? JSONSerialization.WritingOptions.prettyPrinted : nil
-////    if JSONSerialization.isValidJSONObject(value) {
-////      if let data = JSONSerialization.dataWithJSONObject(value, options: options!) {
-////        if let string = NSString(data: data, encoding: NSUTF8StringEncoding) {
-////          return string
-////        }
-////      }
-////    }
-////    return ""
-////  }
-//
+
 //  public func getItemsInGroups(_ fileName: String) -> [NameClassifier.ItemsGroup] {
 //    var items: [NameClassifier.ItemsGroup] = []
 //

@@ -34,9 +34,17 @@ open class ApiClient {
     urlComponents.scheme = baseURL.scheme
     urlComponents.host = baseURL.host
     urlComponents.path = baseURL.path
-    urlComponents.queryItems = request.queryItems
 
-    return urlComponents.url?.appendingPathComponent(request.path)
+    if !request.queryItems.isEmpty {
+      urlComponents.queryItems = request.queryItems
+    }
+
+    if request.path.isEmpty {
+      return urlComponents.url
+    }
+    else {
+      return urlComponents.url?.appendingPathComponent(request.path)
+    }
   }
 
   func buildUrlRequest(url: URL, request: ApiRequest) throws -> URLRequest {
@@ -44,10 +52,12 @@ open class ApiClient {
     urlRequest.httpMethod = request.method.rawValue
 
     if let body = request.body {
-      let encoder = JSONEncoder()
-      encoder.outputFormatting = .prettyPrinted
+//      let encoder = JSONEncoder()
+//      encoder.outputFormatting = .prettyPrinted
+//
+//      urlRequest.httpBody = try encoder.encode(body)
 
-      urlRequest.httpBody = try encoder.encode(body)
+      urlRequest.httpBody = body
     }
 
     request.headers.forEach {
@@ -124,6 +134,7 @@ extension ApiClient: HttpFetcher {
 
           task.resume()
         } catch {
+          print(error)
           observer.on(.error(ApiError.bodyEncodingFailed))
         }
       }
@@ -144,10 +155,11 @@ extension ApiClient: HttpFetcher {
 
   func request<T: Decodable>(_ path: String, to type: T.Type, method: HttpMethod = .get,
                              queryItems: [URLQueryItem] = [], headers: [HttpHeader] = [],
+                             body: Data? = nil,
                              unauthorized: Bool=false) throws -> ApiResponse? {
     var result: (value: T, response: ApiResponse)?
 
-    let request = ApiRequest(path: path, queryItems: queryItems, method: method, headers: headers)
+    let request = ApiRequest(path: path, queryItems: queryItems, method: method, headers: headers, body: body)
 
     return try await {
       self.fetchRx(request)

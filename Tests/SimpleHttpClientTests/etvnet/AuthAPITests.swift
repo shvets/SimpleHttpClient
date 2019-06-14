@@ -21,8 +21,14 @@ class AuthAPITests: XCTestCase {
       XCTAssertNotNil(result)
 
       print("Activation url: \(self.subject.apiClient.authClient.getActivationUrl())")
-      print("Activation code: \(result.userCode!)")
-      print("Device code: \(result.deviceCode!)")
+
+      if let result = result, let userCode = result.userCode {
+        print("Activation code: \(userCode)")        
+      }
+
+      if  let result = result, let deviceCode = result.deviceCode {
+        print("Device code: \(deviceCode)") 
+      }
     }
     else {
       XCTFail("Error during request")
@@ -54,11 +60,11 @@ class AuthAPITests: XCTestCase {
     if let result = try self.subject.apiClient.await({
       self.subject.apiClient.authClient.updateToken(refreshToken: refreshToken)
     }) {
-      XCTAssertNotNil(result.accessToken)
+      XCTAssertNotNil(result!.accessToken)
 
-      print("Result: \(result)")
+      print("Result: \(result!)")
 
-      subject.apiClient.configFile.items = result.asConfigurationItems()
+      subject.apiClient.configFile.items = result!.asConfigurationItems()
 
       if let _ = try self.subject.apiClient.await({
         self.subject.apiClient.configFile.write()

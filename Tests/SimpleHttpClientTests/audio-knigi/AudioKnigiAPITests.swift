@@ -154,6 +154,8 @@ class AudioKnigiAPITests: XCTestCase {
 //
 //      }
 
+    print(result)
+
     XCTAssertNotNil(result)
     XCTAssert(result.count > 0)
   }
@@ -168,7 +170,7 @@ class AudioKnigiAPITests: XCTestCase {
     XCTAssert(result.items.count > 0)
   }
 
-  func testGrouping() throws {
+  func _testGrouping() throws {
     let data: Data? = try File(path: "authors.json").read()
 
     let items: [NameClassifier.Item] = try data!.decoded() as [NameClassifier.Item]
@@ -181,15 +183,15 @@ class AudioKnigiAPITests: XCTestCase {
     XCTAssert(classified.count > 0)
   }
 
-  func testGenerateAuthorsList() throws {
+  func _testGenerateAuthorsList() throws {
     try generateAuthorsList("authors.json")
   }
 
-  func testGeneratePerformersList() throws {
+  func _testGeneratePerformersList() throws {
     try generatePerformersList("performers.json")
   }
 
-  func testGenerateAuthorsInGroupsList() throws {
+  func _testGenerateAuthorsInGroupsList() throws {
     let data: Data? = try File(path: "authors.json").read()
 
     let items: [NameClassifier.Item] = try data!.decoded() as [NameClassifier.Item]
@@ -206,7 +208,7 @@ class AudioKnigiAPITests: XCTestCase {
     try FileSystem().createFile(at: "authors-in-groups.json", contents: data2)
   }
 
-  func testGeneratePerformersInGroupsList() throws {
+  func _testGeneratePerformersInGroupsList() throws {
     let data: Data? = try File(path: "performers.json").read()
 
     let items: [NameClassifier.Item] = try data!.decoded() as [NameClassifier.Item]

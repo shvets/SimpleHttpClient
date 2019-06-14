@@ -82,8 +82,8 @@ extension EtvnetApiClient {
       }
 
       if let value = value {
-        if let userCode = value.userCode,
-           let deviceCode = value.deviceCode {
+        if let userCode = value!.userCode,
+           let deviceCode = value!.deviceCode {
           self.configFile.items["user_code"] = userCode
           self.configFile.items["device_code"] = deviceCode
           self.configFile.items["activation_url"] = authClient.getActivationUrl()
@@ -131,7 +131,7 @@ extension EtvnetApiClient {
             if let value = value {
               ok = true
 
-              self.configFile.items = value.asConfigurationItems()
+              self.configFile.items = value!.asConfigurationItems()
               self.saveConfig()
             }
           }
@@ -156,12 +156,12 @@ extension EtvnetApiClient {
         }
 
         if let value = value {
-          done = value.accessToken != nil
+          done = value!.accessToken != nil
 
           if done {
             result = value
 
-            self.configFile.items = value.asConfigurationItems()
+            self.configFile.items = value!.asConfigurationItems()
             saveConfig()
           }
         }
@@ -180,7 +180,7 @@ extension EtvnetApiClient {
   func updateToken(_ refreshToken: String) throws -> AuthProperties? {
     return try await {
       self.authClient.updateToken(refreshToken: refreshToken)
-    }
+    }!
   }
 
   func checkAccessData(_ key: String) -> Bool {

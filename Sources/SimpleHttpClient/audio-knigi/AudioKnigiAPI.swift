@@ -280,90 +280,69 @@ open class AudioKnigiAPI {
   public func getAudioTracks(_ path: String) throws -> [Track] {
     var newTracks = [Track]()
 
-//    let (cookie, response) = getCookie()
-//
-//    var security_ls_key = ""
-//
-//    if let document = try self.toDocument(response?.data!) {
-//      let scripts = try document.select("script")
-//
-//      for script in scripts {
-//        let text = try script.html()
-//
-//        if let securityLsKey = try self.getSecurityLsKey(text: text) {
-//          security_ls_key = securityLsKey
-//        }
-//      }
-//    }
-//
-//    let response2 = try apiClient.request(path, to: [String].self)!
-//
-//    if let data = response2.body {
-//      if let document = try toDocument(data) {
-//        var bookId = 0
-//
-//        if let id = try self.getBookId(document: document) {
-//          bookId = id
-//        }
-//
-//        let data = self.getData(bid: bookId, security_ls_key: security_ls_key)
-//
-//        let newUrl = "\(AudioKnigiAPI.SiteUrl)/ajax/bid/\(bookId)"
-//
-//        var newTracks = [Track]()
-//
-//        if let cookie = cookie {
-//          newTracks = self.postRequest(url: newUrl, body: data, cookie: cookie)
-//        }
-//
-//        return newTracks
-//      }
-//    }
+    let (cookie, response) = try getCookie()
 
-//    return httpRequestRx(url).map { data in
-//      if let document = try self.toDocument(data) {
-//        var bookId = 0
-//
-//        if let id = try self.getBookId(document: document) {
-//          bookId = id
-//        }
-//
-//        let data = self.getData(bid: bookId, security_ls_key: security_ls_key)
-//
-//        let newUrl = "\(AudioKnigiAPI.SiteUrl)/ajax/bid/\(bookId)"
-//
-//        var newTracks = [Track]()
-//
-//        if let cookie = cookie {
-//          newTracks = self.postRequest(url: newUrl, body: data, cookie: cookie)
-//        }
-//
-//        return newTracks
-//      }
-//
-//      return []
-//    }
+    var security_ls_key = ""
+
+    if let document = try self.toDocument(response?.body!) {
+      let scripts = try document.select("script")
+
+      for script in scripts {
+        let text = try script.html()
+
+        if let securityLsKey = try self.getSecurityLsKey(text: text) {
+          security_ls_key = securityLsKey
+        }
+      }
+    }
+
+    let response2 = try apiClient.request(path, to: [String].self)!
+
+    if let data = response2.body {
+      if let document = try toDocument(data) {
+        var bookId = 0
+
+        if let id = try self.getBookId(document: document) {
+          bookId = id
+        }
+
+        let data = self.getData(bid: bookId, security_ls_key: security_ls_key)
+
+        let newPath = "ajax/bid/\(bookId)"
+
+        var newTracks = [Track]()
+
+        if let cookie = cookie {
+          newTracks = try self.postRequest(path: newPath, body: data, cookie: cookie)
+        }
+
+        return newTracks
+      }
+    }
 
     return newTracks
   }
 
-//  func getCookie() -> (String?, DataResponse<Data>?)  {
-//    let headers: HTTPHeaders = [
-//      "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36"
-//    ];
-//
-//    let response: DataResponse<Data>? = httpRequest(AudioKnigiAPI.SiteUrl, headers: headers)
-//
-//    var cookie: String?
-//
-//    for c in HTTPCookieStorage.shared.cookies! {
-//      if c.name == "PHPSESSID" {
-//        cookie = "\(c)"
-//      }
-//    }
-//
-//    return (cookie, response)
-//  }
+  func getCookie() throws -> (String?, ApiResponse?)  {
+    let headers: [HttpHeader] = [
+      HttpHeader(field: "user-agent", value:
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36")
+    ];
+
+    //let response: DataResponse<Data>? = httpRequest(AudioKnigiAPI.SiteUrl, headers: headers)
+
+    let response = try apiClient.request("", to: [String].self, headers: headers)!
+
+    var cookie: String?
+
+    for c in HTTPCookieStorage.shared.cookies! {
+      if c.name == "PHPSESSID" {
+        cookie = "\(c)"
+      }
+    }
+
+    return (cookie, response)
+  }
 
   func getBookId(document: Document) throws -> Int? {
     let items = try document.select("div[class=player-side js-topic-player]")
@@ -373,27 +352,27 @@ open class AudioKnigiAPI {
     return Int(globalId)
   }
 
-//  func getSecurityLsKey(text: String) throws -> String? {
-//    var security_ls_key: String?
-//
-//    let pattern = ",(LIVESTREET_SECURITY_KEY\\s+=\\s+'.*'),"
-//
-//    let regex = try NSRegularExpression(pattern: pattern)
-//
-//    let matches = regex.matches(in: text, options: [], range: NSRange(location: 0, length: text.count))
-//
-//    let match = self.getMatched(text, matches: matches, index: 1)
-//
-//    if let match = match, !match.isEmpty {
-//      let index = match.find("'")!
-//      let index1 = match.index(index, offsetBy: 1)
-//      let index2 = match.find("',")!
-//
-//      security_ls_key = String(match[index1..<index2])
-//    }
-//
-//    return security_ls_key
-//  }
+  func getSecurityLsKey(text: String) throws -> String? {
+    var security_ls_key: String?
+
+    let pattern = ",(LIVESTREET_SECURITY_KEY\\s+=\\s+'.*'),"
+
+    let regex = try NSRegularExpression(pattern: pattern)
+
+    let matches = regex.matches(in: text, options: [], range: NSRange(location: 0, length: text.count))
+
+    let match = self.getMatched(text, matches: matches, index: 1)
+
+    if let match = match, !match.isEmpty {
+      let index = match.find("'")!
+      let index1 = match.index(index, offsetBy: 1)
+      let index2 = match.find("',")!
+
+      security_ls_key = String(match[index1..<index2])
+    }
+
+    return security_ls_key
+  }
 
   func getData(bid: Int, security_ls_key: String) -> String {
     let secretPassphrase = "EKxtcg46V";
@@ -424,9 +403,15 @@ open class AudioKnigiAPI {
     return "bid=\(bid)&hash=\(hash)&security_ls_key=\(security_ls_key)"
   }
 
-  func postRequest(url: String, body: String, cookie: String) -> [Track] {
-    print(url)
+  func postRequest(path: String, body: String, cookie: String) throws -> [Track] {
+    //print(url)
     var newTracks = [Track]()
+
+    var headers: [HttpHeader] = []
+
+    headers.append(HttpHeader(field: "Content-Type", value: "application/x-www-form-urlencoded; charset=UTF-8"))
+    headers.append(HttpHeader(field: "cookie", value: cookie))
+    headers.append(HttpHeader(field: "user-agent", value: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36"))
 
 //    var request = URLRequest(url: URL(string: url)!)
 //
@@ -437,11 +422,19 @@ open class AudioKnigiAPI {
 //      forHTTPHeaderField: "user-agent")
 //
 //    request.httpBody = body.data(using: .utf8, allowLossyConversion: false)!
-//
+
+    let b = body.data(using: .utf8, allowLossyConversion: false)!
+
+    //let path = url.substring(from: AudioKnigiAPI.SiteUrl.index(url.startIndex, offsetBy: AudioKnigiAPI.SiteUrl.count))
+
+    print(path)
+
+    let response = try apiClient.request(path, to: [String].self, method: .post, headers: headers, body: b)!
+
 //    let semaphore = DispatchSemaphore.init(value: 0)
 //
 //    let utilityQueue = DispatchQueue.global(qos: .utility)
-//
+
 //    Alamofire.request(request).responseData(queue: utilityQueue) { (response) in
 //      if let data = response.data {
 //        if let result = try? data.decoded() as Tracks {
@@ -463,22 +456,22 @@ open class AudioKnigiAPI {
     return newTracks
   }
 
-//  func getMatched(_ link: String, matches: [NSTextCheckingResult], index: Int) -> String? {
-//    var matched: String?
-//
-//    let match = matches.first
-//
-//    if let match = match, index < match.numberOfRanges {
-//      let capturedGroupIndex = match.range(at: index)
-//
-//      let index1 = link.index(link.startIndex, offsetBy: capturedGroupIndex.location)
-//      let index2 = link.index(index1, offsetBy: capturedGroupIndex.length-1)
-//
-//      matched = String(link[index1 ... index2])
-//    }
-//
-//    return matched
-//  }
+  func getMatched(_ link: String, matches: [NSTextCheckingResult], index: Int) -> String? {
+    var matched: String?
+
+    let match = matches.first
+
+    if let match = match, index < match.numberOfRanges {
+      let capturedGroupIndex = match.range(at: index)
+
+      let index1 = link.index(link.startIndex, offsetBy: capturedGroupIndex.location)
+      let index2 = link.index(index1, offsetBy: capturedGroupIndex.length-1)
+
+      matched = String(link[index1 ... index2])
+    }
+
+    return matched
+  }
 
 //  public func getItemsInGroups(_ fileName: String) -> [NameClassifier.ItemsGroup] {
 //    var items: [NameClassifier.ItemsGroup] = []

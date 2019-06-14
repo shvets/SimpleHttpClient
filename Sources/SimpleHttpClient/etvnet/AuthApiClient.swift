@@ -22,8 +22,8 @@ open class AuthApiClient: ApiClient {
     return "\(baseURL)device/usercode"
   }
   
-  func getActivationCodes(includeClientSecret: Bool = true, includeClientId: Bool = false) ->
-    Observable<ActivationCodesProperties> {
+  func getActivationCodes(includeClientSecret: Bool = true, includeClientId: Bool = true) ->
+    Observable<ActivationCodesProperties?> {
 
     var queryItems: [URLQueryItem] = []
 
@@ -39,13 +39,19 @@ open class AuthApiClient: ApiClient {
 
     let request = ApiRequest(path: "device/code", queryItems: queryItems)
 
-    return self.fetchRx(request).map {response in
-      self.decode(response.body!, to: ActivationCodesProperties.self)!
+    return self.fetchRx(request).map { response in
+      if let body = response.body {
+        print(String(data: body, encoding: .utf8))
+        return self.decode(body, to: ActivationCodesProperties.self)!
+      }
+      else {
+        return nil
+      }
     }
   }
 
   @discardableResult
-  public func createToken(deviceCode: String) -> Observable<AuthProperties> {
+  public func createToken(deviceCode: String) -> Observable<AuthProperties?> {
     var queryItems: [URLQueryItem] = []
 
     queryItems.append(URLQueryItem(name: "grant_type", value: GrantType))
@@ -55,13 +61,19 @@ open class AuthApiClient: ApiClient {
 
     let request = ApiRequest(path: "token", queryItems: queryItems)
 
-    return self.fetchRx(request).map {response in
-      self.decode(response.body!, to: AuthProperties.self)!
+    return self.fetchRx(request).map { response in
+      if let body = response.body {
+        print(String(data: body, encoding: .utf8))
+        return self.decode(body, to: AuthProperties.self)!
+      }
+      else {
+        return nil
+      }
     }
   }
 
   @discardableResult
-  func updateToken(refreshToken: String) -> Observable<AuthProperties> {
+  func updateToken(refreshToken: String) -> Observable<AuthProperties?> {
     var queryItems: [URLQueryItem] = []
 
     queryItems.append(URLQueryItem(name: "grant_type", value: "refresh_token"))
@@ -71,8 +83,14 @@ open class AuthApiClient: ApiClient {
 
     let request = ApiRequest(path: "token", queryItems: queryItems)
 
-    return self.fetchRx(request).map {response in
-      self.decode(response.body!, to: AuthProperties.self)!
+    return self.fetchRx(request).map { response in
+      if let body = response.body {
+        print(String(data: body, encoding: .utf8))
+        return self.decode(body, to: AuthProperties.self)!
+      }
+      else {
+        return nil
+      }
     }
   }
 }

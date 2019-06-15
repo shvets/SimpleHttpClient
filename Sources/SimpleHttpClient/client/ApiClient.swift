@@ -148,12 +148,10 @@ extension ApiClient: HttpFetcher {
     }
   }
 
-  func request<T: Decodable>(_ path: String, to type: T.Type, method: HttpMethod = .get,
+  func request(_ path: String, method: HttpMethod = .get,
                              queryItems: [URLQueryItem] = [], headers: [HttpHeader] = [],
                              body: Data? = nil,
                              unauthorized: Bool=false) throws -> ApiResponse? {
-    var result: (value: T, response: ApiResponse)?
-
     let request = ApiRequest(path: path, queryItems: queryItems, method: method, headers: headers, body: body)
 
     return try await {

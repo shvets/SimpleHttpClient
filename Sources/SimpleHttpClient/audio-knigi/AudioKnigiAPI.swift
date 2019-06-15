@@ -47,9 +47,7 @@ open class AudioKnigiAPI {
 
     let path = "/authors/"
 
-    let response = try apiClient.request(path, to: [String].self)!
-
-    if let data = response.body {
+    if let response = try apiClient.request(path), let data = response.body {
       let document = try toDocument(data)
 
       let filter = "author-prefix-filter"
@@ -81,7 +79,7 @@ open class AudioKnigiAPI {
 
     let pagePath = getPagePath(path: path, page: page)
 
-    let response = try apiClient.request(pagePath, to: [String].self)!
+    let response = try apiClient.request(pagePath)!
 
     if let document = try toDocument(response.body!) {
       result = try self.getBookItems(document, path: path, page: page)
@@ -124,7 +122,7 @@ open class AudioKnigiAPI {
 
     let pagePath = getPagePath(path: path, page: page)
 
-    let response = try apiClient.request(pagePath, to: [String].self)!
+    let response = try apiClient.request(pagePath)!
 
     if let data = response.body {
       if let document = try toDocument(data) {
@@ -162,7 +160,7 @@ open class AudioKnigiAPI {
 
     let pagePath = getPagePath(path: path, page: page)
 
-    let response = try apiClient.request(pagePath, to: [String].self)!
+    let response = try apiClient.request(pagePath)!
 
     if let data = response.body {
       if let document = try toDocument(data) {
@@ -263,7 +261,7 @@ open class AudioKnigiAPI {
     var queryItems: [URLQueryItem] = []
     queryItems.append(URLQueryItem(name: "q", value: query))
 
-    let response = try apiClient.request(pagePath, to: [String].self, queryItems: queryItems)!
+    let response = try apiClient.request(pagePath, queryItems: queryItems)!
 
     if let document = try toDocument(response.body!) {
       result = try self.getBookItems(document, path: path, page: page)
@@ -277,7 +275,7 @@ open class AudioKnigiAPI {
 
     let (cookie, securityLsKey) = try getCookieAndSecurityLsKey()
 
-    let response = try apiClient.request(path, to: [String].self)
+    let response = try apiClient.request(path)
 
     if let securityLsKey = securityLsKey, let response = response,
        let data = response.body {
@@ -312,7 +310,7 @@ open class AudioKnigiAPI {
 
     let body = content.data(using: .utf8, allowLossyConversion: false)!
 
-    if let response = try apiClient.request(path, to: Tracks.self, method: .post, headers: headers, body: body) {
+    if let response = try apiClient.request(path, method: .post, headers: headers, body: body) {
       if let data1 = response.body, let tracks = apiClient.decode(data1, to: Tracks.self) {
         if let data2 = tracks.aItems.data(using: .utf8), let items = apiClient.decode(data2, to: [Track].self) {
           newTracks = items
@@ -350,7 +348,7 @@ open class AudioKnigiAPI {
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36")
     ];
 
-    let response = try apiClient.request("", to: [String].self, headers: headers)!
+    let response = try apiClient.request("", headers: headers)!
 
     var cookie: String?
 

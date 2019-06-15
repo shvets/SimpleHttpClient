@@ -142,9 +142,6 @@ open class AudioBooAPI {
 
     let path = String(url[AudioBooAPI.ArchiveUrl.index(url.startIndex, offsetBy: AudioBooAPI.ArchiveUrl.count)...])
 
-    print(url)
-    print(path)
-
     if let response = try archiveClient.request(path), let data = response.body,
        let document = try self.toDocument(data: data) {
       let items = try document.select("script")
@@ -178,13 +175,10 @@ open class AudioBooAPI {
 
     let path = "engine/ajax/search.php"
 
-    var headers: [HttpHeader] = []
-    headers.append(HttpHeader(field: "XMLHttpRequest", value: "X-Requested-With"))
-
     let content = "query=\(query)"
     let body = content.data(using: .utf8, allowLossyConversion: false)
 
-    if let response = try apiClient.request(path, method: .post, headers: [], body: body),
+    if let response = try apiClient.request(path, method: .post, body: body),
        let data = response.body,
        let document = try self.toDocument(data: data) {
       let items = try document.select("a")

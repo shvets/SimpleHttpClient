@@ -20,15 +20,14 @@ open class AudioKnigiAPI {
 
     let path = "/authors/"
 
-    if let response = try apiClient.request(path), let data = response.body {
-      if let document = try data.toDocument() {
-        let items = try document.select("ul[id='author-prefix-filter'] li a")
+    if let response = try apiClient.request(path), let data = response.body,
+       let document = try data.toDocument() {
+      let items = try document.select("ul[id='author-prefix-filter'] li a")
 
-        for item in items.array() {
-          let name = try item.text()
+      for item in items.array() {
+        let name = try item.text()
 
-          result.append(name)
-        }
+        result.append(name)
       }
     }
 
@@ -247,21 +246,20 @@ open class AudioKnigiAPI {
     let response = try apiClient.request(path)
 
     if let securityLsKey = securityLsKey, let response = response,
-       let data = response.body {
-      if let document = try data.toDocument() {
-        var bookId = 0
+       let data = response.body,
+       let document = try data.toDocument() {
+      var bookId = 0
 
-        if let id = try self.getBookId(document: document) {
-          bookId = id
-        }
+      if let id = try self.getBookId(document: document) {
+        bookId = id
+      }
 
-        let securityParams = self.getSecurityParams(bid: bookId, securityLsKey: securityLsKey)
+      let securityParams = self.getSecurityParams(bid: bookId, securityLsKey: securityLsKey)
 
-        let newPath = "ajax/bid/\(bookId)"
+      let newPath = "ajax/bid/\(bookId)"
 
-        if let cookie = cookie {
-          newTracks = try self.requestTracks(path: newPath, content: securityParams, cookie: cookie)
-        }
+      if let cookie = cookie {
+        newTracks = try self.requestTracks(path: newPath, content: securityParams, cookie: cookie)
       }
     }
 

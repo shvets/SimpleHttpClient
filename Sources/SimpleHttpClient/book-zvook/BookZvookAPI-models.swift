@@ -1,6 +1,33 @@
 import Foundation
 
 extension BookZvookAPI {
+  public typealias BookItem = [String: String]
+
+  public struct Pagination: Codable {
+    let page: Int
+    let pages: Int
+    let has_previous: Bool
+    let has_next: Bool
+
+    init(page: Int = 1, pages: Int = 1, has_previous: Bool = false, has_next: Bool = false) {
+      self.page = page
+      self.pages = pages
+      self.has_previous = has_previous
+      self.has_next = has_next
+    }
+  }
+
+  public struct BookResults: Codable {
+    let items: [BookItem]
+    let pagination: Pagination?
+
+    init(items: [BookItem] = [], pagination: Pagination? = nil) {
+      self.items = items
+
+      self.pagination = pagination
+    }
+  }
+
   public struct PersonName {
     public let name: String
     public let id: String

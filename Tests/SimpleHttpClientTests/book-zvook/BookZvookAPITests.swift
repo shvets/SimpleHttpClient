@@ -3,153 +3,105 @@ import XCTest
 @testable import SimpleHttpClient
 
 class BookZvookAPITests: XCTestCase {
-//  var subject =  BookZvookAPI()
-//
-//  func testGetPopularBooks() throws {
-//    let exp = expectation(description: "Popular Books")
-//
-//    _ = try subject.getPopularBooks().subscribe(onNext: { result in
-//      print(result as Any)
-//
-//      XCTAssert(result.count > 0)
-//
-//      exp.fulfill()
-//    },
-//      onError: { error in
-//        print("Received error:", error)
-//      })
-//
-//    waitForExpectations(timeout: 10, handler: nil)
-//  }
-//
-//  func testGetLetters() throws {
-//    let exp = expectation(description: "Get Letters")
-//
-//    _ = try subject.getLetters().subscribe(onNext: { result in
-//      print(result as Any)
-//
-//      XCTAssert(result.count > 0)
-//
-//      exp.fulfill()
-//    },
-//      onError: { error in
-//        print("Received error:", error)
-//      })
-//
-//    waitForExpectations(timeout: 10, handler: nil)
-//  }
-//
-//  func testGetAuthorsByLetter() throws {
-//    let exp = expectation(description: "Get Authors by Letter")
-//
-//    _ = try subject.getLetters().subscribe(onNext: { letters in
-//      // print(letters as Any)
-//
-//      XCTAssert(letters.count > 0)
-//
-//      let id = letters[0]["id"]!
-//
-//      do {
-//        let result = try self.subject.getAuthorsByLetter(id)
-//
-//        print(try result.prettify())
-//
-//        XCTAssert(result.count > 0)
-//      }
-//      catch let e {
-//        XCTFail(e.localizedDescription)
-//      }
-//
-//      exp.fulfill()
-//    },
-//      onError: { error in
-//        print("Received error:", error)
-//      })
-//
-//    waitForExpectations(timeout: 10, handler: nil)
-//  }
-//
-//  func testGetGenres() throws {
-//    let result = try subject.getGenres()
-//
-//    print(result as Any)
-//  }
-//
-//  func testGetPlaylistUrls() throws {
-//    let url = "http://bookzvuk.ru/zhizn-i-neobyichaynyie-priklyucheniya-soldata-ivana-chonkina-1-litso-neprikosnovennoe-vladimir-voynovich-audiokniga-onlayn/"
-//
-//    let result = try self.subject.getPlaylistUrls(url)
-//
-//    print(result as Any)
-//  }
-//
-//  func testGetAudioTracks() throws {
-//    let url = "http://bookzvuk.ru/zhizn-i-neobyichaynyie-priklyucheniya-soldata-ivana-chonkina-1-litso-neprikosnovennoe-vladimir-voynovich-audiokniga-onlayn/"
-//    //let url = "http://bookzvuk.ru/zemlekopyi-terri-pratchett-audiokniga-onlayn/"
-//    let playlistUrls = try subject.getPlaylistUrls(url)
-//
-//    //print(playlistUrls)
-//
-//    let list = try subject.getAudioTracks(playlistUrls[0])
-//
-//    print(try list.prettify())
-//
-//    XCTAssertNotNil(list)
-//    XCTAssert(list.count > 0)
-//  }
-//
-//  func testGetNewBooks() throws {
-//    let exp = expectation(description: "New Books")
-//
-//    _ = try subject.getNewBooks().subscribe(onNext: { result in
-//      print(result as Any)
-//
-//      XCTAssert(result.count > 0)
-//
-//      exp.fulfill()
-//    },
-//      onError: { error in
-//        print("Received error:", error)
-//      })
-//
-//    waitForExpectations(timeout: 10, handler: nil)
-//  }
-//
-//  func testGetGenreBooks() throws {
-//    let exp = expectation(description: "Genre Books")
-//
-//    let genreUrl = "http://bookzvuk.ru/category/bestseller/"
-//
-//    _ = try subject.getGenreBooks(genreUrl).subscribe(onNext: { result in
-//      print(result as Any)
-//
-//      XCTAssert(result.count > 0)
-//
-//      exp.fulfill()
-//    },
-//      onError: { error in
-//        print("Received error:", error)
-//      })
-//
-//    waitForExpectations(timeout: 10, handler: nil)
-//  }
-//
-//  func testSearch() throws {
-//    let query = "пратчетт"
-//
-//    let exp = expectation(description: "Search")
-//
-//    _ = try subject.search(query, page: 2).subscribe(onNext: { result in
-//      print(result as Any)
-//
-//      XCTAssert(result.count > 0)
-//
-//      exp.fulfill()
-//    },
-//      onError: { error in
-//        print("Received error:", error)
-//      })
-//
-//    waitForExpectations(timeout: 10, handler: nil)
-//  }
+  var subject =  BookZvookAPI()
+
+  func testGetPopularBooks() throws {
+    let result = try subject.getPopularBooks()
+
+    print(try result.prettify())
+
+    XCTAssert(result.count > 0)
+  }
+
+  func testGetAuthorBooks() throws {
+    let letters = try subject.getLetters()
+
+    let id = letters[1]["id"]!
+
+    let authors = try self.subject.getAuthorsByLetter(id)
+
+    let result = try subject.getAuthorBooks(id, name: authors[0].name)
+
+    print(try result.prettify())
+
+    XCTAssert(result.items.count > 0)
+  }
+
+  func testGetLetters() throws {
+    let result = try subject.getLetters()
+
+    print(try result.prettify())
+
+    XCTAssert(result.count > 0)
+  }
+
+  func testGetAuthorsByLetter() throws {
+    let letters = try subject.getLetters()
+
+    let id = letters[1]["id"]!
+
+    let result = try self.subject.getAuthorsByLetter(id)
+
+    print(try result.prettify())
+
+    XCTAssert(result.count > 0)
+  }
+
+  func testGetGenres() throws {
+    let result = try subject.getGenres()
+
+    print(try result.prettify())
+  }
+
+  func testGetPlaylistUrls() throws {
+    let url = "http://bookzvuk.ru/zhizn-i-neobyichaynyie-priklyucheniya-soldata-ivana-chonkina-1-litso-neprikosnovennoe-vladimir-voynovich-audiokniga-onlayn/"
+
+    let result = try self.subject.getPlaylistUrls(url)
+
+    print(try result.prettify())
+  }
+
+  func testGetAudioTracks() throws {
+    let url = "http://bookzvuk.ru/zhizn-i-neobyichaynyie-priklyucheniya-soldata-ivana-chonkina-1-litso-neprikosnovennoe-vladimir-voynovich-audiokniga-onlayn/"
+    //let url = "http://bookzvuk.ru/zemlekopyi-terri-pratchett-audiokniga-onlayn/"
+    let playlistUrls = try subject.getPlaylistUrls(url)
+
+    print(playlistUrls)
+
+    let list = try subject.getAudioTracks(playlistUrls[0])
+
+    print(try list.prettify())
+
+    XCTAssertNotNil(list)
+    XCTAssert(list.count > 0)
+  }
+
+  func testGetNewBooks() throws {
+    let result = try subject.getNewBooks()
+
+    print(try result.prettify())
+
+    XCTAssert(result.items.count > 0)
+  }
+
+  func testGetGenreBooks() throws {
+    let genreUrl = "http://bookzvuk.ru/category/bestseller/"
+    let path = String(genreUrl[BookZvookAPI.SiteUrl.index(genreUrl.startIndex, offsetBy: BookZvookAPI.SiteUrl.count)...])
+
+    let result = try subject.getGenreBooks(path)
+
+    print(try result.prettify())
+
+    XCTAssert(result.items.count > 0)
+  }
+
+  func testSearch() throws {
+    let query = "пратчетт"
+
+    let result = try subject.search(query, page: 2)
+
+    print(try result.prettify())
+
+    XCTAssert(result.items.count > 0)
+  }
 }

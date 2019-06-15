@@ -11,7 +11,7 @@ open class NameClassifier {
     public let value: [Item]
   }
 
-  public func classify(items: [Item]) throws -> [(key: String, value: [Any])] {
+  public func classify(items: [Item]) throws -> [(key: String, value: [Item])] {
     var groups = [String: [Item]]()
 
     for item in items {
@@ -53,7 +53,7 @@ open class NameClassifier {
     return items
   }
 
-  func mergeSmallGroups(_ groups: [(key: String, value: [Item])]) -> [(key: String, value: [Any])] {
+  func mergeSmallGroups(_ groups: [(key: String, value: [Item])]) -> [(key: String, value: [Item])] {
     // merge groups into bigger groups with size ~ 20 records
 
     var classifier: [[String]] = []
@@ -80,13 +80,13 @@ open class NameClassifier {
     // flatten records from different group within same classification
     // assign new name in format firstName-lastName, e.g. ABC-AZZ
 
-    var newGroups: [(key: String, value: [Any])] = []
+    var newGroups: [(key: String, value: [Item])] = []
 
     for groupNames in classifier {
       if !groupNames.isEmpty {
         let key = groupNames[0] + "-" + groupNames[groupNames.count - 1]
 
-        var value: [Any] = []
+        var value: [Item] = []
 
         for groupName in groupNames {
           let group = groups.filter { $0.key == groupName }.first

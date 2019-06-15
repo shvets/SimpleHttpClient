@@ -32,7 +32,7 @@ open class AudioBooAPI {
     return result
   }
 
-  public func getAuthorsByLetter(_ path: String) throws -> [(key: String, value: [Any])] {
+  public func getAuthorsByLetter(_ path: String) throws -> [(key: String, value: [NameClassifier.Item])] {
     var groups: [String: [NameClassifier.Item]] = [:]
 
     if let response = try apiClient.request(path), let data = response.body,

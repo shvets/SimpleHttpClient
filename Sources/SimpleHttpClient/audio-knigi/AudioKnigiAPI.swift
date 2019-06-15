@@ -119,8 +119,6 @@ open class AudioKnigiAPI {
   }
 
   func getCollection(path: String, page: Int=1) throws -> BookResults {
-    var result = BookResults()
-
     var collection = [BookItem]()
     var pagination = Pagination()
 
@@ -157,8 +155,6 @@ open class AudioKnigiAPI {
   }
 
   public func getGenres(page: Int=1) throws -> BookResults {
-    var result = BookResults()
-
     var collection = [BookItem]()
     var pagination = Pagination()
 
@@ -276,29 +272,15 @@ open class AudioKnigiAPI {
     return result
   }
 
-
   public func getAudioTracks(_ path: String) throws -> [Track] {
     var newTracks = [Track]()
 
-    let (cookie, response) = try getCookie()
+    let (cookie, securityLsKey) = try getCookieAndSecurityLsKey()
 
-    var security_ls_key = ""
+    let response = try apiClient.request(path, to: [String].self)
 
-    if let document = try self.toDocument(response?.body!) {
-      let scripts = try document.select("script")
-
-      for script in scripts {
-        let text = try script.html()
-
-        if let securityLsKey = try self.getSecurityLsKey(text: text) {
-          security_ls_key = securityLsKey
-        }
-      }
-    }
-
-    let response2 = try apiClient.request(path, to: [String].self)!
-
-    if let data = response2.body {
+    if let securityLsKey = securityLsKey, let response = response,
+       let data = response.body {
       if let document = try toDocument(data) {
         var bookId = 0
 
@@ -306,21 +288,60 @@ open class AudioKnigiAPI {
           bookId = id
         }
 
-        let data = self.getData(bid: bookId, security_ls_key: security_ls_key)
+        let securityParams = self.getSecurityParams(bid: bookId, securityLsKey: securityLsKey)
 
         let newPath = "ajax/bid/\(bookId)"
 
-        var newTracks = [Track]()
-
         if let cookie = cookie {
-          newTracks = try self.postRequest(path: newPath, body: data, cookie: cookie)
+          newTracks = try self.requestTracks(path: newPath, content: securityParams, cookie: cookie)
         }
-
-        return newTracks
       }
     }
 
     return newTracks
+  }
+
+  func requestTracks(path: String, content: String, cookie: String) throws -> [Track] {
+    var newTracks = [Track]()
+
+    var headers: [HttpHeader] = []
+
+    //headers.append(HttpHeader(field: "Content-Type", value: "application/x-www-form-urlencoded; charset=UTF-8"))
+    //headers.append(HttpHeader(field: "cookie", value: cookie))
+    headers.append(HttpHeader(field: "user-agent", value: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36"))
+
+    let body = content.data(using: .utf8, allowLossyConversion: false)!
+
+    if let response = try apiClient.request(path, to: Tracks.self, method: .post, headers: headers, body: body) {
+      if let data1 = response.body, let tracks = apiClient.decode(data1, to: Tracks.self) {
+        if let data2 = tracks.aItems.data(using: .utf8), let items = apiClient.decode(data2, to: [Track].self) {
+          newTracks = items
+        }
+      }
+    }
+
+    return newTracks
+  }
+
+  func getCookieAndSecurityLsKey() throws -> (String?, String?)  {
+    let (cookie, response) = try getCookie()
+
+    var securityLsKey: String?
+
+    if let response = response, let body = response.body,
+       let document = try self.toDocument(body) {
+      let scripts = try document.select("script")
+
+      for script in scripts {
+        let text = try script.html()
+
+        if let key = try self.getSecurityLsKey(text: text) {
+          securityLsKey = key
+        }
+      }
+    }
+
+    return (cookie, securityLsKey)
   }
 
   func getCookie() throws -> (String?, ApiResponse?)  {
@@ -328,8 +349,6 @@ open class AudioKnigiAPI {
       HttpHeader(field: "user-agent", value:
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36")
     ];
-
-    //let response: DataResponse<Data>? = httpRequest(AudioKnigiAPI.SiteUrl, headers: headers)
 
     let response = try apiClient.request("", to: [String].self, headers: headers)!
 
@@ -374,12 +393,12 @@ open class AudioKnigiAPI {
     return security_ls_key
   }
 
-  func getData(bid: Int, security_ls_key: String) -> String {
+  func getSecurityParams(bid: Int, securityLsKey: String) -> String {
     let secretPassphrase = "EKxtcg46V";
 
     let AES = CryptoJS.AES()
 
-    let encrypted = AES.encrypt("\"" + security_ls_key + "\"", password: secretPassphrase)
+    let encrypted = AES.encrypt("\"" + securityLsKey + "\"", password: secretPassphrase)
 
     let ct = encrypted[0]
     let iv = encrypted[1]
@@ -400,60 +419,7 @@ open class AudioKnigiAPI {
       .replacingOccurrences(of: ":", with: "%3A")
       .replacingOccurrences(of: "+", with: "%2B")
 
-    return "bid=\(bid)&hash=\(hash)&security_ls_key=\(security_ls_key)"
-  }
-
-  func postRequest(path: String, body: String, cookie: String) throws -> [Track] {
-    //print(url)
-    var newTracks = [Track]()
-
-    var headers: [HttpHeader] = []
-
-    headers.append(HttpHeader(field: "Content-Type", value: "application/x-www-form-urlencoded; charset=UTF-8"))
-    headers.append(HttpHeader(field: "cookie", value: cookie))
-    headers.append(HttpHeader(field: "user-agent", value: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36"))
-
-//    var request = URLRequest(url: URL(string: url)!)
-//
-//    request.httpMethod = HTTPMethod.post.rawValue
-//    request.setValue("application/x-www-form-urlencoded; charset=UTF-8", forHTTPHeaderField: "Content-Type")
-//    request.setValue(cookie, forHTTPHeaderField: "cookie")
-//    request.setValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36",
-//      forHTTPHeaderField: "user-agent")
-//
-//    request.httpBody = body.data(using: .utf8, allowLossyConversion: false)!
-
-    let b = body.data(using: .utf8, allowLossyConversion: false)!
-
-    //let path = url.substring(from: AudioKnigiAPI.SiteUrl.index(url.startIndex, offsetBy: AudioKnigiAPI.SiteUrl.count))
-
-    print(path)
-
-    let response = try apiClient.request(path, to: [String].self, method: .post, headers: headers, body: b)!
-
-//    let semaphore = DispatchSemaphore.init(value: 0)
-//
-//    let utilityQueue = DispatchQueue.global(qos: .utility)
-
-//    Alamofire.request(request).responseData(queue: utilityQueue) { (response) in
-//      if let data = response.data {
-//        if let result = try? data.decoded() as Tracks {
-//          let result2 = result.aItems
-//
-//          let data3 = result2.data(using: .utf8)!
-//
-//          if let result3 = try? data3.decoded() as [Track] {
-//            newTracks = result3
-//          }
-//        }
-//      }
-//
-//     semaphore.signal()
-//    }
-//
-//    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
-
-    return newTracks
+    return "bid=\(bid)&hash=\(hash)&security_ls_key=\(securityLsKey)"
   }
 
   func getMatched(_ link: String, matches: [NSTextCheckingResult], index: Int) -> String? {

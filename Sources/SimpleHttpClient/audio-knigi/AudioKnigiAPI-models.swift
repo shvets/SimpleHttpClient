@@ -13,10 +13,10 @@ extension AudioKnigiAPI {
 
   public struct Tracks: Codable {
     public let aItems: String
-    public let bStateError: Bool
-    public let fstate: Bool
-    public let sMsg: String
-    public let sMsgTitle: String
+    public let bStateError: Bool?
+    public let fstate: Bool?
+    public let sMsg: String?
+    public let sMsgTitle: String?
 
     public init(aItems: String, bStateError: Bool, fstate: Bool, sMsg: String, sMsgTitle: String) {
       self.aItems = aItems
@@ -28,9 +28,9 @@ extension AudioKnigiAPI {
   }
 
   public struct Track: Codable {
-    public let albumName: String
+    public let albumName: String?
     public let title: String
-    public let url: String
+    public let url: String?
     public let time: Int
 
     enum CodingKeys: String, CodingKey {

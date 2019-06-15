@@ -147,14 +147,8 @@ class AudioKnigiAPITests: XCTestCase {
     let path = "luchshee-yumoristicheskoe-fentezi-antologiya-chast-1"
 
     let result = try subject.getAudioTracks(path)
-//      do {
-//        print(try result.prettify())
-//      }
-//      catch {
-//
-//      }
 
-    print(result)
+    print(try result.prettify())
 
     XCTAssertNotNil(result)
     XCTAssert(result.count > 0)

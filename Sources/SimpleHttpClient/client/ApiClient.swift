@@ -52,11 +52,6 @@ open class ApiClient {
     urlRequest.httpMethod = request.method.rawValue
 
     if let body = request.body {
-//      let encoder = JSONEncoder()
-//      encoder.outputFormatting = .prettyPrinted
-//
-//      urlRequest.httpBody = try encoder.encode(body)
-
       urlRequest.httpBody = body
     }
 

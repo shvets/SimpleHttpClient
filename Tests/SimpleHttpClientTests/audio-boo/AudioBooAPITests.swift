@@ -22,8 +22,7 @@ class AudioBooAPITests: XCTestCase {
 
     let result = try self.subject.getAuthorsByLetter(id)
 
-    //print(try result.prettify())
-    print(result)
+    print(try result.prettify())
 
     XCTAssert(result.count > 0)
   }

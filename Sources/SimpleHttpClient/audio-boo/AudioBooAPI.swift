@@ -32,51 +32,46 @@ open class AudioBooAPI {
     return result
   }
 
-  public func getAuthorsByLetter(_ path: String) throws -> [(key: String, value: [NameClassifier.Item])] {
+  public func getAuthorsByLetter(_ path: String) throws -> [NameClassifier.ItemsGroup] {
     var groups: [String: [NameClassifier.Item]] = [:]
 
     if let response = try apiClient.request(path), let data = response.body,
       let document = try self.toDocument(data: data) {
-        let items = try document.select("div[class=full-news-content] div a")
+      let items = try document.select("div[class=full-news-content] div a")
 
-        for item in items.array() {
-          let href = try item.attr("href")
-          let name = try item.text().trim()
+      for item in items.array() {
+        let href = try item.attr("href")
+        let name = try item.text().trim()
 
-          if !name.isEmpty && !name.hasPrefix("ALIAS") && Int(name) == nil {
-            let index1 = name.startIndex
-            let index2 = name.index(name.startIndex, offsetBy: 3)
+        if !name.isEmpty && !name.hasPrefix("ALIAS") && Int(name) == nil {
+          let index1 = name.startIndex
+          let index2 = name.index(name.startIndex, offsetBy: 3)
 
-            let groupName = name[index1 ..< index2].uppercased()
+          let groupName = name[index1 ..< index2].uppercased()
 
-            if !groups.keys.contains(groupName) {
-              groups[groupName] = []
-            }
-
-            var group: [NameClassifier.Item] = []
-
-            if let subGroup = groups[groupName] {
-              for item in subGroup {
-                group.append(item)
-              }
-            }
-
-            group.append(NameClassifier.Item(id: href, name: name))
-
-            groups[groupName] = group
+          if !groups.keys.contains(groupName) {
+            groups[groupName] = []
           }
+
+          var group: [NameClassifier.Item] = []
+
+          if let subGroup = groups[groupName] {
+            for item in subGroup {
+              group.append(item)
+            }
+          }
+
+          group.append(NameClassifier.Item(id: href, name: name))
+
+          groups[groupName] = group
         }
-      //}
+      }
     }
 
-//    if let document = try getDocument(AudioBooAPI.SiteUrl + path) {
-//
-//    }
-
-    var newGroups: [(key: String, value: [NameClassifier.Item])] = []
+    var newGroups: [NameClassifier.ItemsGroup] = []
 
     for (groupName, group) in groups.sorted(by: { $0.key < $1.key}) {
-      newGroups.append((key: groupName, value: group))
+      newGroups.append(NameClassifier.ItemsGroup(key: groupName, value: group))
     }
 
     return NameClassifier().mergeSmallGroups(newGroups)

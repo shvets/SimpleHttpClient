@@ -11,7 +11,7 @@ open class NameClassifier {
     public let value: [Item]
   }
 
-  public func classify(items: [Item]) throws -> [(key: String, value: [Item])] {
+  public func classify(items: [Item]) throws -> [ItemsGroup] {
     var groups = [String: [Item]]()
 
     for item in items {
@@ -36,7 +36,13 @@ open class NameClassifier {
 
     let sortedGroups = groups.sorted { $0.key < $1.key }
 
-    return mergeSmallGroups(sortedGroups)
+    var convertedGroups: [ItemsGroup] = []
+
+    for group in sortedGroups {
+      convertedGroups.append(ItemsGroup(key: group.key, value: group.value))
+    }
+
+    return mergeSmallGroups(convertedGroups)
   }
 
   public func classify2(items: [Item]) throws -> [ItemsGroup] {
@@ -45,7 +51,7 @@ open class NameClassifier {
     var items: [ItemsGroup] = []
 
     for item in result {
-      let newGroup = NameClassifier.ItemsGroup(key: item.key, value: item.value as! [Item])
+      let newGroup = NameClassifier.ItemsGroup(key: item.key, value: item.value)
 
       items.append(newGroup)
     }
@@ -53,7 +59,7 @@ open class NameClassifier {
     return items
   }
 
-  func mergeSmallGroups(_ groups: [(key: String, value: [Item])]) -> [(key: String, value: [Item])] {
+  func mergeSmallGroups(_ groups: [ItemsGroup]) -> [ItemsGroup] {
     // merge groups into bigger groups with size ~ 20 records
 
     var classifier: [[String]] = []
@@ -64,23 +70,23 @@ open class NameClassifier {
 
     var index = 0
 
-    for (groupName, group) in groups {
-      let groupWeight = group.count
+    for group in groups {
+      let groupWeight = group.value.count
       groupSize += groupWeight
 
-      if groupSize > 20 || startsWithDifferentLetter(classifier[index], name: groupName) {
+      if groupSize > 20 || startsWithDifferentLetter(classifier[index], name: group.key) {
         groupSize = 0
         classifier.append([])
         index = index + 1
       }
 
-      classifier[index].append(groupName)
+      classifier[index].append(group.key)
     }
 
     // flatten records from different group within same classification
     // assign new name in format firstName-lastName, e.g. ABC-AZZ
 
-    var newGroups: [(key: String, value: [Item])] = []
+    var newGroups: [ItemsGroup] = []
 
     for groupNames in classifier {
       if !groupNames.isEmpty {
@@ -98,7 +104,7 @@ open class NameClassifier {
           }
         }
 
-        newGroups.append((key: key, value: value))
+        newGroups.append(ItemsGroup(key: key, value: value))
       }
     }
 

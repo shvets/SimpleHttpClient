@@ -340,7 +340,7 @@ open class EtvnetAPI {
   public func getBookmarks(folder: String? = nil, perPage: Int=PER_PAGE, page: Int=1) throws -> PaginatedBookmarksData? {
     var path: String
 
-    if let floder = folder {
+    if let folder = folder {
       path = "video/bookmarks/folders/\(folder)/items.json"
     }
     else {

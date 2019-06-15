@@ -318,7 +318,7 @@ open class AudioKnigiAPI {
 
     var cookie: String?
 
-    let response = try apiClient.request("", headers: headers)
+    let response = try apiClient.request(headers: headers)
 
     if let cookies = HTTPCookieStorage.shared.cookies {
       for c in cookies {

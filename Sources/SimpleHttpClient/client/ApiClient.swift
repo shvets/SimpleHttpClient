@@ -104,6 +104,7 @@ extension ApiClient: HttpFetcher {
       if let url = self.buildUrl(request) {
         do {
           let urlRequest = try self.buildUrlRequest(url: url, request: request)
+          // print("\(urlRequest.httpMethod!): \(url)")
 
           let task = self.session.dataTask(with: urlRequest) { (data, response, error) in
             if let error = error {
@@ -148,7 +149,7 @@ extension ApiClient: HttpFetcher {
     }
   }
 
-  func request(_ path: String, method: HttpMethod = .get,
+  func request(_ path: String = "", method: HttpMethod = .get,
                              queryItems: [URLQueryItem] = [], headers: [HttpHeader] = [],
                              body: Data? = nil,
                              unauthorized: Bool=false) throws -> ApiResponse? {

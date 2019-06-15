@@ -48,7 +48,7 @@ open class AudioKnigiAPI {
     let path = "/authors/"
 
     if let response = try apiClient.request(path), let data = response.body {
-      if let document = try toDocument(data) {
+      if let document = try data.toDocument() {
         let items = try document.select("ul[id='author-prefix-filter'] li a")
 
         for item in items.array() {
@@ -77,8 +77,8 @@ open class AudioKnigiAPI {
 
     let pagePath = getPagePath(path: path, page: page)
 
-    if let response = try apiClient.request(pagePath), let body = response.body,
-       let document = try toDocument(body) {
+    if let response = try apiClient.request(pagePath), let data = response.body,
+       let document = try data.toDocument() {
       result = try self.getBookItems(document, path: path, page: page)
     }
 
@@ -120,7 +120,7 @@ open class AudioKnigiAPI {
     let pagePath = getPagePath(path: path, page: page)
 
     if let response = try apiClient.request(pagePath), let data = response.body,
-       let document = try toDocument(data) {
+       let document = try data.toDocument() {
       let items = try document.select("td[class=cell-name]")
 
       for item: Element in items.array() {
@@ -156,7 +156,7 @@ open class AudioKnigiAPI {
     let pagePath = getPagePath(path: path, page: page)
 
     if let response = try apiClient.request(pagePath), let data = response.body,
-       let document = try toDocument(data) {
+       let document = try data.toDocument() {
       let items = try document.select("td[class=cell-name]")
 
       for item: Element in items.array() {
@@ -257,8 +257,9 @@ open class AudioKnigiAPI {
     var queryItems: [URLQueryItem] = []
     queryItems.append(URLQueryItem(name: "q", value: query))
 
-    if let response = try apiClient.request(pagePath, queryItems: queryItems), let body = response.body,
-       let document = try toDocument(body) {
+    if let response = try apiClient.request(pagePath, queryItems: queryItems),
+       let data = response.body,
+       let document = try data.toDocument() {
       result = try self.getBookItems(document, path: path, page: page)
     }
 
@@ -274,7 +275,7 @@ open class AudioKnigiAPI {
 
     if let securityLsKey = securityLsKey, let response = response,
        let data = response.body {
-      if let document = try toDocument(data) {
+      if let document = try data.toDocument() {
         var bookId = 0
 
         if let id = try self.getBookId(document: document) {
@@ -320,8 +321,8 @@ open class AudioKnigiAPI {
 
     var securityLsKey: String?
 
-    if let response = response, let body = response.body,
-       let document = try self.toDocument(body) {
+    if let response = response, let data = response.body,
+       let document = try data.toDocument() {
       let scripts = try document.select("script")
 
       for script in scripts {
@@ -346,7 +347,7 @@ open class AudioKnigiAPI {
 
     let response = try apiClient.request("", headers: headers)
 
-    if let response = response, let cookies = HTTPCookieStorage.shared.cookies {
+    if let cookies = HTTPCookieStorage.shared.cookies {
       for c in cookies {
         if c.name == "PHPSESSID" {
           cookie = "\(c)"
@@ -455,14 +456,4 @@ open class AudioKnigiAPI {
 //    return items
 //  }
 
-  public func toDocument(_ data: Data?, encoding: String.Encoding = .utf8) throws -> Document? {
-    var document: Document?
-
-    if let data = data,
-       let html = String(data: data, encoding: encoding) {
-      document = try SwiftSoup.parse(html)
-    }
-
-    return document
-  }
 }

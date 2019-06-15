@@ -48,16 +48,14 @@ open class AudioKnigiAPI {
     let path = "/authors/"
 
     if let response = try apiClient.request(path), let data = response.body {
-      let document = try toDocument(data)
+      if let document = try toDocument(data) {
+        let items = try document.select("ul[id='author-prefix-filter'] li a")
 
-      let filter = "author-prefix-filter"
+        for item in items.array() {
+          let name = try item.text()
 
-      let items = try document!.select("ul[id='" + filter + "'] li a")
-
-      for item in items.array() {
-        let name = try item.text()
-
-        result.append(name)
+          result.append(name)
+        }
       }
     }
 
@@ -79,9 +77,8 @@ open class AudioKnigiAPI {
 
     let pagePath = getPagePath(path: path, page: page)
 
-    let response = try apiClient.request(pagePath)!
-
-    if let document = try toDocument(response.body!) {
+    if let response = try apiClient.request(pagePath), let body = response.body,
+       let document = try toDocument(body) {
       result = try self.getBookItems(document, path: path, page: page)
     }
 
@@ -122,30 +119,28 @@ open class AudioKnigiAPI {
 
     let pagePath = getPagePath(path: path, page: page)
 
-    let response = try apiClient.request(pagePath)!
+    if let response = try apiClient.request(pagePath), let data = response.body,
+       let document = try toDocument(data) {
+      let items = try document.select("td[class=cell-name]")
 
-    if let data = response.body {
-      if let document = try toDocument(data) {
-        let items = try document.select("td[class=cell-name]")
+      for item: Element in items.array() {
+        let link = try item.select("h4 a")
+        let name = try link.text()
+        let href = try link.attr("href")
+        let thumb = "https://audioknigi.club/templates/skin/aclub/images/avatar_blog_48x48.png"
+        //try link.select("img").attr("src")
 
-        for item: Element in items.array() {
-          let link = try item.select("h4 a")
-          let name = try link.text()
-          let href = try link.attr("href")
-          let thumb = "https://audioknigi.club/templates/skin/aclub/images/avatar_blog_48x48.png"
-          //try link.select("img").attr("src")
+        let index = href.index(href.startIndex, offsetBy: AudioKnigiAPI.SiteUrl.count)
 
-          let index = href.index(href.startIndex, offsetBy: AudioKnigiAPI.SiteUrl.count)
+        let id = String(href[index ..< href.endIndex]) + "/"
 
-          let id = String(href[index ..< href.endIndex]) + "/"
-          let filteredId = id.removingPercentEncoding!
-
-          collection.append(["type": "collection", "id": filteredId, "name": name, "thumb": thumb])
+        if let filteredId = id.removingPercentEncoding {
+          collection.append(["type": "collection", "id": filteredId, "name": name, "thumb": thumb]) 
         }
+      }
 
-        if !items.array().isEmpty {
-          pagination = try self.extractPaginationData(document: document, path: path, page: page)
-        }
+      if !items.array().isEmpty {
+        pagination = try self.extractPaginationData(document: document, path: path, page: page)
       }
     }
 
@@ -160,29 +155,26 @@ open class AudioKnigiAPI {
 
     let pagePath = getPagePath(path: path, page: page)
 
-    let response = try apiClient.request(pagePath)!
+    if let response = try apiClient.request(pagePath), let data = response.body,
+       let document = try toDocument(data) {
+      let items = try document.select("td[class=cell-name]")
 
-    if let data = response.body {
-      if let document = try toDocument(data) {
-        let items = try document.select("td[class=cell-name]")
+      for item: Element in items.array() {
+        let link = try item.select("a")
+        let name = try item.select("h4 a").text()
+        let href = try link.attr("href")
 
-        for item: Element in items.array() {
-          let link = try item.select("a")
-          let name = try item.select("h4 a").text()
-          let href = try link.attr("href")
+        let index = href.index(href.startIndex, offsetBy: AudioKnigiAPI.SiteUrl.count)
 
-          let index = href.index(href.startIndex, offsetBy: AudioKnigiAPI.SiteUrl.count)
+        let id = String(href[index ..< href.endIndex])
 
-          let id = String(href[index ..< href.endIndex])
+        let thumb = try link.select("img").attr("src")
 
-          let thumb = try link.select("img").attr("src")
+        collection.append(["type": "genre", "id": id, "name": name, "thumb": thumb])
+      }
 
-          collection.append(["type": "genre", "id": id, "name": name, "thumb": thumb])
-        }
-
-        if !items.array().isEmpty {
-          pagination = try self.extractPaginationData(document: document, path: path, page: page)
-        }
+      if !items.array().isEmpty {
+        pagination = try self.extractPaginationData(document: document, path: path, page: page)
       }
     }
 
@@ -214,17 +206,21 @@ open class AudioKnigiAPI {
           let index1 = link.find("page")
           let index2 = link.find("?")
 
-          let index3 = link.index(index1!, offsetBy: "page".count)
-          var index4: String.Index?
+          if let index1 = index1 {
+            let index3 = link.index(index1, offsetBy: "page".count)
+            var index4: String.Index?
 
-          if index2 == nil {
-            index4 = link.index(link.endIndex, offsetBy: -1)
-          }
-          else {
-            index4 = link.index(index2!, offsetBy: -1)
-          }
+            if index2 == nil {
+              index4 = link.index(link.endIndex, offsetBy: -1)
+            }
+            else if let index2 = index2 {
+              index4 = link.index(index2, offsetBy: -1)
+            }
 
-          pages = Int(link[index3..<index4!])!
+            if let index4 = index4 {
+              pages = Int(link[index3..<index4])!
+            }
+          }
         }
         else {
           pages = try Int(lastLink.text())!
@@ -261,9 +257,8 @@ open class AudioKnigiAPI {
     var queryItems: [URLQueryItem] = []
     queryItems.append(URLQueryItem(name: "q", value: query))
 
-    let response = try apiClient.request(pagePath, queryItems: queryItems)!
-
-    if let document = try toDocument(response.body!) {
+    if let response = try apiClient.request(pagePath, queryItems: queryItems), let body = response.body,
+       let document = try toDocument(body) {
       result = try self.getBookItems(document, path: path, page: page)
     }
 
@@ -308,9 +303,8 @@ open class AudioKnigiAPI {
     //headers.append(HttpHeader(field: "cookie", value: cookie))
     headers.append(HttpHeader(field: "user-agent", value: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36"))
 
-    let body = content.data(using: .utf8, allowLossyConversion: false)!
-
-    if let response = try apiClient.request(path, method: .post, headers: headers, body: body) {
+    if let body = content.data(using: .utf8, allowLossyConversion: false),
+       let response = try apiClient.request(path, method: .post, headers: headers, body: body) {
       if let data1 = response.body, let tracks = apiClient.decode(data1, to: Tracks.self) {
         if let data2 = tracks.aItems.data(using: .utf8), let items = apiClient.decode(data2, to: [Track].self) {
           newTracks = items
@@ -346,15 +340,17 @@ open class AudioKnigiAPI {
     let headers: [HttpHeader] = [
       HttpHeader(field: "user-agent", value:
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36")
-    ];
-
-    let response = try apiClient.request("", headers: headers)!
+    ]
 
     var cookie: String?
 
-    for c in HTTPCookieStorage.shared.cookies! {
-      if c.name == "PHPSESSID" {
-        cookie = "\(c)"
+    let response = try apiClient.request("", headers: headers)
+
+    if let response = response, let cookies = HTTPCookieStorage.shared.cookies {
+      for c in cookies {
+        if c.name == "PHPSESSID" {
+          cookie = "\(c)"
+        }
       }
     }
 
@@ -381,11 +377,13 @@ open class AudioKnigiAPI {
     let match = self.getMatched(text, matches: matches, index: 1)
 
     if let match = match, !match.isEmpty {
-      let index = match.find("'")!
-      let index1 = match.index(index, offsetBy: 1)
-      let index2 = match.find("',")!
+      if let index = match.find("'") {
+        let index1 = match.index(index, offsetBy: 1)
 
-      security_ls_key = String(match[index1..<index2])
+        if let index2 = match.find("',") {
+          security_ls_key = String(match[index1..<index2])
+        }
+      }
     }
 
     return security_ls_key

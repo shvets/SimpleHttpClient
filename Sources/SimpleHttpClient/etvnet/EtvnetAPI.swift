@@ -51,14 +51,14 @@ open class EtvnetAPI {
     PaginatedMediaData? {
     var path: String
 
-    if channelId != nil && genre != nil {
-      path = "video/media/channel/\(channelId!)/archive/\(genre!).json"
+    if let channelId = channelId, let genre = genre {
+      path = "video/media/channel/\(channelId)/archive/\(genre).json"
     }
-    else if genre != nil {
-      path = "video/media/archive/\(genre!).json"
+    else if let genre = genre {
+      path = "video/media/archive/\(genre).json"
     }
-    else if channelId != nil {
-      path = "video/media/channel/\(channelId!)/archive.json"
+    else if let channelId = channelId {
+      path = "video/media/channel/\(channelId)/archive.json"
     }
     else {
       path = "video/media/archive.json"
@@ -196,14 +196,15 @@ open class EtvnetAPI {
     PaginatedMediaData? {
     var path: String
 
-    if channelId != nil && genre != nil {
-      path = "video/media/channel/\(channelId!)/new_arrivals/\(genre!).json"
+
+    if let channelId = channelId, let genre = genre {
+      path = "video/media/channel/\(channelId)/new_arrivals/\(genre).json"
     }
-    else if genre != nil {
-      path = "video/media/new_arrivals/\(genre!).json"
+    else if let genre = genre {
+      path = "video/media/new_arrivals/\(genre).json"
     }
-    else if channelId != nil {
-      path = "video/media/channel/\(channelId!)/new_arrivals.json"
+    else if let channelId = channelId {
+      path = "video/media/channel/\(channelId)/new_arrivals.json"
     }
     else {
       path = "video/media/new_arrivals.json"
@@ -269,8 +270,8 @@ open class EtvnetAPI {
       queryItems.append(URLQueryItem(name: "other_server", value: otherServer))
     }
 
-    if live {
-      path = "video/live/watch/\(channelId!).json"
+    if live, let channelId = channelId {
+      path = "video/live/watch/\(channelId).json"
 
       if let offset = offset {
         queryItems.append(URLQueryItem(name: "offset", value: offset))
@@ -308,7 +309,7 @@ open class EtvnetAPI {
         urlInfo["url"] = value.url
         urlInfo["format"] =  newFormat
 
-        if newMediaProtocol != nil {
+        if let newMediaProtocol = newMediaProtocol {
           urlInfo["protocol"] = newMediaProtocol
         }
 
@@ -339,8 +340,8 @@ open class EtvnetAPI {
   public func getBookmarks(folder: String? = nil, perPage: Int=PER_PAGE, page: Int=1) throws -> PaginatedBookmarksData? {
     var path: String
 
-    if folder != nil {
-      path = "video/bookmarks/folders/\(folder!)/items.json"
+    if let floder = folder {
+      path = "video/bookmarks/folders/\(folder)/items.json"
     }
     else {
       path = "video/bookmarks/items.json"

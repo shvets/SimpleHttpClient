@@ -1,6 +1,8 @@
 import Foundation
 
 extension AudioBooAPI {
+  public typealias BookItem = [String: String]
+
   public struct PersonName {
     public let name: String
     public let id: String

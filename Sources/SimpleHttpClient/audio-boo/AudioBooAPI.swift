@@ -77,53 +77,54 @@ open class AudioBooAPI {
     return NameClassifier().mergeSmallGroups(newGroups)
   }
 
-  public func getAllBooks(page: Int=1) throws -> [Any] {
-    var data = [Any]()
+  public func getAllBooks(page: Int=1) throws -> [BookItem] {
+    var result = [BookItem]()
 
     let pagePath = page == 1 ? "" : "page/\(page)/"
 
-    print(AudioBooAPI.SiteUrl + "/" + pagePath)
+    if let response = try apiClient.request(pagePath), let data = response.body,
+       let document = try self.toDocument(data: data) {
+      let items = try document.select("div[id=dle-content] div[class=biography-main]")
 
-//    if let document = try getDocument(AudioBooAPI.SiteUrl + "/" + pagePath) {
-//      let items = try document.select("div[id=dle-content] div[class=biography-main]")
-//
-//      for item: Element in items.array() {
-//        let name = try item.select("div[class=biography-title] h2 a").text()
-//        let href = try item.select("div div[class=biography-image] a").attr("href")
-//        let thumb = try item.select("div div[class=biography-image] a img").attr("src")
-//
-//        data.append(["type": "book", "id": href, "name": name, "thumb": AudioBooAPI.SiteUrl + thumb])
-//      }
-//    }
+      for item: Element in items.array() {
+        let name = try item.select("div[class=biography-title] h2 a").text()
+        let href = try item.select("div div[class=biography-image] a").attr("href")
+        let thumb = try item.select("div div[class=biography-image] a img").attr("src")
 
-    return data
+        result.append(["type": "book", "id": href, "name": name, "thumb": AudioBooAPI.SiteUrl + thumb])
+      }
+    }
+
+    return result
   }
 
-//  public func getBooks(_ url: String, page: Int=1) throws -> [Any] {
-//    var data = [Any]()
-//
-//    let pagePath = page == 1 ? "" : "page/\(page)/"
-//
-//    if let document = try getDocument(url + pagePath) {
-//      let items = try document.select("div[class=biography-main]")
-//
-//      for item: Element in items.array() {
-//        let name = try item.select("div[class=biography-title] h2 a").text()
-//        let href = try item.select("div div[class=biography-image] a").attr("href")
-//        let thumb = try item.select("div div[class=biography-image] a img").attr("src")
-//
-//        let elements = try item.select("div[class=biography-content] div").array()
-//
-//        let content = try elements[0].text()
-//        let rating = try elements[2].select("div[class=rating] ul li[class=current-rating]").text()
-//
-//        data.append(["type": "book", "id": href, "name": name, "thumb": AudioBooAPI.SiteUrl + thumb, "content": content, "rating": rating])
-//      }
-//    }
-//
-//    return data
-//  }
-//
+  public func getBooks(_ url: String, page: Int=1) throws -> [BookItem] {
+    var result = [BookItem]()
+
+    let pagePath = page == 1 ? "" : "page/\(page)/"
+
+    if let response = try apiClient.request(pagePath), let data = response.body,
+       let document = try self.toDocument(data: data) {
+      let items = try document.select("div[class=biography-main]")
+
+      for item: Element in items.array() {
+        let name = try item.select("div[class=biography-title] h2 a").text()
+        let href = try item.select("div div[class=biography-image] a").attr("href")
+        let thumb = try item.select("div div[class=biography-image] a img").attr("src")
+
+        let elements = try item.select("div[class=biography-content] div").array()
+
+        let content = try elements[0].text()
+        let rating = try elements[2].select("div[class=rating] ul li[class=current-rating]").text()
+
+        result.append(["type": "book", "id": href, "name": name, "thumb": AudioBooAPI.SiteUrl + thumb, 
+                       "content": content, "rating": rating])
+      }
+    }
+
+    return result
+  }
+
 //  public func getPlaylistUrls(_ url: String) throws -> [String] {
 //    var data = [String]()
 //

@@ -3,44 +3,31 @@ import XCTest
 @testable import SimpleHttpClient
 
 class AudioBooAPITests: XCTestCase {
-//  var subject = AudioBooAPI()
-//
-//  func testGetLetters() throws {
-//    let result = subject.getLetters()
-//
-//    print(result as Any)
-//  }
-//
-//  func testGetAuthorsByLetters() throws {
-//    let exp = expectation(description: "Gets new books")
-//
-//    _ = subject.getLetters().subscribe(onNext: { letters in
-//      //print(letters as Any)
-//
-//      XCTAssert(letters.count > 0)
-//
-//      let id = letters[0]["id"]!
-//
-//      do {
-//        let result = try self.subject.getAuthorsByLetter(id)
-//
-//        //print(result as Any)
-//
-//        XCTAssert(result.count > 0)
-//      }
-//      catch let e {
-//        XCTFail(e.localizedDescription)
-//      }
-//
-//      exp.fulfill()
-//    },
-//    onError: { error in
-//      print("Received error:", error)
-//    })
-//
-//    waitForExpectations(timeout: 10, handler: nil)
-//  }
-//
+  var subject = AudioBooAPI()
+
+  func testGetLetters() throws {
+    let result = try subject.getLetters()
+
+    print(try result.prettify())
+
+    XCTAssert(result.count > 0)
+  }
+
+  func testGetAuthorsByLetters() throws {
+    let letters = try subject.getLetters()
+
+    XCTAssert(letters.count > 0)
+
+    let id = letters[0]["id"]!
+
+    let result = try self.subject.getAuthorsByLetter(id)
+
+    //print(try result.prettify())
+    print(result)
+
+    XCTAssert(result.count > 0)
+  }
+
 //  func testGetAllBooks() throws {
 //    do {
 //      let result = try self.subject.getAllBooks()

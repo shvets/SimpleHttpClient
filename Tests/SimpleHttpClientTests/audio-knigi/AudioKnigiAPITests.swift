@@ -10,6 +10,8 @@ class AudioKnigiAPITests: XCTestCase {
     let result = try subject.getAuthorsLetters()
 
     print(try result.prettify())
+
+    XCTAssert(result.count > 0)
   }
 
   func testGetNewBooks() throws {
@@ -19,7 +21,6 @@ class AudioKnigiAPITests: XCTestCase {
 
     XCTAssert(result.items.count > 0)
   }
-
 
   func testGetBestBooks() throws {
     let result = try subject.getBestBooks()

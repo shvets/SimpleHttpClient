@@ -1,98 +1,94 @@
 import Foundation
-//import SwiftSoup
-//import RxSwift
+import SwiftSoup
 
 open class AudioBooAPI {
   public static let SiteUrl = "http://audioboo.ru"
   public static let ArchiveUrl = "https://archive.org"
 
-//  public func getDocument(_ url: String) throws -> Document? {
-//    return try fetchDocument(url, encoding: .windowsCP1251)
-//  }
-//
+  let apiClient = ApiClient(URL(string: SiteUrl)!)
+
 //  public func searchDocument(_ url: String, parameters: [String: String]) throws -> Document? {
 //    let headers = ["X-Requested-With": "XMLHttpRequest"]
 //
 //    return try fetchDocument(url, headers: headers, parameters: parameters, method: .post, encoding: .windowsCP1251)
 //  }
-//
-//  public func getLetters() -> Observable<[[String: String]]> {
-//    let url = AudioBooAPI.SiteUrl
-//
-//    return httpRequestRx(url).map { data in
-//      if let html = String(data: data, encoding: .windowsCP1251) {
-//        var data = [[String: String]]()
-//
-//        let document = try SwiftSoup.parse(html)
-//
-//        let items = try document.select("div[class=content] div div a[class=alfavit]")
-//
-//        for item in items.array() {
-//          let name = try item.text()
-//
-//          let href = try item.attr("href")
-//
-//          data.append(["id": href, "name": name.uppercased()])
-//        }
-//
-//        return data
-//      }
-//
-//      return []
-//    }
-//  }
-//
-//  public func getAuthorsByLetter(_ path: String) throws -> [(key: String, value: [Any])] {
-//    var groups: [String: [NameClassifier.Item]] = [:]
-//
+
+  public func getLetters() throws -> [[String: String]] {
+    var result = [[String: String]]()
+
+    if let response = try apiClient.request(""), let data = response.body,
+       let document = try self.toDocument(data: data) {
+      let items = try document.select("div[class=content] div div a[class=alfavit]")
+
+      for item in items.array() {
+        let name = try item.text()
+
+        let href = try item.attr("href")
+
+        result.append(["id": href, "name": name.uppercased()])
+      }
+    }
+
+    return result
+  }
+
+  public func getAuthorsByLetter(_ path: String) throws -> [(key: String, value: [Any])] {
+    var groups: [String: [NameClassifier.Item]] = [:]
+
+    if let response = try apiClient.request(path), let data = response.body,
+      let document = try self.toDocument(data: data) {
+        let items = try document.select("div[class=full-news-content] div a")
+
+        for item in items.array() {
+          let href = try item.attr("href")
+          let name = try item.text().trim()
+
+          if !name.isEmpty && !name.hasPrefix("ALIAS") && Int(name) == nil {
+            let index1 = name.startIndex
+            let index2 = name.index(name.startIndex, offsetBy: 3)
+
+            let groupName = name[index1 ..< index2].uppercased()
+
+            if !groups.keys.contains(groupName) {
+              groups[groupName] = []
+            }
+
+            var group: [NameClassifier.Item] = []
+
+            if let subGroup = groups[groupName] {
+              for item in subGroup {
+                group.append(item)
+              }
+            }
+
+            group.append(NameClassifier.Item(id: href, name: name))
+
+            groups[groupName] = group
+          }
+        }
+      //}
+    }
+
 //    if let document = try getDocument(AudioBooAPI.SiteUrl + path) {
-//      let items = try document.select("div[class=full-news-content] div a")
 //
-//      for item in items.array() {
-//        let href = try item.attr("href")
-//        let name = try item.text().trim()
-//
-//        if !name.isEmpty && !name.hasPrefix("ALIAS") && Int(name) == nil {
-//          let index1 = name.startIndex
-//          let index2 = name.index(name.startIndex, offsetBy: 3)
-//
-//          let groupName = name[index1 ..< index2].uppercased()
-//
-//          if !groups.keys.contains(groupName) {
-//            groups[groupName] = []
-//          }
-//
-//          var group: [NameClassifier.Item] = []
-//
-//          if let subGroup = groups[groupName] {
-//            for item in subGroup {
-//              group.append(item)
-//            }
-//          }
-//
-//          group.append(NameClassifier.Item(id: href, name: name))
-//
-//          groups[groupName] = group
-//        }
-//      }
 //    }
-//
-//    var newGroups: [(key: String, value: [NameClassifier.Item])] = []
-//
-//    for (groupName, group) in groups.sorted(by: { $0.key < $1.key}) {
-//      newGroups.append((key: groupName, value: group))
-//    }
-//
-//    return NameClassifier().mergeSmallGroups(newGroups)
-//  }
-//
-//  public func getAllBooks(page: Int=1) throws -> [Any] {
-//    var data = [Any]()
-//
-//    let pagePath = page == 1 ? "" : "page/\(page)/"
-//
-//    print(AudioBooAPI.SiteUrl + "/" + pagePath)
-//
+
+    var newGroups: [(key: String, value: [NameClassifier.Item])] = []
+
+    for (groupName, group) in groups.sorted(by: { $0.key < $1.key}) {
+      newGroups.append((key: groupName, value: group))
+    }
+
+    return NameClassifier().mergeSmallGroups(newGroups)
+  }
+
+  public func getAllBooks(page: Int=1) throws -> [Any] {
+    var data = [Any]()
+
+    let pagePath = page == 1 ? "" : "page/\(page)/"
+
+    print(AudioBooAPI.SiteUrl + "/" + pagePath)
+
 //    if let document = try getDocument(AudioBooAPI.SiteUrl + "/" + pagePath) {
 //      let items = try document.select("div[id=dle-content] div[class=biography-main]")
 //
@@ -104,10 +100,10 @@ open class AudioBooAPI {
 //        data.append(["type": "book", "id": href, "name": name, "thumb": AudioBooAPI.SiteUrl + thumb])
 //      }
 //    }
-//
-//    return data
-//  }
-//
+
+    return data
+  }
+
 //  public func getBooks(_ url: String, page: Int=1) throws -> [Any] {
 //    var data = [Any]()
 //
@@ -194,4 +190,7 @@ open class AudioBooAPI {
 //    return data
 //  }
 
+  func toDocument(data: Data) throws -> Document? {
+    return try data.toDocument(encoding: .windowsCP1251)
+  }
 }

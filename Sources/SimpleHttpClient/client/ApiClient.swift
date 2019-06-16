@@ -23,7 +23,7 @@ open class ApiClient {
   let baseURL: URL
   private let session: URLSession
 
-  init(_ baseURL: URL, session: URLSession = URLSession.shared) {
+  public init(_ baseURL: URL, session: URLSession = URLSession.shared) {
     self.baseURL = baseURL
     self.session = session
   }
@@ -149,7 +149,7 @@ extension ApiClient: HttpFetcher {
     }
   }
 
-  func request(_ path: String = "", method: HttpMethod = .get,
+  public func request(_ path: String = "", method: HttpMethod = .get,
                              queryItems: [URLQueryItem] = [], headers: [HttpHeader] = [],
                              body: Data? = nil,
                              unauthorized: Bool=false) throws -> ApiResponse? {
@@ -160,7 +160,7 @@ extension ApiClient: HttpFetcher {
     }
   }
 
-  func decode<T: Decodable>(_ data: Data, to type: T.Type) -> T? {
+  public func decode<T: Decodable>(_ data: Data, to type: T.Type) -> T? {
     var value: T?
 
     do {

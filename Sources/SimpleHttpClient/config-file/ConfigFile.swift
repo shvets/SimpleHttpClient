@@ -19,8 +19,8 @@ public struct ConfigurationItems<T: Codable>: Codable {
     dict.removeAll()
   }
 
-  public mutating func removeValue(forKey: String) {
-    dict.removeValue(forKey: forKey)
+  public mutating func removeValue(forKey: String) -> T? {
+    return dict.removeValue(forKey: forKey)
   }
 
   public func asDictionary() -> Dictionary<String, T> {

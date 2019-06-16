@@ -1,5 +1,4 @@
 import Foundation
-//import Alamofire
 import Files
 
 import SimpleHttpClient
@@ -11,8 +10,6 @@ open class DownloadManager {
     case bookZvook
   }
 
-  public init() {}
-
   public func download(clientType: ClienType, url: String) throws {
     switch clientType {
       case .audioKnigi:
@@ -23,6 +20,10 @@ open class DownloadManager {
         try downloadBookZvookTracks(url)
     }
   }
+
+  private let fileManager = FileManager.default
+
+  public init() {}
 
   public func downloadAudioKnigiTracks(_ url: String) throws {
     let client = AudioKnigiAPI()
@@ -36,6 +37,8 @@ open class DownloadManager {
     var currentAlbum: String?
 
     for track in audioTracks {
+      print(track)
+
       if !track.albumName!.isEmpty {
         currentAlbum = track.albumName
       }
@@ -86,8 +89,6 @@ open class DownloadManager {
 
       let audioTracks = try client.getAudioTracks(playlistUrl)
 
-      print("downloadBookZvookTracks \(audioTracks) \(playlistUrl)")
-
       var bookDir = URL(string: url)!.lastPathComponent
       bookDir = String(bookDir[...bookDir.index(bookDir.endIndex, offsetBy: -".html".count-1)])
 
@@ -106,7 +107,7 @@ open class DownloadManager {
   }
 
   func download(name: String, path: String, bookDir: String) {
-    let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+    let documentsURL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask)[0]
 
     let fileURL = documentsURL.appendingPathComponent(bookDir).appendingPathComponent(name)
 
@@ -120,25 +121,31 @@ open class DownloadManager {
       return
     }
 
-    print(from)
+    if let fromUrl = URL(string: from) {
+      var urlComponents = URLComponents()
+      urlComponents.scheme = fromUrl.scheme
+      urlComponents.host = fromUrl.host
 
-//    let destination: DownloadRequest.DownloadFileDestination = { _, _ in
-//      return (to, [.removePreviousFile, .createIntermediateDirectories])
-//    }
-//
-//    Alamofire.download(from, to: destination)
-//      .downloadProgress(queue: utilityQueue) { progress in
-//        //print("Download Progress: \(progress.fractionCompleted)")
-//      }
-//      .responseData(queue: utilityQueue) { response in
-//        if let url = response.destinationURL {
-//          FileManager.default.createFile(atPath: url.path, contents: response.result.value)
-//        }
-//        else {
-//          print("Cannot download \(to.path)")
-//        }
-//
-//        semaphore.signal()
-//      }
+      if let baseUrl = urlComponents.url {
+        let apiClient = ApiClient(baseUrl)
+
+        let destinationFile = to.path
+        let destinationDir = to.deletingLastPathComponent()
+
+        do {
+          if let response = try apiClient.request(fromUrl.path), let data = response.body {
+            try self.fileManager.createDirectory(at: destinationDir, withIntermediateDirectories: true)
+
+            self.fileManager.createFile(atPath: destinationFile, contents: data)
+          }
+          else {
+            print("Cannot download \(destinationFile)")
+          }
+        }
+        catch {
+          print("Error: \(error.localizedDescription)")
+        }
+      }
+    }
   }
 }

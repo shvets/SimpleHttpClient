@@ -190,6 +190,7 @@ extension EtvnetApiClient {
 }
 
 extension EtvnetApiClient {
+  @discardableResult
   func fullRequest<T: Decodable>(path: String, to type: T.Type, method: HttpMethod = .get,
                                  queryItems: [URLQueryItem] = [], unauthorized: Bool=false) throws ->
     (value: T, response: ApiResponse)? {

@@ -250,18 +250,14 @@ open class AudioKnigiAPI {
     if let securityLsKey = securityLsKey, let response = response,
        let data = response.body,
        let document = try data.toDocument() {
-      var bookId = 0
+      if let bookId = try self.getBookId(document: document) {
+        let securityParams = self.getSecurityParams(bid: bookId, securityLsKey: securityLsKey)
 
-      if let id = try self.getBookId(document: document) {
-        bookId = id
-      }
+        let newPath = "ajax/bid/\(bookId)"
 
-      let securityParams = self.getSecurityParams(bid: bookId, securityLsKey: securityLsKey)
-
-      let newPath = "ajax/bid/\(bookId)"
-
-      if let cookie = cookie {
-        newTracks = try self.requestTracks(path: newPath, content: securityParams, cookie: cookie)
+        if let cookie = cookie {
+          newTracks = try self.requestTracks(path: newPath, content: securityParams, cookie: cookie)
+        }
       }
     }
 
@@ -334,9 +330,13 @@ open class AudioKnigiAPI {
   func getBookId(document: Document) throws -> Int? {
     let items = try document.select("div[class=player-side js-topic-player]")
 
-    let globalId = try items.first()!.attr("data-global-id")
+    if items.array().count > 0 {
+      let globalId = try items.first()!.attr("data-global-id")
 
-    return Int(globalId)
+      return Int(globalId)
+    }
+
+    return nil
   }
 
   func getSecurityLsKey(text: String) throws -> String? {

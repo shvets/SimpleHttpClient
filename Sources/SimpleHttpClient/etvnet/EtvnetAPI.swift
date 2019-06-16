@@ -383,7 +383,7 @@ open class EtvnetAPI {
   public func addBookmark(id: Int) throws -> Bool {
     let path = "video/bookmarks/items/\(id).json"
 
-    try apiClient.fullRequest(path: path, to: MediaResponse.self, method: .post) {
+    try apiClient.fullRequest(path: path, to: MediaResponse.self, method: .post)
 //      let statusCode = response.response.statusCode
 //      let data = response.value
 //

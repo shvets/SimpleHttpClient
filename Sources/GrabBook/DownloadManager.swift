@@ -27,7 +27,9 @@ open class DownloadManager {
   public func downloadAudioKnigiTracks(_ url: String) throws {
     let client = AudioKnigiAPI()
 
-    let audioTracks = try client.getAudioTracks(url)
+    let path = String(url[AudioKnigiAPI.SiteUrl.index(url.startIndex, offsetBy: AudioKnigiAPI.SiteUrl.count)...])
+
+    let audioTracks = try client.getAudioTracks(path)
 
     let bookDir = URL(string: url)!.lastPathComponent
 
@@ -75,8 +77,6 @@ open class DownloadManager {
   }
 
   public func downloadBookZvookTracks(_ url: String) throws {
-    print("downloadBookZvookTracks")
-
     let client = BookZvookAPI()
 
     let playlistUrls = try client.getPlaylistUrls(url)
@@ -85,6 +85,9 @@ open class DownloadManager {
       let playlistUrl = playlistUrls[0]
 
       let audioTracks = try client.getAudioTracks(playlistUrl)
+
+      print("downloadBookZvookTracks \(audioTracks) \(playlistUrl)")
+
       var bookDir = URL(string: url)!.lastPathComponent
       bookDir = String(bookDir[...bookDir.index(bookDir.endIndex, offsetBy: -".html".count-1)])
 

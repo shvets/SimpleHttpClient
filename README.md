@@ -15,7 +15,9 @@ swift test -s <testname>
 swift package show-dependencies
 swift package show-dependencies --format json
 swift -I .build/debug -L .build/debug -lSimpleHttpClient
+./.build/debug/grabbook https://audioknigi.club/zeland-vadim-zhrica-itfat
 ./.build/debug/grabbook --boo http://audioboo.ru/umor/17092-heller-dzhozef-popravka-22.html
+./.build/debug/grabbook --zvook http://bookzvuk.ru/zhizn-i-neobyichaynyie-priklyucheniya-soldata-ivana-chonkina-1-litso-neprikosnovennoe-vladimir-voynovich-audiokniga-onlayn/
 ```
 
     # Links

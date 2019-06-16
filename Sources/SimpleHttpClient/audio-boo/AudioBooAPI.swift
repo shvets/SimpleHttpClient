@@ -145,26 +145,16 @@ open class AudioBooAPI {
     let path = String(url[AudioBooAPI.ArchiveUrl.index(url.startIndex, offsetBy: AudioBooAPI.ArchiveUrl.count)...])
 
     if let response = try archiveClient.request(path), let data = response.body,
-       let document = try self.toDocument(data: data) {
-      let items = try document.select("script")
+       let document = try self.toDocument(data: data, encoding: .utf8) {
+
+      let items = try document.select("input[class=js-play8-playlist]")
 
       for item in items.array() {
-        let text = try item.html()
+        let value = try item.attr("value")
 
-        let index1 = text.find("Play('jw6',")
-        let index2 = text.find("{\"start\":0,")
-
-        if let index1 = index1, let index2 = index2 {
-          let content = String(text[text.index(index1, offsetBy: 10) ... text.index(index2, offsetBy: -1)]).trim()
-          let content2 = content[content.index(content.startIndex, offsetBy: 2) ..< content.index(content.endIndex, offsetBy: -2)]
-          let content3 = content2.replacingOccurrences(of: ",", with: ", ").replacingOccurrences(of: ":", with: ": ")
-
-          // todo
-          //if let tracks = try? content3.data(using: .utf8)!.decoded() as [BooTrack] {
-          if let data = content3.data(using: .utf8),
-             let tracks = archiveClient.decode(data, to: [BooTrack].self) {
-            result = tracks
-          }
+        if let data = value.data(using: .utf8),
+           let tracks = archiveClient.decode(data, to: [BooTrack].self) {
+          result = tracks
         }
       }
     }
@@ -197,7 +187,7 @@ open class AudioBooAPI {
     return result
   }
 
-  func toDocument(data: Data) throws -> Document? {
-    return try data.toDocument(encoding: .windowsCP1251)
+  func toDocument(data: Data, encoding: String.Encoding = .windowsCP1251) throws -> Document? {
+    return try data.toDocument(encoding: encoding)
   }
 }

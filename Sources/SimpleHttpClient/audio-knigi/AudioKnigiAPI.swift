@@ -8,6 +8,10 @@ open class AudioKnigiAPI {
 
   public init() {}
 
+  public static func getURLPathOnly(_ url: String, baseUrl: String) -> String {
+    return String(url[baseUrl.index(url.startIndex, offsetBy: baseUrl.count)...])
+  }
+
   func getPagePath(path: String, page: Int=1) -> String {
     if page == 1 {
       return path
@@ -125,11 +129,9 @@ open class AudioKnigiAPI {
     var collection = [BookItem]()
     var pagination = Pagination()
 
-    let path = "/sections/"
+    let path = getPagePath(path: "/sections/", page: page)
 
-    let pagePath = getPagePath(path: path, page: page)
-
-    if let response = try apiClient.request(pagePath), let data = response.body,
+    if let response = try apiClient.request(path), let data = response.body,
        let document = try data.toDocument() {
       let items = try document.select("td[class=cell-name]")
 
@@ -222,16 +224,14 @@ open class AudioKnigiAPI {
   public func search(_ query: String, page: Int=1) throws -> BookResults {
     var result = BookResults()
 
-    let path = "/search/books/"
-
-    let pagePath = getPagePath(path: path, page: page)
+    let path = getPagePath(path: "/search/books/", page: page)
 
 //    params["q"] = query.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
 
     var queryItems: [URLQueryItem] = []
     queryItems.append(URLQueryItem(name: "q", value: query))
 
-    if let response = try apiClient.request(pagePath, queryItems: queryItems),
+    if let response = try apiClient.request(path, queryItems: queryItems),
        let data = response.body,
        let document = try data.toDocument() {
       result = try self.getBookItems(document, path: path, page: page)

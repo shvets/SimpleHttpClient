@@ -10,6 +10,10 @@ open class BookZvookAPI {
 
   public init() {}
 
+  public static func getURLPathOnly(_ url: String, baseUrl: String) -> String {
+    return String(url[baseUrl.index(url.startIndex, offsetBy: baseUrl.count)...])
+  }
+
   func getPagePath(path: String, page: Int=1) -> String {
     if page == 1 {
       return path
@@ -59,7 +63,7 @@ open class BookZvookAPI {
   public func getAuthorsByLetter(_ url: String) throws -> [Author] {
     var result: [Author] = []
 
-    let path = String(url[BookZvookAPI.SiteUrl.index(url.startIndex, offsetBy: BookZvookAPI.SiteUrl.count)...])
+    let path = BookZvookAPI.getURLPathOnly(url, baseUrl: BookZvookAPI.SiteUrl)
 
     if let response = try apiClient.request(path), let data = response.body,
        let document = try data.toDocument() {
@@ -107,7 +111,6 @@ open class BookZvookAPI {
 
     pagination = buildPaginationData(collection, page: page, perPage: perPage)
 
-    //return ["items": items, "pagination": pagination]
     return BookResults(items: collection, pagination: pagination)
   }
 
@@ -116,12 +119,6 @@ open class BookZvookAPI {
 
 
     return Pagination(page: page, pages: pages, has_previous: page > 1, has_next: page < pages)
-//    return [
-//      "page": page,
-//      "pages": pages,
-//      "has_next": page < pages,
-//      "has_previous": page > 1
-//    ]
   }
 
   public func getGenres() throws -> [[String: String]] {
@@ -145,7 +142,7 @@ open class BookZvookAPI {
   public func getPlaylistUrls(_ url: String) throws -> [String] {
     var result = [String]()
 
-    let path = String(url[BookZvookAPI.SiteUrl.index(url.startIndex, offsetBy: BookZvookAPI.SiteUrl.count)...])
+    let path = BookZvookAPI.getURLPathOnly(url, baseUrl: BookZvookAPI.SiteUrl)
 
     if let response = try apiClient.request(path), let data = response.body,
        let document = try data.toDocument() {
@@ -162,7 +159,7 @@ open class BookZvookAPI {
   public func getAudioTracks(_ url: String) throws -> [BooTrack] {
     var result = [BooTrack]()
 
-    let path = String(url[BookZvookAPI.ArchiveUrl.index(url.startIndex, offsetBy: BookZvookAPI.ArchiveUrl.count)...])
+    let path = BookZvookAPI.getURLPathOnly(url, baseUrl: BookZvookAPI.ArchiveUrl)
 
     if let response = try archiveClient.request(path), let data = response.body,
        let document = try data.toDocument() {
@@ -215,12 +212,12 @@ open class BookZvookAPI {
 
     let encodedQuery = query.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
 
-    let pagePath = getPagePath(path: "", page: page)
+    let path = getPagePath(path: "", page: page)
 
     let content = "s=\(encodedQuery)"
     let body = content.data(using: .utf8, allowLossyConversion: false)
 
-    if let response = try apiClient.request(pagePath, method: .post, body: body), let data = response.body,
+    if let response = try apiClient.request(path, method: .post, body: body), let data = response.body,
        let document = try data.toDocument() {
       let items = try document.select("div[id=main-col] div[id=content] article")
 
@@ -228,7 +225,7 @@ open class BookZvookAPI {
         collection.append(try self.getBook(item))
       }
 
-      pagination = try self.extractPaginationData(document: document, path: pagePath, page: page)
+      pagination = try self.extractPaginationData(document: document, path: path, page: page)
     }
 
     return BookResults(items: collection, pagination: pagination)
@@ -274,5 +271,4 @@ open class BookZvookAPI {
 
     return Pagination(page: page, pages: pages, has_previous: page > 1, has_next: page < pages)
   }
-
 }

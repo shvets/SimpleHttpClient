@@ -10,6 +10,19 @@ open class AudioBooAPI {
 
   public init() {}
 
+  public static func getURLPathOnly(_ url: String, baseUrl: String) -> String {
+    return String(url[baseUrl.index(url.startIndex, offsetBy: baseUrl.count)...])
+  }
+
+  func getPagePath(path: String, page: Int=1) -> String {
+    if page == 1 {
+      return path
+    }
+    else {
+      return "\(path)page/\(page)/"
+    }
+  }
+
   public func getLetters() throws -> [[String: String]] {
     var result = [[String: String]]()
 
@@ -77,9 +90,9 @@ open class AudioBooAPI {
   public func getAllBooks(page: Int=1) throws -> [BookItem] {
     var result = [BookItem]()
 
-    let pagePath = page == 1 ? "" : "page/\(page)/"
+    let path = getPagePath(path: "", page: page)
 
-    if let response = try apiClient.request(pagePath), let data = response.body,
+    if let response = try apiClient.request(path), let data = response.body,
        let document = try self.toDocument(data: data) {
       let items = try document.select("div[id=dle-content] div[class=biography-main]")
 
@@ -98,9 +111,9 @@ open class AudioBooAPI {
   public func getBooks(_ url: String, page: Int=1) throws -> [BookItem] {
     var result = [BookItem]()
 
-    let pagePath = page == 1 ? "" : "page/\(page)/"
+    let path = getPagePath(path: "", page: page)
 
-    if let response = try apiClient.request(pagePath), let data = response.body,
+    if let response = try apiClient.request(path), let data = response.body,
        let document = try self.toDocument(data: data) {
       let items = try document.select("div[class=biography-main]")
 
@@ -125,7 +138,7 @@ open class AudioBooAPI {
   public func getPlaylistUrls(_ url: String) throws -> [String] {
     var result = [String]()
 
-    let path = String(url[AudioBooAPI.SiteUrl.index(url.startIndex, offsetBy: AudioBooAPI.SiteUrl.count)...])
+    let path = AudioBooAPI.getURLPathOnly(url, baseUrl: AudioBooAPI.SiteUrl)
 
     if let response = try apiClient.request(path), let data = response.body,
        let document = try self.toDocument(data: data) {
@@ -142,7 +155,7 @@ open class AudioBooAPI {
   public func getAudioTracks(_ url: String) throws -> [BooTrack] {
     var result = [BooTrack]()
 
-    let path = String(url[AudioBooAPI.ArchiveUrl.index(url.startIndex, offsetBy: AudioBooAPI.ArchiveUrl.count)...])
+    let path = AudioBooAPI.getURLPathOnly(url, baseUrl: AudioBooAPI.ArchiveUrl)
 
     if let response = try archiveClient.request(path), let data = response.body,
        let document = try self.toDocument(data: data, encoding: .utf8) {

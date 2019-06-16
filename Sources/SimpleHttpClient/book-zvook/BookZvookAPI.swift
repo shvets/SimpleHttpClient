@@ -8,6 +8,8 @@ open class BookZvookAPI {
   let apiClient = ApiClient(URL(string: SiteUrl)!)
   let archiveClient = ApiClient(URL(string: ArchiveUrl)!)
 
+  public init() {}
+
   func getPagePath(path: String, page: Int=1) -> String {
     if page == 1 {
       return path
@@ -84,8 +86,6 @@ open class BookZvookAPI {
     var pagination = Pagination()
 
     let authors = try getAuthorsByLetter(url)
-
-    print(authors)
 
     for (author) in authors {
       if author.name == name {
@@ -171,15 +171,12 @@ open class BookZvookAPI {
 
     let path = String(url[BookZvookAPI.ArchiveUrl.index(url.startIndex, offsetBy: BookZvookAPI.ArchiveUrl.count)...])
 
-    print(path)
-
     if let response = try archiveClient.request(path), let data = response.body,
        let document = try data.toDocument() {
       let items = try document.select("script")
 
       for item in items.array() {
         let text = try item.html()
-        print(text)
 
         let index1 = text.find("Play('jw6',")
         let index2 = text.find("{\"start\":0,")
@@ -188,8 +185,6 @@ open class BookZvookAPI {
           let content = String(text[text.index(index1, offsetBy: 10) ... text.index(index2, offsetBy: -1)]).trim()
           let content2 = content[content.index(content.startIndex, offsetBy: 2) ..< content.index(content.endIndex, offsetBy: -2)]
           let content3 = content2.replacingOccurrences(of: ",", with: ", ").replacingOccurrences(of: ":", with: ": ")
-
-          print(content3)
 
           // todo
           if let data = content3.data(using: .utf8),

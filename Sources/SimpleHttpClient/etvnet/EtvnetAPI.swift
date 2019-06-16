@@ -383,17 +383,16 @@ open class EtvnetAPI {
   public func addBookmark(id: Int) throws -> Bool {
     let path = "video/bookmarks/items/\(id).json"
 
-    if let response = try apiClient.fullRequest(path: path, to: MediaResponse.self, method: .post) {
-      let statusCode = response.response.statusCode
-      let data = response.value
+    try apiClient.fullRequest(path: path, to: MediaResponse.self, method: .post) {
+//      let statusCode = response.response.statusCode
+//      let data = response.value
+//
+//      if statusCode == 201 {
+//        //return data.status == "Created"
+//      }
+    //}
 
-      print(data)
-      if statusCode == 201 {
-        //return data.status == "Created"
-      }
-    }
-
-    return false
+    return true
   }
 
   public func removeBookmark(id: Int) throws -> Bool {

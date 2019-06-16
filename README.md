@@ -15,6 +15,7 @@ swift test -s <testname>
 swift package show-dependencies
 swift package show-dependencies --format json
 swift -I .build/debug -L .build/debug -lSimpleHttpClient
+./.build/debug/grabbook --boo http://audioboo.ru/umor/17092-heller-dzhozef-popravka-22.html
 ```
 
     # Links

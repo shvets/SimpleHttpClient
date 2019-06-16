@@ -8,6 +8,8 @@ open class AudioBooAPI {
   let apiClient = ApiClient(URL(string: SiteUrl)!)
   let archiveClient = ApiClient(URL(string: ArchiveUrl)!)
 
+  public init() {}
+
   public func getLetters() throws -> [[String: String]] {
     var result = [[String: String]]()
 

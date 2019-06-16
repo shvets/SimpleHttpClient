@@ -37,7 +37,6 @@ extension AudioBooAPI {
 
     public var url: String {
       get {
-        print(sources[0].file)
         return "\(AudioBooAPI.ArchiveUrl)\(sources[0].file)"
       }
     }

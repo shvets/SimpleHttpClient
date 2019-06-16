@@ -6,6 +6,8 @@ open class AudioKnigiAPI {
 
   let apiClient = ApiClient(URL(string: SiteUrl)!)
 
+  public init() {}
+
   func getPagePath(path: String, page: Int=1) -> String {
     if page == 1 {
       return path

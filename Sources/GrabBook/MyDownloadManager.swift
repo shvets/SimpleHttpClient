@@ -22,14 +22,14 @@ import SimpleHttpClient
 //  }
 //}
 
-open class DownloadManager {
-  public enum ClienType {
+open class MyDownloadManager: DownloadManager {
+  public enum ClientType {
     case audioKnigi
     case audioBoo
     case bookZvook
   }
 
-  public func download(clientType: ClienType, url: String) throws {
+  public func download(clientType: ClientType, url: String) throws {
     var bookFolder = URL(string: url)!.lastPathComponent
 
     switch clientType {
@@ -57,7 +57,7 @@ open class DownloadManager {
             print("\(to.path) --- exist")
           }
           else {
-            downloadTrack(from: path, to: to)
+            try downloadFile(from: path, to: to)
           }
         }
 
@@ -84,7 +84,7 @@ open class DownloadManager {
             print("\(to.path) --- exist")
           }
           else {
-            downloadTrack(from: path, to: to)
+            try downloadFile(from: path, to: to)
           }
         }
       }
@@ -115,7 +115,7 @@ open class DownloadManager {
               print("\(to.path) --- exist")
             }
             else {
-              downloadTrack(from: path, to: to)
+              try downloadFile(from: path, to: to)
             }
           }
         }
@@ -125,10 +125,6 @@ open class DownloadManager {
     }
   }
 
-  let fileManager = FileManager.default
-
-  public init() {}
-
   func getDestinationFile(dir: String, name: String) -> URL {
     let downloadsDirectory = self.fileManager.urls(for: .downloadsDirectory, in: .userDomainMask)[0]
 
@@ -137,32 +133,17 @@ open class DownloadManager {
     return destinationDir.appendingPathComponent(name)
   }
 
-  func downloadTrack(from: String, to: URL) {
-    if let fromUrl = URL(string: from) {
-      var urlComponents = URLComponents()
-      urlComponents.scheme = fromUrl.scheme
-      urlComponents.host = fromUrl.host
-
-      if let baseUrl = urlComponents.url {
-        let apiClient = ApiClient(baseUrl)
-
-        let destinationFile = to.path
-        let destinationDir = to.deletingLastPathComponent()
-
-        do {
-          if let response = try apiClient.request(fromUrl.path), let data = response.body {
-            try self.fileManager.createDirectory(at: destinationDir, withIntermediateDirectories: true)
-
-            self.fileManager.createFile(atPath: destinationFile, contents: data)
-          }
-          else {
-            print("Cannot download \(destinationFile)")
-          }
-        }
-        catch {
-          print("Error: \(error.localizedDescription)")
-        }
+  public func downloadFile(from: String, to: URL) {
+    do {
+      if let fromUrl = URL(string: from) {
+        try super.download(fromUrl: fromUrl, toUrl: to)
       }
+    }
+    catch DownloadError.downloadFailed(let message) {
+      print("\(message)")
+    }
+    catch {
+      print("Error: \(error.localizedDescription)")
     }
   }
 }

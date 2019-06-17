@@ -4,7 +4,7 @@ import Foundation
 import SimpleHttpClient
 
 class GrabBook {
-  let downloadManager = DownloadManager()
+  let downloadManager = MyDownloadManager()
 
   func parseCommandLine() -> Bool {
     return CommandLine.argc > 1

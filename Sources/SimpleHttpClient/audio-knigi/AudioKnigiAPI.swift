@@ -26,8 +26,7 @@ open class AudioKnigiAPI {
 
     let path = "/authors/"
 
-    if let response = try apiClient.request(path), let data = response.body,
-       let document = try data.toDocument() {
+    if let document = try self.getDocument(path) {
       let items = try document.select("ul[id='author-prefix-filter'] li a")
 
       for item in items.array() {
@@ -55,8 +54,7 @@ open class AudioKnigiAPI {
 
     let pagePath = getPagePath(path: path, page: page)
 
-    if let response = try apiClient.request(pagePath), let data = response.body,
-       let document = try data.toDocument() {
+    if let document = try self.getDocument(pagePath) {
       result = try self.getBookItems(document, path: path, page: page)
     }
 
@@ -97,8 +95,7 @@ open class AudioKnigiAPI {
 
     let pagePath = getPagePath(path: path, page: page)
 
-    if let response = try apiClient.request(pagePath), let data = response.body,
-       let document = try data.toDocument() {
+    if let document = try self.getDocument(pagePath) {
       let items = try document.select("td[class=cell-name]")
 
       for item: Element in items.array() {
@@ -131,8 +128,7 @@ open class AudioKnigiAPI {
 
     let path = getPagePath(path: "/sections/", page: page)
 
-    if let response = try apiClient.request(path), let data = response.body,
-       let document = try data.toDocument() {
+    if let document = try self.getDocument(path) {
       let items = try document.select("td[class=cell-name]")
 
       for item: Element in items.array() {
@@ -429,4 +425,13 @@ open class AudioKnigiAPI {
 //    return items
 //  }
 
+  public func getDocument(_ path: String = "") throws -> Document? {
+    var document: Document? = nil
+
+    if let response = try apiClient.request(path), let data = response.body {
+      document = try data.toDocument()
+    }
+
+    return document
+  }
 }

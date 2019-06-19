@@ -5,7 +5,7 @@ import XCTest
 class BookZvookAPITests: XCTestCase {
   var subject =  BookZvookAPI()
 
-  func testGetPopularBooks() throws {
+  func _testGetPopularBooks() throws {
     let result = try subject.getPopularBooks()
 
     print(try result.prettify())

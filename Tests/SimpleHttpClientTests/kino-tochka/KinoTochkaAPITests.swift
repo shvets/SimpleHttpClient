@@ -96,7 +96,7 @@ class KinoTochkaAPITests: XCTestCase {
     XCTAssert(url.count > 0)
   }
 
-  func _testSearch() throws {
+  func testSearch() throws {
     let query = "ивановы"
 
     let list = try subject.search(query)
@@ -136,12 +136,12 @@ class KinoTochkaAPITests: XCTestCase {
     XCTAssert(list.count > 0)
   }
 
-  func _testGetEpisodes() throws {
+  func testGetEpisodes() throws {
     let path = "/11992-milliardy-4-sezon-2019-5.html"
 
     let playlistUrl = try subject.getSeasonPlaylistUrl(path)
 
-    let list = try subject.getEpisodes(playlistUrl, path: "")
+    let list = try subject.getEpisodes(playlistUrl)
 
     print(try list.prettify())
 
@@ -188,5 +188,4 @@ class KinoTochkaAPITests: XCTestCase {
     XCTAssertNotNil(list)
     XCTAssert(list.items.count > 0)
   }
-
 }

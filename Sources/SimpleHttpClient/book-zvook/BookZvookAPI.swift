@@ -23,30 +23,28 @@ open class BookZvookAPI {
     }
   }
 
-  public func getPopularBooks() throws -> [[String: String]] {
-    var result = [[String: String]]()
-
-    if let response = try apiClient.request(), let data = response.body,
-       let document = try data.toDocument() {
-      let items = try document.select("div[class=textwidget] > div > a")
-
-      for item in items.array() {
-        let name = try item.select("img").attr("alt")
-        let href = try item.attr("href")
-        let thumb = try item.select("img").attr("src")
-
-        result.append(["id": href, "name": name, "thumb": thumb])
-      }
-    }
-
-    return result
-  }
+//  public func getPopularBooks() throws -> [[String: String]] {
+//    var result = [[String: String]]()
+//
+//    if let document = try self.getDocument() {
+//      let items = try document.select("div[class=textwidget] > div > a")
+//
+//      for item in items.array() {
+//        let name = try item.select("img").attr("alt")
+//        let href = try item.attr("href")
+//        let thumb = try item.select("img").attr("src")
+//
+//        result.append(["id": href, "name": name, "thumb": thumb])
+//      }
+//    }
+//
+//    return result
+//  }
 
   public func getLetters() throws -> [[String: String]] {
     var result = [[String: String]]()
 
-    if let response = try apiClient.request(), let data = response.body,
-       let document = try data.toDocument() {
+    if let document = try self.getDocument() {
       let items = try document.select("div[class=textwidget] div[class=newsa_story] b span span a")
 
       for item in items.array() {
@@ -65,8 +63,7 @@ open class BookZvookAPI {
 
     let path = BookZvookAPI.getURLPathOnly(url, baseUrl: BookZvookAPI.SiteUrl)
 
-    if let response = try apiClient.request(path), let data = response.body,
-       let document = try data.toDocument() {
+    if let document = try self.getDocument(path) {
       result = try AuthorsBuilder().build(document: document)
     }
 
@@ -117,15 +114,13 @@ open class BookZvookAPI {
   func buildPaginationData(_ data: [Any], page: Int, perPage: Int) -> Pagination {
     let pages = data.count / perPage
 
-
     return Pagination(page: page, pages: pages, has_previous: page > 1, has_next: page < pages)
   }
 
   public func getGenres() throws -> [[String: String]] {
     var result = [[String: String]]()
 
-    if let response = try apiClient.request(), let data = response.body,
-       let document = try data.toDocument() {
+    if let document = try self.getDocument() {
       let items = try document.select("aside[id=categories-2] div[class=dbx-content] ul li a")
 
       for item in items.array() {
@@ -144,8 +139,7 @@ open class BookZvookAPI {
 
     let path = BookZvookAPI.getURLPathOnly(url, baseUrl: BookZvookAPI.SiteUrl)
 
-    if let response = try apiClient.request(path), let data = response.body,
-       let document = try data.toDocument() {
+    if let document = try self.getDocument(path) {
       let link = try document.select("iframe").attr("src")
 
       if !link.isEmpty {
@@ -192,8 +186,7 @@ open class BookZvookAPI {
 
     let pagePath = getPagePath(path: path, page: page)
 
-    if let response = try apiClient.request(pagePath), let data = response.body,
-       let document = try data.toDocument() {
+    if let document = try self.getDocument(pagePath) {
       let items = try document.select("div[id=main-col] div[id=content] article")
 
       for item in items.array() {
@@ -270,5 +263,15 @@ open class BookZvookAPI {
     }
 
     return Pagination(page: page, pages: pages, has_previous: page > 1, has_next: page < pages)
+  }
+
+  public func getDocument(_ path: String = "") throws -> Document? {
+    var document: Document? = nil
+
+    if let response = try apiClient.request(path), let data = response.body {
+      document = try data.toDocument()
+    }
+
+    return document
   }
 }

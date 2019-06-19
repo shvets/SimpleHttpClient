@@ -2,7 +2,6 @@ import Foundation
 
 import Foundation
 import SwiftSoup
-//import Alamofire
 
 open class KinoTochkaAPI {
   public static let SiteUrl = "http://kinotochka.club"
@@ -10,21 +9,8 @@ open class KinoTochkaAPI {
 
   let apiClient = ApiClient(URL(string: SiteUrl)!)
 
-//  public func getDocument(_ url: String) throws -> Document? {
-//    return try fetchDocument(url, headers: getHeaders())
-//  }
-//
-//  public func searchDocument(_ url: String, parameters: [String: String]) throws -> Document? {
-//    return try fetchDocument(url, headers: getHeaders(), parameters: parameters, method: .post)
-//  }
-
-  public func available() throws -> Bool {
-    if let document = try getDocument() {
-      return try document.select("div[class=big-wrapper]").size() > 0
-    }
-    else {
-      return false
-    }
+  public static func getURLPathOnly(_ url: String, baseUrl: String) -> String {
+    return String(url[baseUrl.index(url.startIndex, offsetBy: baseUrl.count)...])
   }
 
   func getPagePath(_ path: String, page: Int=1) -> String {
@@ -33,6 +19,15 @@ open class KinoTochkaAPI {
     }
     else {
       return "\(path)page/\(page)/"
+    }
+  }
+
+  public func available() throws -> Bool {
+    if let document = try getDocument() {
+      return try document.select("div[class=big-wrapper]").size() > 0
+    }
+    else {
+      return false
     }
   }
 
@@ -208,32 +203,20 @@ open class KinoTochkaAPI {
     var collection = [BookItem]()
     var pagination = Pagination()
 
-//    var searchData = [
-//      "do": "search",
-//      "subaction": "search",
-//      "search_start": "\(page)",
-//      "full_search": "0",
-//      "result_from": "1",
-//      "story": query
-//    ]
+    let path = "index.php"
 
-    var queryItems: [URLQueryItem] = []
-    queryItems.append(URLQueryItem(name: "do", value: "search"))
-    queryItems.append(URLQueryItem(name: "subaction", value: "search"))
-    queryItems.append(URLQueryItem(name: "search_start", value: "\(page)"))
-    queryItems.append(URLQueryItem(name: "full_search", value: "0"))
-    queryItems.append(URLQueryItem(name: "result_from", value: "1"))
-    queryItems.append(URLQueryItem(name: "story", value: query))
+    var content = "do=search&subaction=search&search_start=\(page)&full_search=0&story=\(query)"
 
     if page > 1 {
-      //searchData["result_from"] = "\(page * perPage + 1)"
-      queryItems.append(URLQueryItem(name: "result_from", value: "\(page * perPage + 1)"))
+      content += "&result_from=\(page * perPage + 1)"
+    }
+    else {
+      content += "&result_from=1"
     }
 
-    let path = "/index.php?do=search"
+    let body = content.data(using: .utf8, allowLossyConversion: false)
 
-    //if let document = try searchDocument(KinoTochkaAPI.SiteUrl + path, parameters: searchData) {
-    if let response = try apiClient.request(path, method: .post, queryItems: queryItems, headers: getHeaders()),
+    if let response = try apiClient.request(path, method: .post, headers: getHeaders(), body: body),
        let data = response.body,
        let document = try data.toDocument() {
       let items = try document.select("a[class=sres-wrap clearfix]")
@@ -258,7 +241,6 @@ open class KinoTochkaAPI {
       }
     }
 
-    //return ["movies": data, "pagination": paginationData]
     return BookResults(items: collection, pagination: pagination)
   }
 
@@ -330,25 +312,26 @@ open class KinoTochkaAPI {
     return collection
   }
 
-  public func getEpisodes(_ playlistUrl: String, path: String) throws -> [Episode] {
+  public func getEpisodes(_ playlistUrl: String) throws -> [Episode] {
     var list: [Episode] = []
 
-//    if let data = fetchData(playlistUrl, headers: getHeaders(path)),
-//       let content = String(data: data, encoding: .windowsCP1251) {
-    if let response = try apiClient.request(playlistUrl, headers: getHeaders(path)),
+    let newPath = KinoTochkaAPI.getURLPathOnly(playlistUrl, baseUrl: KinoTochkaAPI.SiteUrl)
+
+    if let response = try apiClient.request(newPath, headers: getHeaders()),
        let data = response.body,
        let content = String(data: data, encoding: .windowsCP1251) {
+
       if !content.isEmpty {
         if let index = content.find("{\"playlist\":") {
           let playlistContent = content[index ..< content.endIndex]
 
           if let localizedData = playlistContent.data(using: .windowsCP1251) {
-            if let result = try? localizedData.decoded() as PlayList {
-              for item in result.playlist {
-                list = buildEpisodes(item.playlist)
-              }
-            }
-            else if let result = try? localizedData.decoded() as SingleSeasonPlayList {
+             if let result = apiClient.decode(localizedData, to: PlayList.self) {
+               for item in result.playlist {
+                 list = buildEpisodes(item.playlist)
+               }
+             }
+            else if let result = apiClient.decode(localizedData, to: SingleSeasonPlayList.self) {
               list = buildEpisodes(result.playlist)
             }
           }
@@ -513,12 +496,7 @@ open class KinoTochkaAPI {
     var headers: [HttpHeader] = []
     headers.append(HttpHeader(field: "User-Agent", value: UserAgent))
 
-//    var headers = [
-//      "User-Agent": UserAgent
-//    ];
-
     if !referer.isEmpty {
-      //headers["Referer"] = referer
       headers.append(HttpHeader(field: "Referer", value: referer))
     }
 

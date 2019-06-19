@@ -26,8 +26,7 @@ open class AudioBooAPI {
   public func getLetters() throws -> [[String: String]] {
     var result = [[String: String]]()
 
-    if let response = try apiClient.request(), let data = response.body,
-       let document = try self.toDocument(data: data) {
+    if let document = try self.getDocument() {
       let items = try document.select("div[class=content] div div a[class=alfavit]")
 
       for item in items.array() {
@@ -45,8 +44,7 @@ open class AudioBooAPI {
   public func getAuthorsByLetter(_ path: String) throws -> [NameClassifier.ItemsGroup] {
     var groups: [String: [NameClassifier.Item]] = [:]
 
-    if let response = try apiClient.request(path), let data = response.body,
-      let document = try self.toDocument(data: data) {
+    if let document = try self.getDocument(path) {
       let items = try document.select("div[class=full-news-content] div a")
 
       for item in items.array() {
@@ -92,8 +90,7 @@ open class AudioBooAPI {
 
     let path = getPagePath(path: "", page: page)
 
-    if let response = try apiClient.request(path), let data = response.body,
-       let document = try self.toDocument(data: data) {
+    if let document = try self.getDocument(path) {
       let items = try document.select("div[id=dle-content] div[class=biography-main]")
 
       for item: Element in items.array() {
@@ -113,8 +110,7 @@ open class AudioBooAPI {
 
     let path = getPagePath(path: "", page: page)
 
-    if let response = try apiClient.request(path), let data = response.body,
-       let document = try self.toDocument(data: data) {
+    if let document = try self.getDocument(path) {
       let items = try document.select("div[class=biography-main]")
 
       for item: Element in items.array() {
@@ -140,8 +136,7 @@ open class AudioBooAPI {
 
     let path = AudioBooAPI.getURLPathOnly(url, baseUrl: AudioBooAPI.SiteUrl)
 
-    if let response = try apiClient.request(path), let data = response.body,
-       let document = try self.toDocument(data: data) {
+    if let document = try self.getDocument(path) {
       let items = try document.select("object")
 
       for item: Element in items.array() {
@@ -198,6 +193,16 @@ open class AudioBooAPI {
     }
 
     return result
+  }
+
+  public func getDocument(_ path: String = "") throws -> Document? {
+    var document: Document? = nil
+
+    if let response = try apiClient.request(path), let data = response.body {
+      document = try data.toDocument(encoding: .windowsCP1251)
+    }
+
+    return document
   }
 
   func toDocument(data: Data, encoding: String.Encoding = .windowsCP1251) throws -> Document? {

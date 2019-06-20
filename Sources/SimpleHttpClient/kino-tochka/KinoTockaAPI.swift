@@ -13,6 +13,27 @@ open class KinoTochkaAPI {
     return String(url[baseUrl.index(url.startIndex, offsetBy: baseUrl.count)...])
   }
 
+  func getHeaders(_ referer: String="") -> [HttpHeader] {
+    var headers: [HttpHeader] = []
+    headers.append(HttpHeader(field: "User-Agent", value: UserAgent))
+
+    if !referer.isEmpty {
+      headers.append(HttpHeader(field: "Referer", value: referer))
+    }
+
+    return headers
+  }
+
+  public func getDocument(_ path: String = "") throws -> Document? {
+    var document: Document? = nil
+
+    if let response = try apiClient.request(path), let data = response.body {
+      document = try data.toDocument()
+    }
+
+    return document
+  }
+
   func getPagePath(_ path: String, page: Int=1) -> String {
     if page == 1 {
       return path
@@ -447,7 +468,7 @@ open class KinoTochkaAPI {
     return collection
   }
 
-  public func getUserCollection(_ path: String, page: Int=1) throws -> BookResults{
+  public func getUserCollection(_ path: String, page: Int=1) throws -> BookResults {
     var collection = [BookItem]()
     var pagination = Pagination()
 
@@ -481,26 +502,4 @@ open class KinoTochkaAPI {
 
     return BookResults(items: collection, pagination: pagination)
   }
-
-  public func getDocument(_ path: String = "") throws -> Document? {
-    var document: Document? = nil
-
-    if let response = try apiClient.request(path), let data = response.body {
-      document = try data.toDocument()
-    }
-
-    return document
-  }
-
-  func getHeaders(_ referer: String="") -> [HttpHeader] {
-    var headers: [HttpHeader] = []
-    headers.append(HttpHeader(field: "User-Agent", value: UserAgent))
-
-    if !referer.isEmpty {
-      headers.append(HttpHeader(field: "Referer", value: referer))
-    }
-
-    return headers
-  }
-
 }

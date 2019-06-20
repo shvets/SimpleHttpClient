@@ -5,13 +5,13 @@ import XCTest
 class BookZvookAPITests: XCTestCase {
   var subject =  BookZvookAPI()
 
-  func _testGetPopularBooks() throws {
-    let result = try subject.getPopularBooks()
-
-    print(try result.prettify())
-
-    XCTAssert(result.count > 0)
-  }
+//  func testGetPopularBooks() throws {
+//    let result = try subject.getPopularBooks()
+//
+//    print(try result.prettify())
+//
+//    XCTAssert(result.count > 0)
+//  }
 
   func testGetAuthorBooks() throws {
     let letters = try subject.getLetters()

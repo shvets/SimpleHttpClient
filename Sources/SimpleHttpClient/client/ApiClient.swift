@@ -75,7 +75,7 @@ extension ApiClient: HttpFetcher {
           }
           else if let httpResponse = response as? HTTPURLResponse {
             if let data = data {
-              let response = ApiResponse(statusCode: httpResponse.statusCode, body: data)
+              let response = ApiResponse(statusCode: httpResponse.statusCode, body: data, response: httpResponse)
 
               handler(.success(response))
             }
@@ -112,7 +112,7 @@ extension ApiClient: HttpFetcher {
             }
             else if let httpResponse = response as? HTTPURLResponse {
               if let data = data {
-                let response = ApiResponse(statusCode: httpResponse.statusCode, body: data)
+                let response = ApiResponse(statusCode: httpResponse.statusCode, body: data, response: httpResponse)
 
                 //print("Result: \(String(data: data, encoding: .utf8)!)")
 

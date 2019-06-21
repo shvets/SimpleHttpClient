@@ -441,33 +441,11 @@ open class KinoKongAPI {
 
     var queryItems: [URLQueryItem] = []
     queryItems.append(URLQueryItem(name: "do", value: "search"))
-    queryItems.append(URLQueryItem(name: "subaction", value: "search"))
-    queryItems.append(URLQueryItem(name: "search_start", value: "\(page)"))
-    queryItems.append(URLQueryItem(name: "full_search", value: "0"))
-
-    if page > 1 {
-      queryItems.append(URLQueryItem(name: "result_from", value: "\(page * perPage + 1)"))
-    }
-    else {
-      queryItems.append(URLQueryItem(name: "result_from", value: "1"))
-    }
-
-//    var searchData = [
-//      "do": "search",
-//      "subaction": "search",
-//      "search_start": "\(page)",
-//      "full_search": "0",
-//      "result_from": "1",
-//      "story": query.windowsCyrillicPercentEscapes()
-//    ]
-
-//    if page > 1 {
-//      searchData["result_from"] = "\(page * perPage + 1)"
-//    }
 
     let path = "/index.php"
 
-    var content = "do=search&subaction=search&search_start=\(page)&full_search=0&story=\(query.windowsCyrillicPercentEscapes())"
+    var content = "do=search&" + "subaction=search&" + "search_start=\(page)&" + "full_search=0&" +
+      "story=\(query.windowsCyrillicPercentEscapes())"
 
     if page > 1 {
       content += "&result_from=\(page * perPage + 1)"
@@ -478,8 +456,8 @@ open class KinoKongAPI {
 
     let body = content.data(using: .utf8, allowLossyConversion: false)
 
-    //if let document = try searchDocument(KinoKongAPI.SiteUrl + path, parameters: searchData) {
-    if let response = try apiClient.request(path, method: .post, queryItems: queryItems, headers: getHeaders(), body: body),
+    if let response = try apiClient.request(path, method: .post, queryItems: queryItems,
+      headers: getHeaders(), body: body),
        let data = response.body,
        let document = try data.toDocument(encoding: .windowsCP1251) {
       let items = try document.select("div[class=owl-item]")

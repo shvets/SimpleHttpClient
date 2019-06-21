@@ -33,11 +33,6 @@ open class KinoGoAPI {
     return document
   }
 
-//  public func searchDocument(_ url: String, parameters: [String: String]) throws -> Document? {
-//    return try fetchDocument(url, headers: getHeaders(KinoGoAPI.SiteUrl + "/"), parameters: parameters,
-//      method: .post, encoding: .windowsCP1251)
-//  }
-
   public func available() throws -> Bool {
     if let document = try getDocument() {
       return try document.select("div[class=wrapper]").size() > 0
@@ -311,35 +306,11 @@ open class KinoGoAPI {
 
     var queryItems: [URLQueryItem] = []
     queryItems.append(URLQueryItem(name: "do", value: "search"))
-    queryItems.append(URLQueryItem(name: "subaction", value: "search"))
-    queryItems.append(URLQueryItem(name: "search_start", value: "\(page)"))
-    queryItems.append(URLQueryItem(name: "full_search", value: "0"))
-    queryItems.append(URLQueryItem(name: "story", value: query.windowsCyrillicPercentEscapes()))
 
-    if page > 1 {
-      queryItems.append(URLQueryItem(name: "result_from", value: "\(page * perPage + 1)"))
-    }
-    else {
-      queryItems.append(URLQueryItem(name: "result_from", value: "1"))
-    }
+    let path = "/index.php"
 
-    let searchData = [
-      "do": "search",
-      //"titleonly": "3",
-      "subaction": "search",
-      "search_start": "\(page)",
-      "full_search": "0",
-      "result_from": "\((page-1) * perPage + 1)",
-      "story": query.windowsCyrillicPercentEscapes()
-    ]
-
-//    if page > 1 {
-//      searchData["result_from"] = "\(page * perPage + 1)"
-//    }
-
-    let path = "/index.php?do=search"
-
-    var content = "do=search&subaction=search&search_start=\(page)&full_search=0&story=\(query.windowsCyrillicPercentEscapes())"
+    var content = "do=search&" + "subaction=search&" + "search_start=\(page)&" + "full_search=0&" +
+      "story=\(query.windowsCyrillicPercentEscapes())"
 
     if page > 1 {
       content += "&result_from=\(page * perPage + 1)"
@@ -350,7 +321,6 @@ open class KinoGoAPI {
 
     let body = content.data(using: .utf8, allowLossyConversion: false)
 
-    //if let document = try searchDocument(path, parameters: searchData) {
     if let response = try apiClient.request(path, method: .post,
       queryItems: queryItems,
       headers: getHeaders(KinoGoAPI.SiteUrl + "/"), body: body),

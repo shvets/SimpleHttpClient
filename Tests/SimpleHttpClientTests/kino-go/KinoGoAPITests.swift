@@ -150,7 +150,7 @@ class KinoGoAPITests: XCTestCase {
 //    XCTAssert(list.count > 0)
 //  }
 
-  func _testSearch() throws {
+  func testSearch() throws {
 //    #if swift(>=5.0)
 //    print("Hello, Swift 5.0")
 //

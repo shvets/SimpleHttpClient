@@ -129,31 +129,42 @@ extension ApiClient: HttpFetcher {
     }
   }
 
-//  @discardableResult
-//  func fetch(_ request: ApiRequest) throws -> ApiResponse? {
-//    var response: ApiResponse? = nil
-//
-//    let handler: (Result<ApiResponse, ApiError>) -> Void = {result in
-//      switch result {
-//        case .success(let data):
-//          response = data
-//
-//        default:
-//          print("")
-//      }
-//
-////      print(result)
-//    }
-//
-//    self.fetchAsync(request, handler)
-//
-//    return response
-//  }
-
   public func request(_ path: String = "", method: HttpMethod = .get,
                              queryItems: Set<URLQueryItem> = [], headers: Set<HttpHeader> = [],
                              body: Data? = nil,
                              unauthorized: Bool=false) throws -> ApiResponse? {
+    let request = ApiRequest(path: path, queryItems: queryItems, method: method, headers: headers, body: body)
+
+    var response: ApiResponse?
+    var error: Error?
+
+    let semaphore = DispatchSemaphore.init(value: 0)
+
+    self.fetch(request) { (result) in
+      switch result {
+      case .success(let r):
+        response = r
+
+        semaphore.signal()
+      case .failure(let e):
+        error = e
+        semaphore.signal()
+      }
+    }
+
+    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
+
+    if let error = error {
+      throw error
+    }
+
+    return response
+  }
+
+  public func requestRx(_ path: String = "", method: HttpMethod = .get,
+                      queryItems: Set<URLQueryItem> = [], headers: Set<HttpHeader> = [],
+                      body: Data? = nil,
+                      unauthorized: Bool=false) throws -> ApiResponse? {
     let request = ApiRequest(path: path, queryItems: queryItems, method: method, headers: headers, body: body)
 
     return try awaitRx {

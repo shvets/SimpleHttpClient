@@ -156,7 +156,7 @@ extension ApiClient: HttpFetcher {
                              unauthorized: Bool=false) throws -> ApiResponse? {
     let request = ApiRequest(path: path, queryItems: queryItems, method: method, headers: headers, body: body)
 
-    return try await {
+    return try awaitRx {
       self.fetchRx(request)
     }
   }
@@ -172,7 +172,7 @@ extension ApiClient: HttpFetcher {
   }
 
   @discardableResult
-  func await<T>(_ handler: @escaping () -> Observable<T>) throws -> T? {
+  func awaitRx<T>(_ handler: @escaping () -> Observable<T>) throws -> T? {
     return try Await.awaitRx(handler)
   }
 }

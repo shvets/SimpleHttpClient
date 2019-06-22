@@ -57,7 +57,7 @@ class AuthAPITests: XCTestCase {
   func testUpdateToken() throws {
     let refreshToken = subject.apiClient.configFile.items["refresh_token"]!
 
-    if let result = try self.subject.apiClient.await({
+    if let result = try self.subject.apiClient.awaitRx({
       self.subject.apiClient.authClient.updateToken(refreshToken: refreshToken)
     }) {
       XCTAssertNotNil(result!.accessToken)
@@ -66,7 +66,7 @@ class AuthAPITests: XCTestCase {
 
       subject.apiClient.configFile.items = result!.asConfigurationItems()
 
-      if let _ = try self.subject.apiClient.await({
+      if let _ = try self.subject.apiClient.awaitRx({
         self.subject.apiClient.configFile.write()
       }) {
         print("Config saved.")

@@ -28,7 +28,7 @@ open class KinoKongAPI {
     return headers
   }
 
-  public func getDocument(_ path: String = "", queryItems: [URLQueryItem] = []) throws -> Document? {
+  public func getDocument(_ path: String = "", queryItems: Set<URLQueryItem> = []) throws -> Document? {
     var document: Document? = nil
 
     if let response = try apiClient.request(path, queryItems: queryItems),
@@ -130,9 +130,9 @@ open class KinoKongAPI {
   }
 
   public func getMoviesByCriteriaPaginated(_ mode: String, page: Int=1, perPage: Int=25) throws -> BookResults {
-    var queryItems: [URLQueryItem] = []
-    queryItems.append(URLQueryItem(name: "do", value: "top"))
-    queryItems.append(URLQueryItem(name: "mode", value: mode))
+    var queryItems: Set<URLQueryItem> = []
+    queryItems.insert(URLQueryItem(name: "do", value: "top"))
+    queryItems.insert(URLQueryItem(name: "mode", value: mode))
 
     let collection = try getMoviesByCriteria(queryItems: queryItems)
 
@@ -149,7 +149,7 @@ open class KinoKongAPI {
     return BookResults(items: collection, pagination: pagination)
   }
 
-  func getMoviesByCriteria(queryItems: [URLQueryItem]) throws ->  [BookItem] {
+  func getMoviesByCriteria(queryItems: Set<URLQueryItem>) throws ->  [BookItem] {
     var data =  [BookItem]()
 
     if let document = try getDocument(queryItems: queryItems) {
@@ -394,8 +394,8 @@ open class KinoKongAPI {
     var collection = [BookItem]()
     var pagination = Pagination()
 
-    var queryItems: [URLQueryItem] = []
-    queryItems.append(URLQueryItem(name: "do", value: "search"))
+    var queryItems: Set<URLQueryItem> = []
+    queryItems.insert(URLQueryItem(name: "do", value: "search"))
 
     let path = "/index.php"
 

@@ -299,8 +299,8 @@ open class KinoGoAPI {
     var collection = [BookItem]()
     var pagination = Pagination()
 
-    var queryItems: [URLQueryItem] = []
-    queryItems.append(URLQueryItem(name: "do", value: "search"))
+    var queryItems: Set<URLQueryItem> = []
+    queryItems.insert(URLQueryItem(name: "do", value: "search"))
 
     let path = "/index.php"
 

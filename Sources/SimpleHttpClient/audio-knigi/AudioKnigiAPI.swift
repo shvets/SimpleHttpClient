@@ -224,8 +224,8 @@ open class AudioKnigiAPI {
 
 //    params["q"] = query.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
 
-    var queryItems: [URLQueryItem] = []
-    queryItems.append(URLQueryItem(name: "q", value: query))
+    var queryItems: Set<URLQueryItem> = []
+    queryItems.insert(URLQueryItem(name: "q", value: query))
 
     if let response = try apiClient.request(path, queryItems: queryItems),
        let data = response.data,

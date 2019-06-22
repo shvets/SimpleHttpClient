@@ -25,16 +25,16 @@ open class AuthApiClient: ApiClient {
   func getActivationCodes(includeClientSecret: Bool = true, includeClientId: Bool = true) ->
     Observable<ActivationCodesProperties?> {
 
-    var queryItems: [URLQueryItem] = []
+    var queryItems: Set<URLQueryItem> = []
 
-    queryItems.append(URLQueryItem(name: "scope", value: Scope))
+    queryItems.insert(URLQueryItem(name: "scope", value: Scope))
 
     if includeClientSecret {
-      queryItems.append(URLQueryItem(name: "client_secret", value: ClientSecret))
+      queryItems.insert(URLQueryItem(name: "client_secret", value: ClientSecret))
     }
     
     if includeClientId {
-      queryItems.append(URLQueryItem(name: "client_id", value: ClientId))
+      queryItems.insert(URLQueryItem(name: "client_id", value: ClientId))
     }
 
     let request = ApiRequest(path: "device/code", queryItems: queryItems)
@@ -51,12 +51,12 @@ open class AuthApiClient: ApiClient {
 
   @discardableResult
   public func createToken(deviceCode: String) -> Observable<AuthProperties?> {
-    var queryItems: [URLQueryItem] = []
+    var queryItems: Set<URLQueryItem> = []
 
-    queryItems.append(URLQueryItem(name: "grant_type", value: GrantType))
-    queryItems.append(URLQueryItem(name: "code", value: deviceCode))
-    queryItems.append(URLQueryItem(name: "client_secret", value: ClientSecret))
-    queryItems.append(URLQueryItem(name: "client_id", value: ClientId))
+    queryItems.insert(URLQueryItem(name: "grant_type", value: GrantType))
+    queryItems.insert(URLQueryItem(name: "code", value: deviceCode))
+    queryItems.insert(URLQueryItem(name: "client_secret", value: ClientSecret))
+    queryItems.insert(URLQueryItem(name: "client_id", value: ClientId))
 
     let request = ApiRequest(path: "token", queryItems: queryItems)
 
@@ -72,12 +72,12 @@ open class AuthApiClient: ApiClient {
 
   @discardableResult
   func updateToken(refreshToken: String) -> Observable<AuthProperties?> {
-    var queryItems: [URLQueryItem] = []
+    var queryItems: Set<URLQueryItem> = []
 
-    queryItems.append(URLQueryItem(name: "grant_type", value: "refresh_token"))
-    queryItems.append(URLQueryItem(name: "refresh_token", value: refreshToken))
-    queryItems.append(URLQueryItem(name: "client_secret", value: ClientSecret))
-    queryItems.append(URLQueryItem(name: "client_id", value: ClientId))
+    queryItems.insert(URLQueryItem(name: "grant_type", value: "refresh_token"))
+    queryItems.insert(URLQueryItem(name: "refresh_token", value: refreshToken))
+    queryItems.insert(URLQueryItem(name: "client_secret", value: ClientSecret))
+    queryItems.insert(URLQueryItem(name: "client_id", value: ClientId))
 
     let request = ApiRequest(path: "token", queryItems: queryItems)
 

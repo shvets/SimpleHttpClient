@@ -35,7 +35,7 @@ open class ApiClient {
     urlComponents.path = baseURL.path
 
     if !request.queryItems.isEmpty {
-      urlComponents.queryItems = request.queryItems
+      urlComponents.queryItems = Array(request.queryItems)
     }
 
     if request.path.isEmpty {
@@ -139,7 +139,7 @@ extension ApiClient: HttpFetcher {
   }
 
   public func request(_ path: String = "", method: HttpMethod = .get,
-                             queryItems: [URLQueryItem] = [], headers: Set<HttpHeader> = [],
+                             queryItems: Set<URLQueryItem> = [], headers: Set<HttpHeader> = [],
                              body: Data? = nil,
                              unauthorized: Bool=false) throws -> ApiResponse? {
     let request = ApiRequest(path: path, queryItems: queryItems, method: method, headers: headers, body: body)

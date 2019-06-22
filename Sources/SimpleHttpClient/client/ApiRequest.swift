@@ -21,13 +21,13 @@ struct ApiRequest {
   let method: HttpMethod
   let path: String
 
-  var queryItems: [URLQueryItem] = []
+  var queryItems: Set<URLQueryItem> = []
   var headers: Set<HttpHeader> = []
   var body: Data?
 }
 
 extension ApiRequest {
-  init(path: String, queryItems: [URLQueryItem] = [], method: HttpMethod = .get,
+  init(path: String, queryItems: Set<URLQueryItem> = [], method: HttpMethod = .get,
        headers: Set<HttpHeader> = [], body: Data? = nil) {
     self.path = path
     self.queryItems = queryItems

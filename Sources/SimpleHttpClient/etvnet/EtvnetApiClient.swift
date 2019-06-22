@@ -56,14 +56,14 @@ extension EtvnetApiClient {
     saveConfig()
   }
 
-  func addAccessToken(params: [URLQueryItem], accessToken: String) -> [URLQueryItem] {
-    var newParams: [URLQueryItem] = []
+  func addAccessToken(params: Set<URLQueryItem>, accessToken: String) -> Set<URLQueryItem> {
+    var newParams: Set<URLQueryItem> = []
 
     for param in params {
-      newParams.append(param)
+      newParams.insert(param)
     }
 
-    newParams.append(URLQueryItem(name: "access_token", value: accessToken))
+    newParams.insert(URLQueryItem(name: "access_token", value: accessToken))
 
     return newParams
   }
@@ -192,7 +192,7 @@ extension EtvnetApiClient {
 extension EtvnetApiClient {
   @discardableResult
   func fullRequest<T: Decodable>(path: String, to type: T.Type, method: HttpMethod = .get,
-                                 queryItems: [URLQueryItem] = [], unauthorized: Bool=false) throws ->
+                                 queryItems: Set<URLQueryItem> = [], unauthorized: Bool=false) throws ->
     (value: T, response: ApiResponse)? {
     var result: (value: T, response: ApiResponse)?
 

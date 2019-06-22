@@ -21,7 +21,7 @@ class ApiClientTests: XCTestCase {
 
     let request = ApiRequest(path: "posts")
 
-    subject.fetchAsync(request) { (result) in
+    subject.fetch(request) { (result) in
       switch result {
         case .success(let response):
           do {

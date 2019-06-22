@@ -10,12 +10,10 @@ enum ApiError: Error {
 }
 
 protocol HttpFetcher {
-  func fetchAsync(_ request: ApiRequest, _ handler: @escaping (Result<ApiResponse, ApiError>) -> Void)
+  func fetch(_ request: ApiRequest, _ handler: @escaping (Result<ApiResponse, ApiError>) -> Void)
 
   @discardableResult
   func fetchRx(_ request: ApiRequest) -> Observable<ApiResponse>
-
-  func fetch(_ request: ApiRequest) throws -> ApiResponse?
 }
 
 open class ApiClient {
@@ -63,7 +61,7 @@ open class ApiClient {
 }
 
 extension ApiClient: HttpFetcher {
-  func fetchAsync(_ request: ApiRequest, _ handler: @escaping (Result<ApiResponse, ApiError>) -> Void) {
+  func fetch(_ request: ApiRequest, _ handler: @escaping (Result<ApiResponse, ApiError>) -> Void) {
     if let url = buildUrl(request) {
       do {
         let urlRequest = try buildUrlRequest(url: url, request: request)
@@ -131,12 +129,26 @@ extension ApiClient: HttpFetcher {
     }
   }
 
-  @discardableResult
-  func fetch(_ request: ApiRequest) throws -> ApiResponse? {
-    return try await {
-      self.fetchRx(request)
-    }
-  }
+//  @discardableResult
+//  func fetch(_ request: ApiRequest) throws -> ApiResponse? {
+//    var response: ApiResponse? = nil
+//
+//    let handler: (Result<ApiResponse, ApiError>) -> Void = {result in
+//      switch result {
+//        case .success(let data):
+//          response = data
+//
+//        default:
+//          print("")
+//      }
+//
+////      print(result)
+//    }
+//
+//    self.fetchAsync(request, handler)
+//
+//    return response
+//  }
 
   public func request(_ path: String = "", method: HttpMethod = .get,
                              queryItems: Set<URLQueryItem> = [], headers: Set<HttpHeader> = [],
@@ -161,6 +173,6 @@ extension ApiClient: HttpFetcher {
 
   @discardableResult
   func await<T>(_ handler: @escaping () -> Observable<T>) throws -> T? {
-    return try Await.await(handler)
+    return try Await.awaitRx(handler)
   }
 }

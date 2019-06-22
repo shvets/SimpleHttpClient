@@ -3,7 +3,7 @@ import RxSwift
 
 class Await {
   @discardableResult
-  static func await<T>(_ handler: @escaping () -> Observable<T>) throws -> T? {
+  static func awaitRx<T>(_ handler: @escaping () -> Observable<T>) throws -> T? {
     var result: T?
     var error: Error?
 
@@ -30,7 +30,7 @@ class Await {
     return result
   }
 
-  static func awaitAsync<T: Decodable>(_ handler: @escaping () -> Result<T, ApiError>) -> Result<T, ApiError> {
+  static func await<T: Decodable>(_ handler: @escaping () -> Result<T, ApiError>) throws -> Result<T, ApiError> {
     let semaphore = DispatchSemaphore.init(value: 0)
 
     let result: Result<T, ApiError> = handler()

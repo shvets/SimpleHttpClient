@@ -15,7 +15,7 @@ class AuthAPITests: XCTestCase {
   var subject = EtvnetAPI(configFile: config)
   
   func testGetActivationCodes() throws {
-    if let result = try Await.await({
+    if let result = try Await.awaitRx({
       self.subject.apiClient.authClient.getActivationCodes()
     }) {
       XCTAssertNotNil(result)

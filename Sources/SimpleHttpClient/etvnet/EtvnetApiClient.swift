@@ -203,8 +203,8 @@ extension EtvnetApiClient {
     if let accessToken = configFile.items["access_token"] {
       let newQueryItems = addAccessToken(params: queryItems, accessToken: accessToken)
 
-      var headers: [HttpHeader] = []
-      headers.append(HttpHeader(field: "User-agent", value: UserAgent))
+      var headers: Set<HttpHeader> = []
+      headers.insert(HttpHeader(field: "User-agent", value: UserAgent))
 
       let response = try request(path, method: method, queryItems: newQueryItems, headers: headers)
 

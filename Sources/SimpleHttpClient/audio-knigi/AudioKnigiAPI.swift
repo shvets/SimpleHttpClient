@@ -263,11 +263,11 @@ open class AudioKnigiAPI {
   func requestTracks(path: String, content: String, cookie: String) throws -> [Track] {
     var newTracks = [Track]()
 
-    var headers: [HttpHeader] = []
+    var headers: Set<HttpHeader> = []
 
     //headers.append(HttpHeader(field: "Content-Type", value: "application/x-www-form-urlencoded; charset=UTF-8"))
     //headers.append(HttpHeader(field: "cookie", value: cookie))
-    headers.append(HttpHeader(field: "user-agent", value: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36"))
+    headers.insert(HttpHeader(field: "user-agent", value: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36"))
 
     if let body = content.data(using: .utf8, allowLossyConversion: false),
        let response = try apiClient.request(path, method: .post, headers: headers, body: body) {
@@ -303,7 +303,7 @@ open class AudioKnigiAPI {
   }
 
   func getCookie() throws -> (String?, ApiResponse?)  {
-    let headers: [HttpHeader] = [
+    let headers: Set<HttpHeader> = [
       HttpHeader(field: "user-agent", value:
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36")
     ]

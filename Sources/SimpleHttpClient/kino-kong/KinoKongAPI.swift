@@ -12,17 +12,17 @@ open class KinoKongAPI {
     return String(url[baseUrl.index(url.startIndex, offsetBy: baseUrl.count)...])
   }
 
-  func getHeaders(_ referer: String="") -> [HttpHeader] {
-    var headers: [HttpHeader] = []
-    headers.append(HttpHeader(field: "User-Agent", value: UserAgent))
-    headers.append(HttpHeader(field: "Host", value: KinoKongAPI.SiteUrl.replacingOccurrences(of: "https://", with: "")))
-    headers.append(HttpHeader(field: "Upgrade-Insecure-Requests", value: "1"))
+  func getHeaders(_ referer: String="") -> Set<HttpHeader> {
+    var headers: Set<HttpHeader> = []
+    headers.insert(HttpHeader(field: "User-Agent", value: UserAgent))
+    headers.insert(HttpHeader(field: "Host", value: KinoKongAPI.SiteUrl.replacingOccurrences(of: "https://", with: "")))
+    headers.insert(HttpHeader(field: "Upgrade-Insecure-Requests", value: "1"))
 
     if !referer.isEmpty {
-      headers.append(HttpHeader(field: "Referer", value: referer))
+      headers.insert(HttpHeader(field: "Referer", value: referer))
     }
     else {
-      headers.append(HttpHeader(field: "Referer", value: KinoKongAPI.SiteUrl))
+      headers.insert(HttpHeader(field: "Referer", value: KinoKongAPI.SiteUrl))
     }
 
     return headers

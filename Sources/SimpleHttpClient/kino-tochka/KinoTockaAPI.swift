@@ -13,12 +13,12 @@ open class KinoTochkaAPI {
     return String(url[baseUrl.index(url.startIndex, offsetBy: baseUrl.count)...])
   }
 
-  func getHeaders(_ referer: String="") -> [HttpHeader] {
-    var headers: [HttpHeader] = []
-    headers.append(HttpHeader(field: "User-Agent", value: UserAgent))
+  func getHeaders(_ referer: String="") -> Set<HttpHeader> {
+    var headers: Set<HttpHeader> = []
+    headers.insert(HttpHeader(field: "User-Agent", value: UserAgent))
 
     if !referer.isEmpty {
-      headers.append(HttpHeader(field: "Referer", value: referer))
+      headers.insert(HttpHeader(field: "Referer", value: referer))
     }
 
     return headers
@@ -474,7 +474,7 @@ open class KinoTochkaAPI {
 
     let pagePath = getPagePath(path, page: page)
 
-    if let document = try getDocument(path) {
+    if let document = try getDocument(pagePath) {
       let items = try document.select("div[id=dle-content] div div")
 
       for item: Element in items.array() {

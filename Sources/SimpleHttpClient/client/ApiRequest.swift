@@ -1,6 +1,6 @@
 import Foundation
 
-public struct HttpHeader {
+public struct HttpHeader: Hashable {
   let field: String
   let value: String
 }
@@ -22,13 +22,13 @@ struct ApiRequest {
   let path: String
 
   var queryItems: [URLQueryItem] = []
-  var headers: [HttpHeader] = []
+  var headers: Set<HttpHeader> = []
   var body: Data?
 }
 
 extension ApiRequest {
   init(path: String, queryItems: [URLQueryItem] = [], method: HttpMethod = .get,
-       headers: [HttpHeader] = [], body: Data? = nil) {
+       headers: Set<HttpHeader> = [], body: Data? = nil) {
     self.path = path
     self.queryItems = queryItems
     self.method = method

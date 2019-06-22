@@ -139,7 +139,7 @@ extension ApiClient: HttpFetcher {
   }
 
   public func request(_ path: String = "", method: HttpMethod = .get,
-                             queryItems: [URLQueryItem] = [], headers: [HttpHeader] = [],
+                             queryItems: [URLQueryItem] = [], headers: Set<HttpHeader> = [],
                              body: Data? = nil,
                              unauthorized: Bool=false) throws -> ApiResponse? {
     let request = ApiRequest(path: path, queryItems: queryItems, method: method, headers: headers, body: body)

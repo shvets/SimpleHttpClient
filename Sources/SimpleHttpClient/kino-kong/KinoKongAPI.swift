@@ -12,39 +12,27 @@ open class KinoKongAPI {
     return String(url[baseUrl.index(url.startIndex, offsetBy: baseUrl.count)...])
   }
 
-  //  func getHeaders(_ referer: String="") -> [String: String] {
-//    var headers: [String: String] = [
-//      "User-Agent": UserAgent,
-//      "Host": KinoKongAPI.SiteUrl.replacingOccurrences(of: "https://", with: ""),
-//      "Referer": KinoKongAPI.SiteUrl,
-//      "Upgrade-Insecure-Requests": "1"
-//    ];
-//
-//    if !referer.isEmpty {
-//      headers["Referer"] = referer
-//    }
-//
-//    return headers
-//  }
-
   func getHeaders(_ referer: String="") -> [HttpHeader] {
     var headers: [HttpHeader] = []
     headers.append(HttpHeader(field: "User-Agent", value: UserAgent))
     headers.append(HttpHeader(field: "Host", value: KinoKongAPI.SiteUrl.replacingOccurrences(of: "https://", with: "")))
-    headers.append(HttpHeader(field: "Referer", value: KinoKongAPI.SiteUrl))
-    headers.append(HttpHeader(field: "Upgrade-Insecure-Requests", value: "q"))
+    headers.append(HttpHeader(field: "Upgrade-Insecure-Requests", value: "1"))
 
     if !referer.isEmpty {
       headers.append(HttpHeader(field: "Referer", value: referer))
+    }
+    else {
+      headers.append(HttpHeader(field: "Referer", value: KinoKongAPI.SiteUrl))
     }
 
     return headers
   }
 
-  public func getDocument(_ path: String = "") throws -> Document? {
+  public func getDocument(_ path: String = "", queryItems: [URLQueryItem] = []) throws -> Document? {
     var document: Document? = nil
 
-    if let response = try apiClient.request(path), let data = response.body {
+    if let response = try apiClient.request(path, queryItems: queryItems),
+       let data = response.body {
       document = try data.toDocument(encoding: .windowsCP1251)
     }
 
@@ -59,43 +47,6 @@ open class KinoKongAPI {
       return "\(path)page/\(page)/"
     }
   }
-
-//  public func getDocument(_ url: String) throws -> Document? {
-//    return try fetchDocument(url, headers: getHeaders(), encoding: .windowsCP1251)
-//  }
-//
-//  public func searchDocument(_ url: String, parameters: [String: String]) throws -> Document? {
-//    return try fetchDocument(url, headers: getHeaders(), parameters: parameters, method: .post, encoding: .windowsCP1251)
-//  }
-//
-////  public override func fetchDocument(_ url: String,
-////                            headers: HTTPHeaders = [:],
-////                            parameters: Parameters = [:],
-////                            method: HTTPMethod = .get,
-////                            encoding: String.Encoding = .utf8) throws -> Document? {
-////    var document: Document?
-////
-//////    if let dataResponse = fetchDataResponse(url, headers: headers, parameters: parameters, method: method),
-//////       let data = dataResponse.data,
-//////       let html = String(data: data, encoding: encoding) {
-//////      document = try SwiftSoup.parse(html)
-//////    }
-////
-//////    let networking = Networking(baseURL: url)
-//////
-//////    networking.get("/", headers: headers, parameters: parameters) { result in
-//////      switch result {
-//////      case .success(let response):
-//////        let json = response.dictionaryBody
-//////        // Do something with JSON, you can also get arrayBody
-//////      case .failure(let response):
-//////        print(response)
-//////        // Handle error
-//////      }
-//////    }
-////
-////    return document
-////  }
 
   public func available() throws -> Bool {
     if let document = try getDocument() {
@@ -167,19 +118,23 @@ open class KinoKongAPI {
   }
 
   func getMoviesByRating(page: Int=1) throws -> BookResults {
-    return try getMoviesByCriteriaPaginated("/?do=top&mode=rating", page: page)
+    return try getMoviesByCriteriaPaginated("rating", page: page)
   }
 
   func getMoviesByViews(page: Int=1) throws -> BookResults {
-    return try getMoviesByCriteriaPaginated("/?do=top&mode=views", page: page)
+    return try getMoviesByCriteriaPaginated("views", page: page)
   }
 
   func getMoviesByComments(page: Int=1) throws -> BookResults {
-    return try getMoviesByCriteriaPaginated("/?do=top&mode=comments", page: page)
+    return try getMoviesByCriteriaPaginated("comments", page: page)
   }
 
-  public func getMoviesByCriteriaPaginated(_ path: String, page: Int=1, perPage: Int=25) throws -> BookResults {
-    let collection = try getMoviesByCriteria(path)
+  public func getMoviesByCriteriaPaginated(_ mode: String, page: Int=1, perPage: Int=25) throws -> BookResults {
+    var queryItems: [URLQueryItem] = []
+    queryItems.append(URLQueryItem(name: "do", value: "top"))
+    queryItems.append(URLQueryItem(name: "mode", value: mode))
+
+    let collection = try getMoviesByCriteria(queryItems: queryItems)
 
     var items: [Any] = []
 
@@ -194,10 +149,10 @@ open class KinoKongAPI {
     return BookResults(items: collection, pagination: pagination)
   }
 
-  func getMoviesByCriteria(_ path: String) throws ->  [BookItem] {
+  func getMoviesByCriteria(queryItems: [URLQueryItem]) throws ->  [BookItem] {
     var data =  [BookItem]()
 
-    if let document = try getDocument(KinoKongAPI.SiteUrl + path) {
+    if let document = try getDocument(queryItems: queryItems) {
       let items = try document.select("div[id=dle-content] div div table tr")
 
       for item: Element in items.array() {
@@ -322,7 +277,7 @@ open class KinoKongAPI {
           let index1 = text.find("pl:")
 
           if let startIndex = index1 {
-            let text2 = String(String(text[startIndex ..< text.endIndex]))
+            let text2 = String(text[startIndex ..< text.endIndex])
 
             let index2 = text2.find("\",")
 
@@ -388,8 +343,8 @@ open class KinoKongAPI {
     return matched
   }
 
-  public func getGroupedGenres() throws -> [String: [Any]] {
-    var data = [String: [Any]]()
+  public func getGroupedGenres() throws -> [String: [BookItem]] {
+    var data = [String: [BookItem]]()
 
     if let document = try getDocument() {
       let items = try document.select("div[id=header] div div div ul li")
@@ -444,7 +399,7 @@ open class KinoKongAPI {
 
     let path = "/index.php"
 
-    var content = "do=search&" + "subaction=search&" + "search_start=\(page)&" + "full_search=0&" +
+    var content = "subaction=search&" + "search_start=\(page)&" + "full_search=0&" +
       "story=\(query.windowsCyrillicPercentEscapes())"
 
     if page > 1 {
@@ -511,40 +466,28 @@ open class KinoKongAPI {
     return Pagination(page: page, pages: pages, has_previous: page > 1, has_next: page < pages)
   }
 
-  public func getSeasons(_ playlistUrl: String, path: String) throws -> [Season] {
+  public func getSeasons(_ playlistUrl: String, path: String = "") throws -> [Season] {
     var list: [Season] = []
 
     let newPath = KinoKongAPI.getURLPathOnly(playlistUrl, baseUrl: KinoKongAPI.SiteUrl)
 
-    print(newPath)
-//    if let data = fetchData(playlistUrl, headers: getHeaders(KinoKongAPI.SiteUrl + path)),
-//       let content = String(data: data, encoding: .windowsCP1251) {
-    if let response = try apiClient.request(newPath, headers: getHeaders(KinoKongAPI.SiteUrl + path)),
+    if let response = try apiClient.request(newPath, headers: getHeaders(KinoKongAPI.SiteUrl + "/" + path)),
        let data = response.body,
        let content = String(data: data, encoding: .windowsCP1251) {
+
       if !content.isEmpty {
         if let index = content.find("{\"playlist\":") {
           let playlistContent = content[index ..< content.endIndex]
 
           if let localizedData = playlistContent.data(using: .windowsCP1251) {
-            print(localizedData)
-//            if let result = apiClient.decode(localizedData, to: PlayList.self) {
-//              for item in result.playlist {
-//                list.append(Season(comment: item.comment, playlist: buildEpisodes(item.playlist)))
-//              }
-//            }
-//            else if let result = apiClient.decode(localizedData, to: SingleSeasonPlayList.self) {
-//              list.append(Season(comment: "Сезон 1", playlist: buildEpisodes(result.playlist)))
-//            }
-
-//            if let result = try? localizedData.decoded() as PlayList {
-//              for item in result.playlist {
-//                list.append(Season(comment: item.comment, playlist: buildEpisodes(item.playlist)))
-//              }
-//            }
-//            else if let result = try? localizedData.decoded() as SingleSeasonPlayList {
-//              list.append(Season(comment: "Сезон 1", playlist: buildEpisodes(result.playlist)))
-//            }
+            if let result = apiClient.decode(localizedData, to: PlayList.self) {
+              for item in result.playlist {
+                list.append(Season(comment: item.comment, playlist: buildEpisodes(item.playlist)))
+              }
+            }
+            else if let result = apiClient.decode(localizedData, to: SingleSeasonPlayList.self) {
+              list.append(Season(comment: "Сезон 1", playlist: buildEpisodes(result.playlist)))
+            }
           }
         }
       }
@@ -581,5 +524,13 @@ open class KinoKongAPI {
     }
 
     return episodeUrl
+  }
+
+  func getSoundtrackPlaylistUrl(_ path: String) throws -> String {
+    return try getSeriePlaylistUrl(path)
+  }
+
+  func getSoundtracks(_ playlistUrl: String) throws -> [Season] {
+    return try getSeasons(playlistUrl)
   }
 }

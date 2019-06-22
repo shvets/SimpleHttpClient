@@ -41,11 +41,10 @@ class KinoKongAPITests: XCTestCase {
   func testGetGroupedGenres() throws {
     let list = try subject.getGroupedGenres()
 
-    print(list)
+    print(try list.prettify())
 
-//
-//    XCTAssertNotNil(list)
-//    XCTAssert(list.count > 0)
+    XCTAssertNotNil(list)
+    XCTAssert(list.count > 0)
   }
 
   func testGetUrls() throws {
@@ -95,24 +94,26 @@ class KinoKongAPITests: XCTestCase {
     XCTAssert(list.items.count > 0)
   }
 
-  func _testPaginationInAllMovies() throws {
-    let result1 = try subject.getAllMovies(page: 21)
+  func testPaginationInAllMovies() throws {
+    let result1 = try subject.getAllMovies(page: 1)
 
     let pagination1 = result1.pagination
 
     print(try pagination1.prettify())
 
-//    XCTAssertTrue(pagination1!.has_next)
-//    XCTAssertFalse(pagination1!.has_previous)
-//    XCTAssertEqual(pagination1!.page, 1)
-//
-//    let result2 = try subject.getAllMovies(page: 2)
-//
-//    let pagination2 = result2.pagination
-//
-//    XCTAssertTrue(pagination2!.has_next)
-//    XCTAssertTrue(pagination2!.has_previous)
-//    XCTAssertEqual(pagination2!.page, 2)
+    XCTAssertTrue(pagination1!.has_next)
+    XCTAssertFalse(pagination1!.has_previous)
+    XCTAssertEqual(pagination1!.page, 1)
+
+    let result2 = try subject.getAllMovies(page: 2)
+
+    let pagination2 = result2.pagination
+
+    print(try pagination2.prettify())
+
+    XCTAssertTrue(pagination2!.has_next)
+    XCTAssertTrue(pagination2!.has_previous)
+    XCTAssertEqual(pagination2!.page, 2)
   }
 
   func testPaginationInMoviesByRating() throws {
@@ -122,13 +123,13 @@ class KinoKongAPITests: XCTestCase {
 
     print(try pagination1.prettify())
 
-    XCTAssertFalse(pagination1!.has_next)
+    XCTAssertTrue(pagination1!.has_next)
     XCTAssertFalse(pagination1!.has_previous)
     XCTAssertEqual(pagination1!.page, 1)
   }
 
-  func _testGetMultipleSeasons() throws {
-    let path = "/22926-gomorra-1-4-sezon-2019.html"
+  func testGetMultipleSeasons() throws {
+    let path = "22926-gomorra-1-4-sezon-2019.html"
 
     let playlistUrl = try subject.getSeriePlaylistUrl(path)
 
@@ -142,7 +143,7 @@ class KinoKongAPITests: XCTestCase {
     XCTAssert(list.count > 0)
   }
 
-  func _testGetSingleSeason() throws {
+  func testGetSingleSeason() throws {
     let path = "31759-orvill-06-10-2017.html"
 
     let playlistUrl = try subject.getSeriePlaylistUrl(path)
@@ -157,14 +158,13 @@ class KinoKongAPITests: XCTestCase {
     XCTAssert(list.count > 0)
   }
 
-  func _testGetMoviesByRating() throws {
+  func testGetMoviesByRating() throws {
     let list = try subject.getMoviesByRating()
 
-    print(list)
-    //print(try list.prettify())
+    print(try list.prettify())
 
-//    XCTAssertNotNil(list)
-//    XCTAssert(list.count > 0)
+    XCTAssertNotNil(list)
+    XCTAssert(list.items.count > 0)
   }
 
   func testGetTags() throws {
@@ -176,11 +176,11 @@ class KinoKongAPITests: XCTestCase {
     XCTAssert(list.count > 0)
   }
 
-  func _testGetSoundtracks() throws {
-    let path = "/15479-smotret-dedpul-2016-smotet-online.html"
+  func testGetSoundtracks() throws {
+    let path = "15479-smotret-dedpul-2016-smotet-online.html"
 
-    let playlistUrl = try subject.getSeriePlaylistUrl(path)
-    let list = try subject.getSeasons(playlistUrl, path: "")
+    let playlistUrl = try subject.getSoundtrackPlaylistUrl(path)
+    let list = try subject.getSoundtracks(playlistUrl)
 
     print(try list.prettify())
 

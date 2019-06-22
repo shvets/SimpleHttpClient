@@ -232,21 +232,16 @@ open class KinoGoAPI {
           if let startIndex = index1 {
             let text2 = String(text[startIndex..<text.endIndex])
 
-            let text3 = text2
-
-            //.replacingOccurrences(of: "[480,720]", with: "720")
-
-            let index2 = text3.find("\",")
+            let index2 = text2.find("\",")
 
             if let endIndex = index2 {
-              let text4 = text3[text.index(text3.startIndex, offsetBy: 11) ..< endIndex]
+              let text3 = text2[text.index(text2.startIndex, offsetBy: 11) ..< endIndex]
 
-              let text5 = text4.trimmingCharacters(in: .whitespaces).trimmingCharacters(in: .newlines)
+              let text4 = text3.trimmingCharacters(in: .whitespaces).trimmingCharacters(in: .newlines)
 
-              let text6 = String(text5[text5.startIndex ..< text5.index(text5.endIndex, offsetBy: -2)])
+              let text5 = String(text4[text4.startIndex ..< text4.index(text4.endIndex, offsetBy: -2)])
 
-              urls = File(comment: "", file: text6).urls()
-                //text6.components(separatedBy: ",")
+              urls = File(comment: "", file: text5).urls()
 
               break
             }
@@ -283,7 +278,7 @@ open class KinoGoAPI {
 //          let index1 = text.find("pl:")
 //
 //          if let startIndex = index1 {
-//            let text2 = String(String(text[startIndex ..< text.endIndex]))
+//            let text2 = String(text[startIndex ..< text.endIndex])
 //
 //            let index2 = text2.find("\",st:")
 //

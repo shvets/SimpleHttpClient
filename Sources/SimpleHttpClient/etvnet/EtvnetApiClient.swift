@@ -208,10 +208,10 @@ extension EtvnetApiClient {
 
       let response = try request(path, method: method, queryItems: newQueryItems, headers: headers)
 
-      result = (value: self.decode(response!.body!, to: type)!, response: response!)
+      result = (value: self.decode(response!.data!, to: type)!, response: response!)
 
-      if let r = result {
-        let statusCode = r.response.statusCode
+      if let result2 = result, let response = result2.response.response {
+        let statusCode = response.statusCode
 
         if (statusCode == 401 || statusCode == 400) && !unauthorized {
           do {

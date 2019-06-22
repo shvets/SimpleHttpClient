@@ -152,7 +152,7 @@ open class AudioBooAPI {
 
     let path = AudioBooAPI.getURLPathOnly(url, baseUrl: AudioBooAPI.ArchiveUrl)
 
-    if let response = try archiveClient.request(path), let data = response.body,
+    if let response = try archiveClient.request(path), let data = response.data,
        let document = try self.toDocument(data: data, encoding: .utf8) {
 
       let items = try document.select("input[class=js-play8-playlist]")
@@ -179,7 +179,7 @@ open class AudioBooAPI {
     let body = content.data(using: .utf8, allowLossyConversion: false)
 
     if let response = try apiClient.request(path, method: .post, body: body),
-       let data = response.body,
+       let data = response.data,
        let document = try self.toDocument(data: data) {
       let items = try document.select("a")
 
@@ -198,7 +198,7 @@ open class AudioBooAPI {
   public func getDocument(_ path: String = "") throws -> Document? {
     var document: Document? = nil
 
-    if let response = try apiClient.request(path), let data = response.body {
+    if let response = try apiClient.request(path), let data = response.data {
       document = try data.toDocument(encoding: .windowsCP1251)
     }
 

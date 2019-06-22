@@ -155,7 +155,7 @@ open class BookZvookAPI {
 
     let path = BookZvookAPI.getURLPathOnly(url, baseUrl: BookZvookAPI.ArchiveUrl)
 
-    if let response = try archiveClient.request(path), let data = response.body,
+    if let response = try archiveClient.request(path), let data = response.data,
        let document = try data.toDocument() {
       let items = try document.select("input[class=js-play8-playlist]")
 
@@ -210,7 +210,7 @@ open class BookZvookAPI {
     let content = "s=\(encodedQuery)"
     let body = content.data(using: .utf8, allowLossyConversion: false)
 
-    if let response = try apiClient.request(path, method: .post, body: body), let data = response.body,
+    if let response = try apiClient.request(path, method: .post, body: body), let data = response.data,
        let document = try data.toDocument() {
       let items = try document.select("div[id=main-col] div[id=content] article")
 
@@ -268,7 +268,7 @@ open class BookZvookAPI {
   public func getDocument(_ path: String = "") throws -> Document? {
     var document: Document? = nil
 
-    if let response = try apiClient.request(path), let data = response.body {
+    if let response = try apiClient.request(path), let data = response.data {
       document = try data.toDocument()
     }
 

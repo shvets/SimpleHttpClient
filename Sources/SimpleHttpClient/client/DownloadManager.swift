@@ -14,7 +14,7 @@ open class DownloadManager {
       let apiClient = ApiClient(baseUrl)
 
       if let response = try apiClient.request(fromUrl.path),
-         let data = response.body {
+         let data = response.data {
         try createFile(url: toUrl, contents: data)
       }
       else {

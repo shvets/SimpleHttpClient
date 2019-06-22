@@ -24,7 +24,7 @@ class ApiClientTests: XCTestCase {
     subject.fetchAsync(request) { (result) in
       switch result {
         case .success(let response):
-          let posts = self.subject.decode(response.body!, to: [Post].self)!
+          let posts = self.subject.decode(response.data!, to: [Post].self)!
           print("Received posts: \(posts.first?.title ?? "")")
 
           XCTAssertEqual(posts.count, 100)
@@ -44,7 +44,7 @@ class ApiClientTests: XCTestCase {
     let request = ApiRequest(path: "posts")
 
     _ = subject.fetchRx(request).map {response in
-      (value: self.subject.decode(response.body!, to: [Post].self)!, response: response)
+      (value: self.subject.decode(response.data!, to: [Post].self)!, response: response)
     }.subscribe(onNext: { result, _ in
 
       print("Received posts: \(result.first?.title ?? "")")

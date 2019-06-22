@@ -228,7 +228,7 @@ open class AudioKnigiAPI {
     queryItems.append(URLQueryItem(name: "q", value: query))
 
     if let response = try apiClient.request(path, queryItems: queryItems),
-       let data = response.body,
+       let data = response.data,
        let document = try data.toDocument() {
       result = try self.getBookItems(document, path: path, page: page)
     }
@@ -244,7 +244,7 @@ open class AudioKnigiAPI {
     let response = try apiClient.request(path)
 
     if let securityLsKey = securityLsKey, let response = response,
-       let data = response.body,
+       let data = response.data,
        let document = try data.toDocument() {
       if let bookId = try self.getBookId(document: document) {
         let securityParams = self.getSecurityParams(bid: bookId, securityLsKey: securityLsKey)
@@ -271,7 +271,7 @@ open class AudioKnigiAPI {
 
     if let body = content.data(using: .utf8, allowLossyConversion: false),
        let response = try apiClient.request(path, method: .post, headers: headers, body: body) {
-      if let data1 = response.body, let tracks = apiClient.decode(data1, to: Tracks.self) {
+      if let data1 = response.data, let tracks = apiClient.decode(data1, to: Tracks.self) {
         if let data2 = tracks.aItems.data(using: .utf8), let items = apiClient.decode(data2, to: [Track].self) {
           newTracks = items
         }
@@ -286,7 +286,7 @@ open class AudioKnigiAPI {
 
     var securityLsKey: String?
 
-    if let response = response, let data = response.body,
+    if let response = response, let data = response.data,
        let document = try data.toDocument() {
       let scripts = try document.select("script")
 
@@ -428,7 +428,7 @@ open class AudioKnigiAPI {
   public func getDocument(_ path: String = "") throws -> Document? {
     var document: Document? = nil
 
-    if let response = try apiClient.request(path), let data = response.body {
+    if let response = try apiClient.request(path), let data = response.data {
       document = try data.toDocument()
     }
 

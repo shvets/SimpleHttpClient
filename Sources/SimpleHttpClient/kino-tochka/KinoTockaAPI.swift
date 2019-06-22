@@ -27,7 +27,7 @@ open class KinoTochkaAPI {
   public func getDocument(_ path: String = "") throws -> Document? {
     var document: Document? = nil
 
-    if let response = try apiClient.request(path), let data = response.body {
+    if let response = try apiClient.request(path), let data = response.data {
       document = try data.toDocument()
     }
 
@@ -238,7 +238,7 @@ open class KinoTochkaAPI {
     let body = content.data(using: .utf8, allowLossyConversion: false)
 
     if let response = try apiClient.request(path, method: .post, headers: getHeaders(), body: body),
-       let data = response.body,
+       let data = response.data,
        let document = try data.toDocument() {
       let items = try document.select("a[class=sres-wrap clearfix]")
 
@@ -339,7 +339,7 @@ open class KinoTochkaAPI {
     let newPath = KinoTochkaAPI.getURLPathOnly(playlistUrl, baseUrl: KinoTochkaAPI.SiteUrl)
 
     if let response = try apiClient.request(newPath, headers: getHeaders()),
-       let data = response.body,
+       let data = response.data,
        let content = String(data: data, encoding: .windowsCP1251) {
 
       if !content.isEmpty {

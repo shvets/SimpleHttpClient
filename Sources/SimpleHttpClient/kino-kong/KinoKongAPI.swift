@@ -32,7 +32,7 @@ open class KinoKongAPI {
     var document: Document? = nil
 
     if let response = try apiClient.request(path, queryItems: queryItems),
-       let data = response.body {
+       let data = response.data {
       document = try data.toDocument(encoding: .windowsCP1251)
     }
 
@@ -413,7 +413,7 @@ open class KinoKongAPI {
 
     if let response = try apiClient.request(path, method: .post, queryItems: queryItems,
       headers: getHeaders(), body: body),
-       let data = response.body,
+       let data = response.data,
        let document = try data.toDocument(encoding: .windowsCP1251) {
       let items = try document.select("div[class=owl-item]")
 
@@ -472,7 +472,7 @@ open class KinoKongAPI {
     let newPath = KinoKongAPI.getURLPathOnly(playlistUrl, baseUrl: KinoKongAPI.SiteUrl)
 
     if let response = try apiClient.request(newPath, headers: getHeaders(KinoKongAPI.SiteUrl + "/" + path)),
-       let data = response.body,
+       let data = response.data,
        let content = String(data: data, encoding: .windowsCP1251) {
 
       if !content.isEmpty {

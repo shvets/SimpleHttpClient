@@ -26,7 +26,7 @@ open class KinoGoAPI {
   public func getDocument(_ path: String = "") throws -> Document? {
     var document: Document? = nil
 
-    if let response = try apiClient.request(path), let data = response.body {
+    if let response = try apiClient.request(path), let data = response.data {
       document = try data.toDocument(encoding: .windowsCP1251)
     }
 
@@ -319,7 +319,7 @@ open class KinoGoAPI {
     if let response = try apiClient.request(path, method: .post,
       queryItems: queryItems,
       headers: getHeaders(KinoGoAPI.SiteUrl + "/"), body: body),
-       let data = response.body,
+       let data = response.data,
        let document = try data.toDocument(encoding: .windowsCP1251) {
       let items = try document.select("div[class=shortstory]")
 

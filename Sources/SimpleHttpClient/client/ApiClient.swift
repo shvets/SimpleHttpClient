@@ -7,7 +7,6 @@ enum ApiError: Error {
   case notHttpResponse
   case bodyEncodingFailed
   case bodyDecodingFailed
-  case emptyResponse
 }
 
 protocol HttpFetcher {
@@ -74,14 +73,9 @@ extension ApiClient: HttpFetcher {
             handler(.failure(.genericError(error: error)))
           }
           else if let httpResponse = response as? HTTPURLResponse {
-            if let data = data {
-              let response = ApiResponse(statusCode: httpResponse.statusCode, body: data, response: httpResponse)
+            let response = ApiResponse(data: data, response: httpResponse)
 
-              handler(.success(response))
-            }
-            else {
-              handler(.failure(.emptyResponse))
-            }
+            handler(.success(response))
           }
           else {
             handler(.failure(.notHttpResponse))
@@ -111,17 +105,12 @@ extension ApiClient: HttpFetcher {
               observer.onError(ApiError.genericError(error: error))
             }
             else if let httpResponse = response as? HTTPURLResponse {
-              if let data = data {
-                let response = ApiResponse(statusCode: httpResponse.statusCode, body: data, response: httpResponse)
+              let response = ApiResponse(data: data, response: httpResponse)
 
-                //print("Result: \(String(data: data, encoding: .utf8)!)")
+              //print("Result: \(String(data: data, encoding: .utf8)!)")
 
-                observer.on(.next(response))
-                observer.on(.completed)
-              }
-              else {
-                observer.on(.error(ApiError.emptyResponse))
-              }
+              observer.on(.next(response))
+              observer.on(.completed)
             }
             else {
               observer.on(.error(ApiError.notHttpResponse))

@@ -398,8 +398,9 @@ open class EtvnetAPI {
   public func removeBookmark(id: Int) throws -> Bool {
     let path = "video/bookmarks/items/\(id).json"
 
-    if let response = try apiClient.fullRequest(path: path, to: MediaResponse.self, method: .delete) {
-      let statusCode = response.response.statusCode
+    if let result = try apiClient.fullRequest(path: path, to: MediaResponse.self, method: .delete),
+       let response = result.response.response {
+      let statusCode = response.statusCode
 
       if statusCode == 204 {
         return true

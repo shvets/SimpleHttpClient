@@ -2,6 +2,18 @@ import Foundation
 import RxSwift
 
 class Await {
+  static func await<T>(_ handler: @escaping () -> Result<T, ApiError>) throws -> Result<T, ApiError> {
+    let semaphore = DispatchSemaphore.init(value: 0)
+
+    let result: Result<T, ApiError> = handler()
+
+    semaphore.signal()
+
+    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
+
+    return result
+  }
+
   @discardableResult
   static func awaitRx<T>(_ handler: @escaping () -> Observable<T>) throws -> T? {
     var result: T?
@@ -26,18 +38,6 @@ class Await {
     if let error = error {
       throw error
     }
-
-    return result
-  }
-
-  static func await<T: Decodable>(_ handler: @escaping () -> Result<T, ApiError>) throws -> Result<T, ApiError> {
-    let semaphore = DispatchSemaphore.init(value: 0)
-
-    let result: Result<T, ApiError> = handler()
-
-    semaphore.signal()
-
-    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
 
     return result
   }

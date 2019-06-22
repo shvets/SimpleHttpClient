@@ -24,12 +24,17 @@ class ApiClientTests: XCTestCase {
     subject.fetchAsync(request) { (result) in
       switch result {
         case .success(let response):
-          let posts = self.subject.decode(response.data!, to: [Post].self)!
-          print("Received posts: \(posts.first?.title ?? "")")
+          do {
+            let posts = try self.subject.decode(response.data!, to: [Post].self)!
+            print("Received posts: \(posts.first?.title ?? "")")
 
-          XCTAssertEqual(posts.count, 100)
+            XCTAssertEqual(posts.count, 100)
 
-          exp.fulfill()
+            exp.fulfill()
+          }
+          catch {
+            XCTFail("Error during decoding: \(error)")
+          }
         case .failure(let error):
           XCTFail("Error during request: \(error)")
         }
@@ -44,7 +49,7 @@ class ApiClientTests: XCTestCase {
     let request = ApiRequest(path: "posts")
 
     _ = subject.fetchRx(request).map {response in
-      (value: self.subject.decode(response.data!, to: [Post].self)!, response: response)
+      (value: try self.subject.decode(response.data!, to: [Post].self)!, response: response)
     }.subscribe(onNext: { result, _ in
 
       print("Received posts: \(result.first?.title ?? "")")

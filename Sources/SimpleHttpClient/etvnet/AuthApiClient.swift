@@ -41,7 +41,7 @@ open class AuthApiClient: ApiClient {
 
     return self.fetchRx(request).map { response in
       if let body = response.data {
-        return self.decode(body, to: ActivationCodesProperties.self)!
+        return try self.decode(body, to: ActivationCodesProperties.self)!
       }
       else {
         return nil
@@ -62,7 +62,7 @@ open class AuthApiClient: ApiClient {
 
     return self.fetchRx(request).map { response in
       if let body = response.data {
-        return self.decode(body, to: AuthProperties.self)!
+        return try self.decode(body, to: AuthProperties.self)!
       }
       else {
         return nil
@@ -83,7 +83,7 @@ open class AuthApiClient: ApiClient {
 
     return self.fetchRx(request).map { response in
       if let body = response.data {
-        return self.decode(body, to: AuthProperties.self)!
+        return try self.decode(body, to: AuthProperties.self)!
       }
       else {
         return nil

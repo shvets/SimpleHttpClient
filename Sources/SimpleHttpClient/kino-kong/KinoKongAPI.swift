@@ -471,7 +471,9 @@ open class KinoKongAPI {
 
     let newPath = KinoKongAPI.getURLPathOnly(playlistUrl, baseUrl: KinoKongAPI.SiteUrl)
 
-    if let response = try apiClient.request(newPath, headers: getHeaders(KinoKongAPI.SiteUrl + "/" + path)),
+    print(newPath)
+
+    if let response = try apiClient.request(newPath, headers: getHeaders(KinoKongAPI.SiteUrl + "/" + newPath)),
        let data = response.data,
        let content = String(data: data, encoding: .windowsCP1251) {
 
@@ -480,12 +482,13 @@ open class KinoKongAPI {
           let playlistContent = content[index ..< content.endIndex]
 
           if let localizedData = playlistContent.data(using: .windowsCP1251) {
-            if let result = apiClient.decode(localizedData, to: PlayList.self) {
+
+            if let result = try? apiClient.decode(localizedData, to: PlayList.self) {
               for item in result.playlist {
                 list.append(Season(comment: item.comment, playlist: buildEpisodes(item.playlist)))
               }
             }
-            else if let result = apiClient.decode(localizedData, to: SingleSeasonPlayList.self) {
+            else if let result = try apiClient.decode(localizedData, to: SingleSeasonPlayList.self) {
               list.append(Season(comment: "Сезон 1", playlist: buildEpisodes(result.playlist)))
             }
           }
@@ -530,7 +533,28 @@ open class KinoKongAPI {
     return try getSeriePlaylistUrl(path)
   }
 
-  func getSoundtracks(_ playlistUrl: String) throws -> [Season] {
-    return try getSeasons(playlistUrl)
+  public func getSoundtracks(_ playlistUrl: String, path: String = "") throws -> [Soundtrack] {
+    var list: [Soundtrack] = []
+
+    let newPath = KinoKongAPI.getURLPathOnly(playlistUrl, baseUrl: KinoKongAPI.SiteUrl)
+
+    if let response = try apiClient.request(newPath, headers: getHeaders(KinoKongAPI.SiteUrl + "/" + newPath)),
+       let data = response.data,
+       let content = String(data: data, encoding: .windowsCP1251) {
+
+      if !content.isEmpty {
+        if let index = content.find("{\"playlist\":") {
+          let playlistContent = content[index ..< content.endIndex]
+
+          if let localizedData = playlistContent.data(using: .windowsCP1251) {
+            if let result = try apiClient.decode(localizedData, to: SoundtrackList.self) {
+              list = result.playlist
+            }
+          }
+        }
+      }
+    }
+
+    return list
   }
 }

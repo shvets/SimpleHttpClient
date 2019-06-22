@@ -271,8 +271,8 @@ open class AudioKnigiAPI {
 
     if let body = content.data(using: .utf8, allowLossyConversion: false),
        let response = try apiClient.request(path, method: .post, headers: headers, body: body) {
-      if let data1 = response.data, let tracks = apiClient.decode(data1, to: Tracks.self) {
-        if let data2 = tracks.aItems.data(using: .utf8), let items = apiClient.decode(data2, to: [Track].self) {
+      if let data1 = response.data, let tracks = try apiClient.decode(data1, to: Tracks.self) {
+        if let data2 = tracks.aItems.data(using: .utf8), let items = try apiClient.decode(data2, to: [Track].self) {
           newTracks = items
         }
       }

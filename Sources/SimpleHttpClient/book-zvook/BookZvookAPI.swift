@@ -163,7 +163,7 @@ open class BookZvookAPI {
         let value = try item.attr("value")
 
         if let data = value.data(using: .utf8),
-          let tracks = archiveClient.decode(data, to: [BooTrack].self) {
+          let tracks = try archiveClient.decode(data, to: [BooTrack].self) {
           result = tracks
         }
       }

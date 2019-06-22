@@ -65,4 +65,13 @@ extension KinoKongAPI {
     public let playlist: [Episode]
   }
 
+  public struct Soundtrack: Codable {
+    public let comment: String
+    public let file: String
+  }
+
+  public struct SoundtrackList: Codable {
+    public let playlist: [Soundtrack]
+  }
+
 }

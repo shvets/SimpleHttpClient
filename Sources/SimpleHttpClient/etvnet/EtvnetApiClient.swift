@@ -71,10 +71,9 @@ extension EtvnetApiClient {
   public func authorization(includeClientSecret: Bool = true) throws -> AuthResult? {
     var result: AuthResult?
 
-    if configFile.items["device_code"] != nil && checkAccessData("user_code") {
-      let userCode = configFile.items["user_code"]!
-      let deviceCode = configFile.items["device_code"]!
-
+    if configFile.items["device_code"] != nil && checkAccessData("user_code"),
+       let userCode = configFile.items["user_code"],
+       let deviceCode = configFile.items["device_code"] {
       result = AuthResult(userCode: userCode, deviceCode: deviceCode)
     } else {
       let value = try await {
@@ -208,13 +207,14 @@ extension EtvnetApiClient {
 
       let response = try request(path, method: method, queryItems: newQueryItems, headers: headers)
 
-      result = (value: self.decode(response!.data!, to: type)!, response: response!)
+      if let response = response, let data = response.data,
+         let value = try self.decode(data, to: type) {
+        result = (value: value, response: response)
 
-      if let result2 = result, let response = result2.response.response {
-        let statusCode = response.statusCode
+        if let result2 = result, let response = result2.response.response {
+          let statusCode = response.statusCode
 
-        if (statusCode == 401 || statusCode == 400) && !unauthorized {
-          do {
+          if (statusCode == 401 || statusCode == 400) && !unauthorized {
             let refreshToken = self.configFile.items["refresh_token"]
 
             if let refreshToken = refreshToken {
@@ -225,8 +225,6 @@ extension EtvnetApiClient {
                 result = try self.fullRequest(path: path, to: type, method: method, queryItems: queryItems, unauthorized: true)
               }
             }
-          } catch {
-            print(error)
           }
         }
       }

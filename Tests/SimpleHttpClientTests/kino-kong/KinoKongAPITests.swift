@@ -180,6 +180,9 @@ class KinoKongAPITests: XCTestCase {
     let path = "15479-smotret-dedpul-2016-smotet-online.html"
 
     let playlistUrl = try subject.getSoundtrackPlaylistUrl(path)
+
+    print(playlistUrl)
+
     let list = try subject.getSoundtracks(playlistUrl)
 
     print(try list.prettify())

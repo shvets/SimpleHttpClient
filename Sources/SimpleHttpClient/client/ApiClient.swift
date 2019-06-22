@@ -149,21 +149,11 @@ extension ApiClient: HttpFetcher {
     }
   }
 
-  public func decode<T: Decodable>(_ data: Data, to type: T.Type) -> T? {
-    var value: T?
+  public func decode<T: Decodable>(_ data: Data, to type: T.Type, decoder: JSONDecoder = .init() ) throws -> T? {
+    var value: T? = nil
 
-    do {
-      if data.isEmpty {
-        value = "" as! T
-      }
-      else {
-        let decoder = JSONDecoder()
-
-        value = try decoder.decode(T.self, from: data)
-      }
-    }
-    catch {
-      print(error)
+    if !data.isEmpty {
+      value = try decoder.decode(T.self, from: data)
     }
 
     return value

@@ -347,12 +347,14 @@ open class KinoTochkaAPI {
           let playlistContent = content[index ..< content.endIndex]
 
           if let localizedData = playlistContent.data(using: .windowsCP1251) {
-             if let result = apiClient.decode(localizedData, to: PlayList.self) {
+            print(String(data: localizedData, encoding: .windowsCP1251))
+
+             if let result = try? apiClient.decode(localizedData, to: PlayList.self) {
                for item in result.playlist {
                  list = buildEpisodes(item.playlist)
                }
              }
-            else if let result = apiClient.decode(localizedData, to: SingleSeasonPlayList.self) {
+            else if let result = try apiClient.decode(localizedData, to: SingleSeasonPlayList.self) {
               list = buildEpisodes(result.playlist)
             }
           }

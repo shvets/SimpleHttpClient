@@ -135,30 +135,9 @@ extension ApiClient: HttpFetcher {
                              unauthorized: Bool=false) throws -> ApiResponse? {
     let request = ApiRequest(path: path, queryItems: queryItems, method: method, headers: headers, body: body)
 
-    var response: ApiResponse?
-    var error: Error?
-
-    let semaphore = DispatchSemaphore.init(value: 0)
-
-    self.fetch(request) { (result) in
-      switch result {
-      case .success(let r):
-        response = r
-
-        semaphore.signal()
-      case .failure(let e):
-        error = e
-        semaphore.signal()
-      }
+    return try Await.await() { handler in
+      self.fetch(request, handler)
     }
-
-    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
-
-    if let error = error {
-      throw error
-    }
-
-    return response
   }
 
   public func requestRx(_ path: String = "", method: HttpMethod = .get,
@@ -167,7 +146,7 @@ extension ApiClient: HttpFetcher {
                       unauthorized: Bool=false) throws -> ApiResponse? {
     let request = ApiRequest(path: path, queryItems: queryItems, method: method, headers: headers, body: body)
 
-    return try awaitRx {
+    return try Await.awaitRx {
       self.fetchRx(request)
     }
   }

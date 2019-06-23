@@ -166,7 +166,7 @@ class KinoGoAPITests: XCTestCase {
 //    print("unknown")
 //    #endif
 
-    let query = "мердок"
+    let query = "гейман"
 
     let list = try subject.search(query)
 

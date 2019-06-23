@@ -194,15 +194,37 @@ open class KinoGoAPI {
         for item: Element in items.array() {
           let href = try item.select("div[class=shortstorytitle] h2 a").attr("href")
           let name = try item.select("div[class=shortstorytitle] h2 a").text()
-          let thumb = try item.select("div[class=shortimg] a img").first()!.attr("src")
 
-          var type: String
+          let shortimg = try item.select("div[class=shortimg]")
+
+          let firstImg = try item.select("div[class=shortimg] a img").first()
+
+          let thumb: String
+
+          if let firstImg = firstImg {
+            thumb = try firstImg.attr("src")
+          }
+          else {
+            thumb = ""
+          }
+
+          var type = "movie"
 
           if name.contains("Сезон") || name.contains("сезон") {
             type = "serie"
           }
           else {
-            type = serie ? "serie" : "movie"
+            let firstCont = try shortimg.select("div[class=lenta] div[class=cont]").first()
+
+            if let firstCont = firstCont {
+              let serieLink = try firstCont.text()
+
+              if !serieLink.isEmpty {
+                if serieLink.contains("Сезон") || serieLink.contains("сезон") {
+                  type = "serie"
+                }
+              }
+            }
           }
 
           collection.append(["id": href, "name": name, "thumb": KinoGoAPI.SiteUrl + thumb, "type": type])
@@ -333,10 +355,24 @@ open class KinoGoAPI {
 
         let description = try shortimg.select("div div").text()
         let thumb = try shortimg.select("img").first()!.attr("src")
+
         var type = "movie"
 
         if name.contains("Сезон") || name.contains("сезон") {
           type = "serie"
+        }
+        else {
+          let firstCont = try shortimg.select("div[class=lenta] div[class=cont]").first()
+
+          if let firstCont = firstCont {
+            let serieLink = try firstCont.text()
+
+            if !serieLink.isEmpty {
+              if serieLink.contains("Сезон") || serieLink.contains("сезон") {
+                type = "serie"
+              }
+            }
+          }
         }
 
         collection.append(["id": href, "name": name, "description": description, 

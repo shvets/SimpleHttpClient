@@ -9,11 +9,11 @@ open class DownloadManager {
 
   public init() {}
 
-  open func download(fromUrl: URL, toUrl: URL) throws {
-    if let baseUrl = self.getBaseUrl(fromUrl) {
+  public func downloadFrom(_ url: URL, toUrl: URL) throws {
+    if let baseUrl = self.getBaseUrl(url) {
       let apiClient = ApiClient(baseUrl)
 
-      if let response = try apiClient.request(fromUrl.path),
+      if let response = try apiClient.request(url.path),
          let data = response.data {
         try createFile(url: toUrl, contents: data)
       }

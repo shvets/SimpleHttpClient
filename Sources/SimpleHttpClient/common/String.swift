@@ -9,7 +9,7 @@ extension String {
     return self.trimmingCharacters(in: .whitespaces)
   }
 
-  func addingPercentEncoding(withAllowedCharacters characterSet: CharacterSet, using encoding: String.Encoding) -> String {
+  public func addingPercentEncoding(withAllowedCharacters characterSet: CharacterSet, using encoding: String.Encoding) -> String {
     let stringData = self.data(using: encoding, allowLossyConversion: true) ?? Data()
 
     let percentEscaped = stringData.map {byte->String in
@@ -27,7 +27,7 @@ extension String {
     return percentEscaped
   }
 
-  func windowsCyrillicPercentEscapes() -> String {
+  public func windowsCyrillicPercentEscapes() -> String {
     let rfc3986Unreserved = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
 
     let encoding = CFStringEncoding(CFStringEncodings.windowsCyrillic.rawValue)

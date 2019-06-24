@@ -1,5 +1,5 @@
 extension Optional {
-  func orThrow(_ errorExpression: @autoclosure () -> Error) throws -> Wrapped {
+  public func orThrow(_ errorExpression: @autoclosure () -> Error) throws -> Wrapped {
     guard let value = self else {
       throw errorExpression()
     }
@@ -15,7 +15,7 @@ extension Optional where Wrapped: Collection {
 }
 
 extension Optional {
-  func matching(_ predicate: (Wrapped) -> Bool) -> Wrapped? {
+  public func matching(_ predicate: (Wrapped) -> Bool) -> Wrapped? {
     guard let value = self else {
       return nil
     }

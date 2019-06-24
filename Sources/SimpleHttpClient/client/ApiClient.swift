@@ -1,7 +1,7 @@
 import Foundation
 import RxSwift
 
-enum ApiError: Error {
+public enum ApiError: Error {
   case genericError(error: Error)
   case invalidURL
   case notHttpResponse
@@ -17,7 +17,7 @@ protocol HttpFetcher {
 }
 
 open class ApiClient {
-  let baseURL: URL
+  public let baseURL: URL
   private let session: URLSession
 
   public init(_ baseURL: URL, session: URLSession = URLSession.shared) {
@@ -61,7 +61,7 @@ open class ApiClient {
 }
 
 extension ApiClient: HttpFetcher {
-  func fetch(_ request: ApiRequest, _ handler: @escaping (Result<ApiResponse, ApiError>) -> Void) {
+  public func fetch(_ request: ApiRequest, _ handler: @escaping (Result<ApiResponse, ApiError>) -> Void) {
     if let url = buildUrl(request) {
       do {
         let urlRequest = try buildUrlRequest(url: url, request: request)
@@ -91,7 +91,7 @@ extension ApiClient: HttpFetcher {
   }
 
   @discardableResult
-  func fetchRx(_ request: ApiRequest) -> Observable<ApiResponse> {
+  public func fetchRx(_ request: ApiRequest) -> Observable<ApiResponse> {
     return Observable.create { observer -> Disposable in
       if let url = self.buildUrl(request) {
         do {
@@ -162,7 +162,7 @@ extension ApiClient: HttpFetcher {
   }
 
   @discardableResult
-  func awaitRx<T>(_ handler: @escaping () -> Observable<T>) throws -> T? {
+  public func awaitRx<T>(_ handler: @escaping () -> Observable<T>) throws -> T? {
     return try Await.awaitRx(handler)
   }
 }

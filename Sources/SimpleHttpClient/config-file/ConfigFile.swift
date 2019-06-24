@@ -5,6 +5,8 @@ import Files
 public struct ConfigurationItems<T: Codable>: Codable {
   private var dict: Dictionary<String, T> = [:]
 
+  public init() {}
+
   public subscript(key: String) -> T? {
     get {
       return dict[key]

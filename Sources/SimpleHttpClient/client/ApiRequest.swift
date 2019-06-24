@@ -1,8 +1,13 @@
 import Foundation
 
 public struct HttpHeader: Hashable {
-  let field: String
-  let value: String
+  public let field: String
+  public let value: String
+
+  public init(field: String, value: String) {
+    self.field = field
+    self.value = value
+  }
 }
 
 public enum HttpMethod: String {
@@ -17,7 +22,7 @@ public enum HttpMethod: String {
   case connect = "CONNECT"
 }
 
-struct ApiRequest {
+public struct ApiRequest {
   let method: HttpMethod
   let path: String
 
@@ -27,7 +32,7 @@ struct ApiRequest {
 }
 
 extension ApiRequest {
-  init(path: String, queryItems: Set<URLQueryItem> = [], method: HttpMethod = .get,
+  public init(path: String, queryItems: Set<URLQueryItem> = [], method: HttpMethod = .get,
        headers: Set<HttpHeader> = [], body: Data? = nil) {
     self.path = path
     self.queryItems = queryItems

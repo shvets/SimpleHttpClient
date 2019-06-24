@@ -69,7 +69,7 @@ class DownloadOperation : Operation {
     // set the state to executing
     state = .executing
 
-    print("downloading \(self.task.originalRequest?.url?.absoluteString)")
+    print("downloading \(String(describing: self.task.originalRequest?.url?.absoluteString))")
 
     // start the downloading
     self.task.resume()

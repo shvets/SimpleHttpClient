@@ -1,10 +1,10 @@
 import Foundation
 import RxSwift
 
-typealias ResultHandler<T> = (Result<T, ApiError>) -> Void
+public typealias ResultHandler<T> = (Result<T, ApiError>) -> Void
 
-class Await {
-  static func await<T>(_ callback: @escaping (_ handler: @escaping ResultHandler<T>) -> Void) throws ->
+public class Await {
+  public static func await<T>(_ callback: @escaping (_ handler: @escaping ResultHandler<T>) -> Void) throws ->
     T? {
     var result: T?
     var error: Error?
@@ -35,7 +35,7 @@ class Await {
   }
 
   @discardableResult
-  static func awaitRx<T>(_ handler: @escaping () -> Observable<T>) throws -> T? {
+  public static func awaitRx<T>(_ handler: @escaping () -> Observable<T>) throws -> T? {
     var result: T?
     var error: Error?
 

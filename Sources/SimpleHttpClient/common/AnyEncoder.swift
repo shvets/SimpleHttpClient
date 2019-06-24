@@ -1,13 +1,13 @@
 import Foundation
 
-protocol AnyEncoder {
+public protocol AnyEncoder {
   func encode<T: Encodable>(_ value: T) throws -> Data
 }
 
 extension JSONEncoder: AnyEncoder {}
 
 extension Encodable {
-  func encoded(using encoder: AnyEncoder = JSONEncoder()) throws -> Data {
+  public func encoded(using encoder: AnyEncoder = JSONEncoder()) throws -> Data {
     if let encoder = encoder as? JSONEncoder {
       encoder.outputFormatting = .prettyPrinted
     }
@@ -15,7 +15,7 @@ extension Encodable {
     return try encoder.encode(self)
   }
 
-  func prettify() throws -> String {
+  public func prettify() throws -> String {
     return String(data: try encoded(), encoding: .utf8)!
   }
 }

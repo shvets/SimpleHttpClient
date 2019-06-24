@@ -27,7 +27,7 @@ class DiskStorage {
 }
 
 extension DiskStorage: ReadableStorage {
-  func readAsync<T: Decodable>(_ type: T.Type, for key: String, using decoder: AnyDecoder = JSONDecoder(),
+  func read<T: Decodable>(_ type: T.Type, for key: String, using decoder: AnyDecoder = JSONDecoder(),
                           handler: @escaping StorageHandler<T>) {
     queue.async {
       let url = self.path.appendingPathComponent(key)
@@ -47,7 +47,7 @@ extension DiskStorage: ReadableStorage {
     }
   }
 
-  func read<T: Decodable>(_ type: T.Type, for key: String, using decoder: AnyDecoder = JSONDecoder()) -> Observable<T> {
+  func readRx<T: Decodable>(_ type: T.Type, for key: String, using decoder: AnyDecoder = JSONDecoder()) -> Observable<T> {
     return Observable.create { observer in
       let url = self.path.appendingPathComponent(key)
 
@@ -71,7 +71,7 @@ extension DiskStorage: ReadableStorage {
 }
 
 extension DiskStorage: WritableStorage {
-  func writeAsync<T: Encodable>(_ value: T, for key: String, using encoder: AnyEncoder = JSONEncoder(),
+  func write<T: Encodable>(_ value: T, for key: String, using encoder: AnyEncoder = JSONEncoder(),
                            handler: @escaping StorageHandler<T> = { _ in }) {
     queue.async {
       let url = self.path.appendingPathComponent(key)
@@ -90,7 +90,7 @@ extension DiskStorage: WritableStorage {
     }
   }
 
-  func write<T: Encodable>(_ value: T, for key: String, using encoder: AnyEncoder = JSONEncoder()) -> Observable<T> {
+  func writeRx<T: Encodable>(_ value: T, for key: String, using encoder: AnyEncoder = JSONEncoder()) -> Observable<T> {
     return Observable.create { observer in
 
       let url = self.path.appendingPathComponent(key)

@@ -10,17 +10,17 @@ enum StorageError: Error {
 typealias StorageHandler<T> = (Result<T, StorageError>) -> Void
 
 protocol ReadableStorage {
-  func readAsync<T: Decodable>(_  type: T.Type, for key: String, using decoder: AnyDecoder,
+  func read<T: Decodable>(_  type: T.Type, for key: String, using decoder: AnyDecoder,
                           handler: @escaping StorageHandler<T>)
 
-  func read<T: Decodable>(_  type: T.Type, for key: String, using decoder: AnyDecoder) -> Observable<T>
+  func readRx<T: Decodable>(_  type: T.Type, for key: String, using decoder: AnyDecoder) -> Observable<T>
 }
 
 protocol WritableStorage {
-  func writeAsync<T: Encodable>(_ value: T, for key: String, using encoder: AnyEncoder,
+  func write<T: Encodable>(_ value: T, for key: String, using encoder: AnyEncoder,
                            handler: @escaping StorageHandler<T>)
 
-  func write<T: Encodable>(_ value: T, for key: String, using encoder: AnyEncoder) -> Observable<T>
+  func writeRx<T: Encodable>(_ value: T, for key: String, using encoder: AnyEncoder) -> Observable<T>
 }
 
 typealias Storage = ReadableStorage & WritableStorage

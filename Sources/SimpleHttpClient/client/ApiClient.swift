@@ -135,21 +135,21 @@ extension ApiClient: HttpFetcher {
                              unauthorized: Bool=false) throws -> ApiResponse? {
     let request = ApiRequest(path: path, queryItems: queryItems, method: method, headers: headers, body: body)
 
-    return try Await.await() { handler in
+    return try await() { handler in
       self.fetch(request, handler)
     }
   }
 
-  public func requestRx(_ path: String = "", method: HttpMethod = .get,
-                      queryItems: Set<URLQueryItem> = [], headers: Set<HttpHeader> = [],
-                      body: Data? = nil,
-                      unauthorized: Bool=false) throws -> ApiResponse? {
-    let request = ApiRequest(path: path, queryItems: queryItems, method: method, headers: headers, body: body)
-
-    return try Await.awaitRx {
-      self.fetchRx(request)
-    }
-  }
+//  public func requestRx(_ path: String = "", method: HttpMethod = .get,
+//                      queryItems: Set<URLQueryItem> = [], headers: Set<HttpHeader> = [],
+//                      body: Data? = nil,
+//                      unauthorized: Bool=false) throws -> ApiResponse? {
+//    let request = ApiRequest(path: path, queryItems: queryItems, method: method, headers: headers, body: body)
+//
+//    return try Await.awaitRx {
+//      self.fetchRx(request)
+//    }
+//  }
 
   public func decode<T: Decodable>(_ data: Data, to type: T.Type, decoder: JSONDecoder = .init() ) throws -> T? {
     var value: T? = nil
@@ -161,8 +161,41 @@ extension ApiClient: HttpFetcher {
     return value
   }
 
-  @discardableResult
-  public func awaitRx<T>(_ handler: @escaping () -> Observable<T>) throws -> T? {
-    return try Await.awaitRx(handler)
+//  @discardableResult
+//  public func awaitRx<T>(_ handler: @escaping () -> Observable<T>) throws -> T? {
+//    return try Await.awaitRx(handler)
+//  }
+
+  //public typealias ResultHandler<T> = (Result<T, Error>) -> Void
+
+  public func await<T, E: Error>(
+    _ callback: @escaping (_ handler: @escaping (Result<T, E>) -> Void) -> Void) throws ->
+    T? {
+    var result: T?
+    var error: Error?
+
+    let semaphore = DispatchSemaphore.init(value: 0)
+
+    let handler: (Result<T, E>) -> Void = { (response) in
+      switch response {
+      case .success(let r):
+        result = r
+        semaphore.signal()
+
+      case .failure(let e):
+        error = e
+        semaphore.signal()
+      }
+    }
+
+    callback(handler)
+
+    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
+
+    if let error = error {
+      throw error
+    }
+
+    return result
   }
 }

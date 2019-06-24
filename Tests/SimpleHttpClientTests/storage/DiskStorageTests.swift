@@ -15,8 +15,8 @@ final class DiskStorageTests: XCTestCase {
 
     let timeline = Timeline(tweets: ["Hello", "World", "!!!"])
 
-    storage.writeAsync(timeline, for: "timeline") { _ in
-      storage.readAsync(Timeline.self, for: "timeline") { result in
+    storage.write(timeline, for: "timeline") { _ in
+      storage.read(Timeline.self, for: "timeline") { result in
         do {
           print(try result.get())
 

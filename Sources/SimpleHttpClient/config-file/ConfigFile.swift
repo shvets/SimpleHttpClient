@@ -92,7 +92,7 @@ extension ConfigFile: Configuration {
   public func read() -> Observable<ConfigurationItems<T>> {
     clear()
 
-    return storage.read(ConfigurationItems<T>.self, for: name).map { items in
+    return storage.readRx(ConfigurationItems<T>.self, for: name).map { items in
       self.items = items
 
       return items
@@ -101,7 +101,7 @@ extension ConfigFile: Configuration {
 
   @discardableResult
   public func write() -> Observable<ConfigurationItems<T>> {
-    return storage.write(items, for: name)
+    return storage.writeRx(items, for: name)
   }
 
   public func exists() -> Bool {

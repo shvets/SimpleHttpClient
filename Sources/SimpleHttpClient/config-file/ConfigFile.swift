@@ -92,14 +92,14 @@ extension ConfigFile: Configuration {
     clear()
 
     return try Await.await() { handler in
-      self.storage.read(ConfigurationItems<T>.self, for: self.name, handler: handler)
+      self.storage.read(ConfigurationItems<T>.self, for: self.name, handler)
     }
   }
 
   @discardableResult
   public func write() throws -> ConfigurationItems<T>? {
     return try Await.await() { handler in
-      self.storage.write(self.items, for: self.name, handler: handler)
+      self.storage.write(self.items, for: self.name, handler)
     }
   }
 

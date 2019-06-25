@@ -14,11 +14,11 @@ final class DiskStorageTests: XCTestCase {
     let timeline = Timeline(tweets: ["Hello", "World", "!!!"])
 
     try Await.await() { handler in
-      storage.write(timeline, for: "timeline", handler: handler)
+      storage.write(timeline, for: "timeline", handler)
     }
 
     let result = try Await.await() { handler in
-     storage.read(Timeline.self, for: "timeline", handler: handler)
+     storage.read(Timeline.self, for: "timeline", handler)
     }
 
     if let result = result {

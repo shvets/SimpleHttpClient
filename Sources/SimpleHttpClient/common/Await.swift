@@ -1,6 +1,7 @@
 import Foundation
 
 class Await {
+  @discardableResult
   public static func await<T, E: Error>(
     _ callback: @escaping (_ handler: @escaping (Result<T, E>) -> Void) -> Void) throws ->
     T? {

@@ -27,7 +27,7 @@ class DiskStorage {
 
 extension DiskStorage: ReadableStorage {
   func read<T: Decodable>(_ type: T.Type, for key: String,
-                          handler: @escaping (Result<T, StorageError>) -> Void) {
+                          _ handler: @escaping (Result<T, StorageError>) -> Void) {
     queue.async {
       let url = self.path.appendingPathComponent(key)
 
@@ -71,7 +71,7 @@ extension DiskStorage: ReadableStorage {
 
 extension DiskStorage: WritableStorage {
   func write<T: Encodable>(_ value: T, for key: String,
-                           handler: @escaping (Result<T, StorageError>) -> Void = { _ in }) {
+                           _ handler: @escaping (Result<T, StorageError>) -> Void = { _ in }) {
     queue.async {
       let url = self.path.appendingPathComponent(key)
 

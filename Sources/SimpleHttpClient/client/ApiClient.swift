@@ -135,7 +135,7 @@ extension ApiClient: HttpFetcher {
                              unauthorized: Bool=false) throws -> ApiResponse? {
     let request = ApiRequest(path: path, queryItems: queryItems, method: method, headers: headers, body: body)
 
-    return try await() { handler in
+    return try Await.await() { handler in
       self.fetch(request, handler)
     }
   }
@@ -165,37 +165,4 @@ extension ApiClient: HttpFetcher {
 //  public func awaitRx<T>(_ handler: @escaping () -> Observable<T>) throws -> T? {
 //    return try Await.awaitRx(handler)
 //  }
-
-  //public typealias ResultHandler<T> = (Result<T, Error>) -> Void
-
-  public func await<T, E: Error>(
-    _ callback: @escaping (_ handler: @escaping (Result<T, E>) -> Void) -> Void) throws ->
-    T? {
-    var result: T?
-    var error: Error?
-
-    let semaphore = DispatchSemaphore.init(value: 0)
-
-    let handler: (Result<T, E>) -> Void = { (response) in
-      switch response {
-      case .success(let r):
-        result = r
-        semaphore.signal()
-
-      case .failure(let e):
-        error = e
-        semaphore.signal()
-      }
-    }
-
-    callback(handler)
-
-    _ = semaphore.wait(timeout: DispatchTime.distantFuture)
-
-    if let error = error {
-      throw error
-    }
-
-    return result
-  }
 }

@@ -4,8 +4,6 @@ import XCTest
 
 final class DiskStorageTests: XCTestCase {
   func testStorage() throws {
-    let exp = expectation(description: "Tests Get API")
-
     struct Timeline: Codable, Equatable {
       let tweets: [String]
     }
@@ -15,21 +13,21 @@ final class DiskStorageTests: XCTestCase {
 
     let timeline = Timeline(tweets: ["Hello", "World", "!!!"])
 
-    storage.write(timeline, for: "timeline") { _ in
-      storage.read(Timeline.self, for: "timeline") { result in
-        do {
-          print(try result.get())
-
-          XCTAssertEqual(try result.get(), timeline)
-
-          exp.fulfill()
-        }
-        catch {
-          XCTFail()
-        }
-      }
+    try Await.await() { handler in
+      storage.write(timeline, for: "timeline", handler: handler)
     }
 
-    waitForExpectations(timeout: 10)
+    let result = try Await.await() { handler in
+     storage.read(Timeline.self, for: "timeline", handler: handler)
+    }
+
+    if let result = result {
+      print(try result.prettify())
+
+      XCTAssertEqual(result, timeline)
+    }
+    else {
+      XCTFail("Error: empty response")
+    }
   }
 }

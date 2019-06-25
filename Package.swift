@@ -15,7 +15,7 @@ let package = Package(
   dependencies: [
     .package(url: "https://github.com/JohnSundell/Identity", from: "0.2.0"),
     .package(url: "https://github.com/alexruperez/Tagging", from: "0.1.0"),
-    .package(url: "https://github.com/ReactiveX/RxSwift", from: "5.0.1"),
+    //.package(url: "https://github.com/ReactiveX/RxSwift", from: "5.0.1"),
     .package(url: "https://github.com/scinfu/SwiftSoup", from: "2.0.0"),
     .package(url: "https://github.com/JohnSundell/Files", from: "3.1.0")
   ],
@@ -24,7 +24,7 @@ let package = Package(
       name: "SimpleHttpClient",
       dependencies: [
         "SwiftSoup",
-        "RxSwift",
+        //"RxSwift",
         "Files"
       ]),
     .testTarget(

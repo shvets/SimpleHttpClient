@@ -1,5 +1,4 @@
 import Foundation
-import RxSwift
 
 class DiskStorage {
   private let queue: DispatchQueue

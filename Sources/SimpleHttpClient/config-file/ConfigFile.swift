@@ -1,5 +1,4 @@
 import Foundation
-import RxSwift
 import Files
 
 public struct ConfigurationItems<T: Codable>: Codable {

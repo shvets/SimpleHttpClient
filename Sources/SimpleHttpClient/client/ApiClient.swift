@@ -1,5 +1,4 @@
 import Foundation
-import RxSwift
 
 public enum ApiError: Error {
   case genericError(error: Error)
@@ -12,8 +11,8 @@ public enum ApiError: Error {
 protocol HttpFetcher {
   func fetch(_ request: ApiRequest, _ handler: @escaping (Result<ApiResponse, ApiError>) -> Void)
 
-  @discardableResult
-  func fetchRx(_ request: ApiRequest) -> Observable<ApiResponse>
+//  @discardableResult
+//  func fetchRx(_ request: ApiRequest) -> Observable<ApiResponse>
 }
 
 open class ApiClient {
@@ -90,44 +89,44 @@ extension ApiClient: HttpFetcher {
     }
   }
 
-  @discardableResult
-  public func fetchRx(_ request: ApiRequest) -> Observable<ApiResponse> {
-    return Observable.create { observer -> Disposable in
-      if let url = self.buildUrl(request) {
-        do {
-          let urlRequest = try self.buildUrlRequest(url: url, request: request)
-          // print("\(urlRequest.httpMethod!): \(url)")
-
-          let task = self.session.dataTask(with: urlRequest) { (data, response, error) in
-            if let error = error {
-              observer.onError(ApiError.genericError(error: error))
-            }
-            else if let httpResponse = response as? HTTPURLResponse {
-              let response = ApiResponse(data: data, response: httpResponse)
-
-              //print("Result: \(String(data: data, encoding: .utf8)!)")
-
-              observer.on(.next(response))
-              observer.on(.completed)
-            }
-            else {
-              observer.on(.error(ApiError.notHttpResponse))
-            }
-          }
-
-          task.resume()
-        } catch {
-          print(error)
-          observer.on(.error(ApiError.bodyEncodingFailed))
-        }
-      }
-      else {
-        observer.on(.error(ApiError.invalidURL))
-      }
-
-      return Disposables.create()
-    }
-  }
+//  @discardableResult
+//  public func fetchRx(_ request: ApiRequest) -> Observable<ApiResponse> {
+//    return Observable.create { observer -> Disposable in
+//      if let url = self.buildUrl(request) {
+//        do {
+//          let urlRequest = try self.buildUrlRequest(url: url, request: request)
+//          // print("\(urlRequest.httpMethod!): \(url)")
+//
+//          let task = self.session.dataTask(with: urlRequest) { (data, response, error) in
+//            if let error = error {
+//              observer.onError(ApiError.genericError(error: error))
+//            }
+//            else if let httpResponse = response as? HTTPURLResponse {
+//              let response = ApiResponse(data: data, response: httpResponse)
+//
+//              //print("Result: \(String(data: data, encoding: .utf8)!)")
+//
+//              observer.on(.next(response))
+//              observer.on(.completed)
+//            }
+//            else {
+//              observer.on(.error(ApiError.notHttpResponse))
+//            }
+//          }
+//
+//          task.resume()
+//        } catch {
+//          print(error)
+//          observer.on(.error(ApiError.bodyEncodingFailed))
+//        }
+//      }
+//      else {
+//        observer.on(.error(ApiError.invalidURL))
+//      }
+//
+//      return Disposables.create()
+//    }
+//  }
 
   public func request(_ path: String = "", method: HttpMethod = .get,
                              queryItems: Set<URLQueryItem> = [], headers: Set<HttpHeader> = [],

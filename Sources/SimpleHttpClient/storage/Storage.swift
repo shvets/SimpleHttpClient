@@ -1,5 +1,4 @@
 import Foundation
-import RxSwift
 
 enum StorageError: Error {
   case genericError(error: Error)

@@ -43,26 +43,24 @@ class ApiClientTests: XCTestCase {
     waitForExpectations(timeout: 10)
   }
 
-  func testGetApi() {
-    let exp = expectation(description: "Tests Get API")
-
+  func testGetApi() throws {
     let request = ApiRequest(path: "posts")
 
-    _ = subject.fetchRx(request).map {response in
-      (value: try self.subject.decode(response.data!, to: [Post].self)!, response: response)
-    }.subscribe(onNext: { result, _ in
+    let response = try Await.await() { handler in
+      self.subject.fetch(request, handler)
+    }
 
-      print("Received posts: \(result.first?.title ?? "")")
+    if let response = response, let data = response.data,
+       let posts = try self.subject.decode(data, to: [Post].self) {
 
-      XCTAssertEqual(result.count, 100)
+      // print(try posts.prettify())
 
-      exp.fulfill()
-    }, onError: { (error) -> Void in
-      exp.fulfill()
-      XCTFail("Error during request: \(error)")
-    })
-
-    waitForExpectations(timeout: 10)
+      XCTAssertEqual(posts[0].id, 1)
+      XCTAssertEqual(posts.count, 100)
+    }
+    else {
+      XCTFail("Error: empty value")
+    }
   }
 
   func testGetDownloadApi() {

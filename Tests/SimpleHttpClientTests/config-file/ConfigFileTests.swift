@@ -6,7 +6,7 @@ import Files
 class ConfigFileTests: XCTestCase {
   static let path = URL(fileURLWithPath: NSTemporaryDirectory())
 
-  var subject: ConfigFile = ConfigFile<String>(path: path, fileName: "test.config")
+  let subject: ConfigFile = ConfigFile<String>(path: path, fileName: "test.config")
 
   func testSave() throws {
     //try File(path: subject.fileName).delete()

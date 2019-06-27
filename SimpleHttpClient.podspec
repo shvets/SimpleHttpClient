@@ -18,5 +18,10 @@ Pod::Spec.new do |s|
   s.ios.source_files = "Sources/**/*.swift"
   s.tvos.source_files = "Sources/**/*.swift"
 
+  #s.dependency 'Identity', '~> 0.2.0'
+  #s.dependency 'Tagging', '~> 0.1.0'
+  s.dependency 'Files', '~> 2.0.1'
+  s.dependency 'SwiftSoup', '~> 2.0.0'
+
   s.pod_target_xcconfig = { 'SWIFT_VERSION' => swift_version }
 end

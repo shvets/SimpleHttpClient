@@ -91,9 +91,15 @@ extension ConfigFile: Configuration {
   public func read() throws -> ConfigurationItems<T>? {
     clear()
 
-    return try Await.await() { handler in
-      self.storage.read(ConfigurationItems<T>.self, for: self.name, handler)
+    let items = try Await.await() { handler in
+     self.storage.read(ConfigurationItems<T>.self, for: self.name, handler)
     }
+
+    if let items = items {
+      self.items = items
+    }
+
+    return self.items
   }
 
   @discardableResult

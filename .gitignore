@@ -6,3 +6,5 @@
 .buid
 Package.resolved
 *.config
+Pods
+*.lock

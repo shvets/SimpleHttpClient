@@ -18,7 +18,9 @@ class ConfigFileTests: XCTestCase {
     subject.items["key1"] = "value1"
     subject.items["key2"] = "value2"
 
-    if let items = try subject.write() {
+    if let items = (try Await.await() { handler in
+      self.subject.write(handler)
+    }) {
       print(try items.prettify())
 
       XCTAssertEqual(items.keys.count, 2)
@@ -33,7 +35,9 @@ class ConfigFileTests: XCTestCase {
 
     try FileSystem().createFile(at: ConfigFileTests.fileName, contents: data!)
 
-    if let items = try subject.read() {
+    if let items = (try Await.await() { handler in
+      self.subject.read(handler)
+    }) {
       print(try items.prettify())
 
       XCTAssertEqual(items.keys.count, 2)

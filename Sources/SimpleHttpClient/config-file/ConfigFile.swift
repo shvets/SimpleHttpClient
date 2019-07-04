@@ -46,25 +46,13 @@ extension ConfigFile: Configuration {
     return items.removeValue(forKey: key) != nil
   }
 
-  @discardableResult
-  public func read() throws -> [String: Item]? {
+  public func read(_ handler: @escaping (Result<[String: Item], StorageError>) -> Void) {
     clear()
 
-    let items = try Await.await() { handler in
-      self.storage.read([String: Item].self, for: self.fileName, handler)
-    }
-
-    if let items = items {
-      self.items = items
-    }
-
-    return self.items
+    self.storage.read([String: Item].self, for: self.fileName, handler)
   }
 
-  @discardableResult
-  public func write() throws -> [String: Item]? {
-    return try Await.await() { handler in
-      self.storage.write(self.items, for: self.fileName, handler)
-    }
+  public func write(_ handler: @escaping (Result<[String: Item], StorageError>) -> Void) {
+    self.storage.write(self.items, for: self.fileName, handler)
   }
 }

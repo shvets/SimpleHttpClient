@@ -1,80 +1,43 @@
 import Foundation
 import Files
 
-public struct ConfigurationItems<T: Codable>: Codable {
-  private var dict: Dictionary<String, T> = [:]
-
-  public init() {}
-
-  public subscript(key: String) -> T? {
-    get {
-      return dict[key]
-    }
-
-    set(newValue) {
-      dict[key] = newValue
-    }
-  }
-
-  public mutating func removeAll() {
-    dict.removeAll()
-  }
-
-  public mutating func removeValue(forKey: String) -> T? {
-    return dict.removeValue(forKey: forKey)
-  }
-
-  public func asDictionary() -> Dictionary<String, T> {
-    return dict
-  }
-}
-
-protocol Configuration {
-  associatedtype Item: Codable
-
-  var items: ConfigurationItems<Item> { get set }
-
-  func add(key: String, value: Item)
-
-  func remove(_ key: String) -> Bool
-
-  func clear()
-
-  func read() throws -> ConfigurationItems<Item>?
-
-  func write() throws -> ConfigurationItems<Item>?
-
-  func exists() -> Bool
-}
-
 open class ConfigFile<T: Codable> {
-  typealias Item = T
+  public typealias Item = T
 
-  var name: String = ""
+  private let fileManager = FileManager.default
 
-  let fileManager = FileManager.default
+  private var list: [String: Item] = [:]
 
-  private var list: ConfigurationItems<T> = ConfigurationItems()
-
-  public var items: ConfigurationItems<T> {
+  public var items: [String: Item] {
     get {
       return list
     }
+
     set {
       list = newValue
     }
   }
 
-  let storage: DiskStorage!
+  private var fileName: String = ""
+
+  private let storage: DiskStorage!
 
   public init(path: URL, fileName: String) {
-    self.name = fileName
+    self.storage = DiskStorage(path: path)
 
-    storage = DiskStorage(path: path)
+    self.fileName = fileName
   }
 }
 
 extension ConfigFile: Configuration {
+  public func exists() -> Bool {
+    return fileManager.fileExists(atPath: "\(storage.getPath())/\(fileName)")
+  }
+
+  public func clear() {
+    items.removeAll()
+  }
+
   public func add(key: String, value: T) {
     items[key] = value
   }
@@ -83,16 +46,12 @@ extension ConfigFile: Configuration {
     return items.removeValue(forKey: key) != nil
   }
 
-  public func clear() {
-    items.removeAll()
-  }
-
   @discardableResult
-  public func read() throws -> ConfigurationItems<T>? {
+  public func read() throws -> [String: Item]? {
     clear()
 
     let items = try Await.await() { handler in
-     self.storage.read(ConfigurationItems<T>.self, for: self.name, handler)
+      self.storage.read([String: Item].self, for: self.fileName, handler)
     }
 
     if let items = items {
@@ -103,13 +62,9 @@ extension ConfigFile: Configuration {
   }
 
   @discardableResult
-  public func write() throws -> ConfigurationItems<T>? {
+  public func write() throws -> [String: Item]? {
     return try Await.await() { handler in
-      self.storage.write(self.items, for: self.name, handler)
+      self.storage.write(self.items, for: self.fileName, handler)
     }
-  }
-
-  public func exists() -> Bool {
-    return fileManager.fileExists(atPath: "\(storage.getPath())/\(name)")
   }
 }

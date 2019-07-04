@@ -15,13 +15,15 @@ let package = Package(
   dependencies: [
     .package(url: "https://github.com/JohnSundell/Identity", from: "0.2.0"),
     .package(url: "https://github.com/alexruperez/Tagging", from: "0.1.0"),
-    .package(url: "https://github.com/JohnSundell/Files", from: "3.1.0")
+    .package(url: "https://github.com/JohnSundell/Files", from: "3.1.0"),
+    .package(url: "https://github.com/JohnSundell/Codextended", from: "0.3.0")
   ],
   targets: [
     .target(
       name: "SimpleHttpClient",
       dependencies: [
-        "Files"
+        "Files",
+        "Codextended"
       ]),
     .testTarget(
       name: "SimpleHttpClientTests",

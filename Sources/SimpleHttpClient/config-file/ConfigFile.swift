@@ -2,13 +2,11 @@ import Foundation
 import Files
 
 open class ConfigFile<T: Codable> {
-  public typealias Item = T
-
   private let fileManager = FileManager.default
 
-  private var list: [String: Item] = [:]
+  private var list: [String: T] = [:]
 
-  public var items: [String: Item] {
+  public var items: [String: T] {
     get {
       return list
     }
@@ -46,13 +44,13 @@ extension ConfigFile: Configuration {
     return items.removeValue(forKey: key) != nil
   }
 
-  public func read(_ handler: @escaping (Result<[String: Item], StorageError>) -> Void) {
+  public func read(_ handler: @escaping (Result<[String: T], StorageError>) -> Void) {
     clear()
 
-    self.storage.read([String: Item].self, for: self.fileName, handler)
+    self.storage.read([String: T].self, for: self.fileName, handler)
   }
 
-  public func write(_ handler: @escaping (Result<[String: Item], StorageError>) -> Void) {
+  public func write(_ handler: @escaping (Result<[String: T], StorageError>) -> Void) {
     self.storage.write(self.items, for: self.fileName, handler)
   }
 }

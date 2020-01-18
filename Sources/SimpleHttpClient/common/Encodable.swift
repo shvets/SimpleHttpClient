@@ -3,7 +3,9 @@ import Codextended
 
 extension Encodable {
   public func prettify() throws -> String {
-    if let result = String(data: try encoded(), encoding: .utf8) {
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = .prettyPrinted
+    if let result = String(data: try encoded(using: encoder), encoding: .utf8) {
       return result
     }
     else {

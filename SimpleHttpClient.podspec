@@ -1,7 +1,7 @@
 #swift_version = File.new('.swift-version').read
 
 Pod::Spec.new do |s|
-  s.swift_version = "5.0"
+  s.swift_version = "5.1"
   s.name         = "SimpleHttpClient"
   s.version      = "1.0.3"
   s.summary      = "Simple Swift HTTP client"
@@ -19,12 +19,12 @@ Pod::Spec.new do |s|
   s.ios.source_files = "Sources/**/*.swift"
   s.tvos.source_files = "Sources/**/*.swift"
 
-  #s.dependency 'Identity', '~> 0.2.0'
-  #s.dependency 'Tagging', '~> 0.1.0'
-  s.dependency 'Files', '~> 2.0.1'
-  #s.dependency 'SwiftSoup', '~> 2.0.0'
+  s.dependency 'Identity', '~> 0.3.0'
+  s.dependency 'Tagging', '~> 0.1.0'
+  s.dependency 'Files', '~> 4.1.1'
+  s.dependency 'SwiftSoup', '~> 2.3.0'
   s.dependency 'Codextended', '~> 0.3.0'
 
   #s.pod_target_xcconfig = { 'SWIFT_VERSION' => swift_version }
-  s.pod_target_xcconfig = { 'SWIFT_VERSION' => '5.0' }
+  s.pod_target_xcconfig = { 'SWIFT_VERSION' => '5.1' }
 end

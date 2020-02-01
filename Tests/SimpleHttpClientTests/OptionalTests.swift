@@ -42,7 +42,6 @@ extension Optional where Wrapped == LiveBeing {
 }
 
 class OptionalTests: XCTestCase {
-
   func test1() throws {
     var data: String?
 

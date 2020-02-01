@@ -1,4 +1,4 @@
-// swift-tools-version:5.0
+// swift-tools-version:5.1
 
 import PackageDescription
 
@@ -13,9 +13,9 @@ let package = Package(
     .library(name: "SimpleHttpClient", targets: ["SimpleHttpClient"])
   ],
   dependencies: [
-    .package(url: "https://github.com/JohnSundell/Identity", from: "0.2.0"),
+    .package(url: "https://github.com/JohnSundell/Identity", from: "0.3.0"),
     .package(url: "https://github.com/alexruperez/Tagging", from: "0.1.0"),
-    .package(url: "https://github.com/JohnSundell/Files", from: "3.1.0"),
+    .package(url: "https://github.com/JohnSundell/Files", from: "4.1.1"),
     .package(url: "https://github.com/JohnSundell/Codextended", from: "0.3.0")
   ],
   targets: [

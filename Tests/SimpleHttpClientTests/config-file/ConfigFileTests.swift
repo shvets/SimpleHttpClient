@@ -33,7 +33,8 @@ class ConfigFileTests: XCTestCase {
   func testLoad() throws {
     let data = "{\"key1\": \"value1\", \"key2\": \"value2\"}".data(using: .utf8)
 
-    try FileSystem().createFile(at: ConfigFileTests.fileName, contents: data!)
+    let folder = try Folder(path: ".")
+    try folder.createFile(named: ConfigFileTests.fileName, contents: data!)
 
     if let items = (try Await.await() { handler in
       self.subject.read(handler)

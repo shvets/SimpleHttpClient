@@ -129,9 +129,9 @@ extension ApiClient: HttpFetcher {
 //  }
 
   public func request(_ path: String = "", method: HttpMethod = .get,
-                             queryItems: Set<URLQueryItem> = [], headers: Set<HttpHeader> = [],
-                             body: Data? = nil,
-                             unauthorized: Bool=false) throws -> ApiResponse? {
+                      queryItems: Set<URLQueryItem> = [], headers: Set<HttpHeader> = [],
+                      body: Data? = nil,
+                      unauthorized: Bool=false) throws -> ApiResponse? {
     let request = ApiRequest(path: path, queryItems: queryItems, method: method, headers: headers, body: body)
 
     return try Await.await() { handler in

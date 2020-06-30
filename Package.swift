@@ -1,11 +1,11 @@
-// swift-tools-version:5.1
+// swift-tools-version:5.2
 
 import PackageDescription
 
 let package = Package(
   name: "SimpleHttpClient",
   platforms: [
-//    .macOS(.v10_12),
+    .macOS(.v10_12),
     .iOS(.v12),
     .tvOS(.v12)
   ],

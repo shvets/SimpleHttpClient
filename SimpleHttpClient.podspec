@@ -3,7 +3,7 @@
 Pod::Spec.new do |s|
   s.swift_version = "5.2"
   s.name         = "SimpleHttpClient"
-  s.version      = "1.0.3"
+  s.version      = "1.0.4"
   s.summary      = "Simple Swift HTTP client"
   s.description  = "Simple Swift HTTP client."
 

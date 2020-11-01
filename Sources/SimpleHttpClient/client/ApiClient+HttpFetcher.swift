@@ -88,16 +88,6 @@ extension ApiClient: HttpFetcher {
 //    }
 //  }
 
-  public func decode<T: Decodable>(_ data: Data, to type: T.Type, decoder: JSONDecoder = .init()) throws -> T? {
-    var value: T? = nil
-
-    if !data.isEmpty {
-      value = try decoder.decode(T.self, from: data)
-    }
-
-    return value
-  }
-
 //  @discardableResult
 //  public func awaitRx<T>(_ handler: @escaping () -> Observable<T>) throws -> T? {
 //    return try Await.awaitRx(handler)

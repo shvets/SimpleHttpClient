@@ -43,3 +43,15 @@ open class ApiClient {
     return urlRequest
   }
 }
+
+extension ApiClient {
+  public func decode<T: Decodable>(_ data: Data, to type: T.Type, decoder: JSONDecoder = .init()) throws -> T? {
+    var value: T? = nil
+
+    if !data.isEmpty {
+      value = try decoder.decode(T.self, from: data)
+    }
+
+    return value
+  }
+}

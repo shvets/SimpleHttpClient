@@ -1,9 +1,9 @@
 #swift_version = File.new('.swift-version').read
 
 Pod::Spec.new do |s|
-  s.swift_version = "5.2"
+  s.swift_version = "5.3"
   s.name         = "SimpleHttpClient"
-  s.version      = "1.0.4"
+  s.version      = "1.0.5"
   s.summary      = "Simple Swift HTTP client"
   s.description  = "Simple Swift HTTP client."
 
@@ -12,8 +12,8 @@ Pod::Spec.new do |s|
   s.license      = "MIT"
   s.source = { :git => 'https://github.com/shvets/SimpleHttpClient.git', :tag => s.version }
 
-  s.ios.deployment_target = "12.2"
-  s.tvos.deployment_target = "12.2"
+  s.ios.deployment_target = "12.3"
+  s.tvos.deployment_target = "12.3"
   s.macos.deployment_target = "10.10"
 
   s.source_files = "Sources/**/*.swift"
@@ -27,5 +27,5 @@ Pod::Spec.new do |s|
   s.dependency 'Codextended', '~> 0.3.0'
 
   #s.pod_target_xcconfig = { 'SWIFT_VERSION' => swift_version }
-  s.pod_target_xcconfig = { 'SWIFT_VERSION' => '5.2' }
+  s.pod_target_xcconfig = { 'SWIFT_VERSION' => '5.3' }
 end

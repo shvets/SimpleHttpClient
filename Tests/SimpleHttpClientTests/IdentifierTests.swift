@@ -9,7 +9,7 @@ struct Author: Identifiable, Codable {
 
 extension Author: Equatable {
   static func == (lhs: Author, rhs: Author) -> Bool {
-    return lhs.id == rhs.id
+    lhs.id == rhs.id
   }
 }
 
@@ -21,7 +21,7 @@ struct Book: Identifiable, Codable {
 
 extension Book: Equatable {
   static func == (lhs: Book, rhs: Book) -> Bool {
-    return lhs.authorId == rhs.authorId
+    lhs.authorId == rhs.authorId
   }
 }
 

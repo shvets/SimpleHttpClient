@@ -8,7 +8,7 @@ open class ConfigFile<T: Codable> {
 
   public var items: [String: T] {
     get {
-      return list
+      list
     }
 
     set {
@@ -29,7 +29,7 @@ open class ConfigFile<T: Codable> {
 
 extension ConfigFile: Configuration {
   public func exists() -> Bool {
-    return fileManager.fileExists(atPath: "\(storage.getPath())/\(fileName)")
+    fileManager.fileExists(atPath: "\(storage.getPath())/\(fileName)")
   }
 
   public func clear() {
@@ -41,7 +41,7 @@ extension ConfigFile: Configuration {
   }
 
   public func remove(_ key: String) -> Bool {
-    return items.removeValue(forKey: key) != nil
+    items.removeValue(forKey: key) != nil
   }
 
   public func read(_ handler: @escaping (Result<[String: T], StorageError>) -> Void) {

@@ -1,4 +1,5 @@
 import Foundation
+import Await
 
 extension ApiClient: HttpFetcher {
   public func fetch(_ request: ApiRequest, _ handler: @escaping (ApiResult) -> Void) {

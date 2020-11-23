@@ -1,6 +1,7 @@
 import XCTest
 
 import Foundation
+import Await
 
 @testable import SimpleHttpClient
 

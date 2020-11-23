@@ -13,9 +13,8 @@ let package = Package(
     .library(name: "SimpleHttpClient", targets: ["SimpleHttpClient"])
   ],
   dependencies: [
-    .package(url: "https://github.com/JohnSundell/Identity", from: "0.3.0"),
-    .package(url: "https://github.com/alexruperez/Tagging", from: "0.1.0"),
     .package(url: "https://github.com/JohnSundell/Files", from: "4.1.1"),
+    .package(url: "https://github.com/shvets/Await", from: "1.0.0"),
     .package(url: "https://github.com/JohnSundell/Codextended", from: "0.3.0")
   ],
   targets: [
@@ -23,14 +22,14 @@ let package = Package(
       name: "SimpleHttpClient",
       dependencies: [
         "Files",
-        "Codextended"
+        "Await"
       ]),
     .testTarget(
       name: "SimpleHttpClientTests",
       dependencies: [
         "SimpleHttpClient",
-        "Identity",
-        "Tagging"
+        "Await",
+        "Codextended"
       ]),
   ]
 )

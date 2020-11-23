@@ -13,7 +13,7 @@ let package = Package(
     .library(name: "SimpleHttpClient", targets: ["SimpleHttpClient"])
   ],
   dependencies: [
-    .package(url: "https://github.com/JohnSundell/Files", from: "4.1.1"),
+    .package(url: "https://github.com/JohnSundell/Files", from: "4.2.0"),
     .package(url: "https://github.com/shvets/Await", from: "1.0.0"),
     .package(url: "https://github.com/JohnSundell/Codextended", from: "0.3.0")
   ],

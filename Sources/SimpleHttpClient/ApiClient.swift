@@ -13,6 +13,7 @@ open class ApiClient {
     var urlComponents = URLComponents()
 
     urlComponents.scheme = baseURL.scheme
+    urlComponents.port = baseURL.port
     urlComponents.host = baseURL.host
     urlComponents.path = baseURL.path
 

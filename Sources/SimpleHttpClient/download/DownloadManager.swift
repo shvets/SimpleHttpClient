@@ -10,7 +10,7 @@ open class DownloadManager {
   public init() {}
 
   public func downloadFrom(_ url: URL, toUrl: URL) throws {
-    if let baseUrl = self.getBaseUrl(url) {
+    if let baseUrl = getBaseUrl(url) {
       let apiClient = ApiClient(baseUrl)
 
       if let response = try apiClient.request(url.path),

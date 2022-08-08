@@ -16,6 +16,7 @@ let package = Package(
     .package(url: "https://github.com/JohnSundell/Files", from: "4.2.0"),
     .package(url: "https://github.com/shvets/Await", from: "1.0.0"),
     .package(url: "https://github.com/JohnSundell/Codextended", from: "0.3.0")
+    //.package(url: "https://github.com/binarybirds/swift-http", from: "1.0.0"),
   ],
   targets: [
     .target(
@@ -23,6 +24,7 @@ let package = Package(
       dependencies: [
         "Files",
         "Await"
+        //.product(name: "SwiftHttp", package: "swift-http")
       ]),
     .testTarget(
       name: "SimpleHttpClientTests",
@@ -30,6 +32,7 @@ let package = Package(
         "SimpleHttpClient",
         "Await",
         "Codextended"
+        //.product(name: "SwiftHttp", package: "swift-http")
       ]),
   ]
 )

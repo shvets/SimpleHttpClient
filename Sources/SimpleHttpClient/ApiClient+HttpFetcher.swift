@@ -73,7 +73,7 @@ extension ApiClient: HttpFetcher {
                       unauthorized: Bool = false) throws -> ApiResponse? {
     let request = ApiRequest(path: path, queryItems: queryItems, method: method, headers: headers, body: body)
 
-    return try Await.await() { handler in
+    return try Await.await { handler in
       self.fetch(request, handler)
     }
   }

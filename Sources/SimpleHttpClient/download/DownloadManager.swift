@@ -13,8 +13,9 @@ open class DownloadManager {
     if let baseUrl = getBaseUrl(url) {
       let apiClient = ApiClient(baseUrl)
 
-      if let response = try apiClient.request(url.path),
-         let data = response.data {
+      let response = try apiClient.request(url.path)
+
+      if let data = response.data {
         try createFile(url: toUrl, contents: data)
       }
       else {
@@ -27,9 +28,9 @@ open class DownloadManager {
     let file = url.path
     let dir = url.deletingLastPathComponent()
 
-    try self.fileManager.createDirectory(at: dir, withIntermediateDirectories: true)
+    try fileManager.createDirectory(at: dir, withIntermediateDirectories: true)
 
-    self.fileManager.createFile(atPath: file, contents: contents)
+    fileManager.createFile(atPath: file, contents: contents)
   }
 
   func getBaseUrl(_ url: URL) -> URL? {

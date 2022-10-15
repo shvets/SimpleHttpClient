@@ -1,96 +1,85 @@
 import Foundation
-import Await
+
+class ApiClientOperation: Operation {
+  var response: ApiResponse? = nil
+
+  var client: ApiClient
+  var request: ApiRequest
+
+  init(client: ApiClient, request: ApiRequest) {
+    self.client = client
+    self.request = request
+  }
+
+  override func main() {
+    let semaphore = DispatchSemaphore(value: 0)
+
+    Task {
+      let result = await client.fetch(request)
+
+      switch result {
+        case .success(let r):
+          response = r
+
+        case .failure(let error):
+          throw error
+      }
+
+      semaphore.signal()
+    }
+
+    semaphore.wait()
+  }
+}
 
 extension ApiClient: HttpFetcher {
-  public func fetch(_ request: ApiRequest, _ handler: @escaping (ApiResult) -> Void) {
+  public func request(_ path: String = "", method: HttpMethod = .get,
+                      queryItems: Set<URLQueryItem> = [], headers: Set<HttpHeader> = [],
+                      body: Data? = nil,
+                      unauthorized: Bool = false) throws -> ApiResponse {
+    let request = ApiRequest(path: path, queryItems: queryItems, method: method, headers: headers, body: body)
+
+    let operation = ApiClientOperation(client: self, request: request)
+
+    operation.start()
+
+    return operation.response!
+  }
+
+  public func request(_ request: ApiRequest) throws -> ApiResponse {
+    let operation = ApiClientOperation(client: self, request: request)
+
+    operation.start()
+
+    return operation.response!
+  }
+
+  public func fetch(_ request: ApiRequest) async -> ApiResult {
     if let url = buildUrl(request) {
       do {
         let urlRequest = try buildUrlRequest(url: url, request: request)
 
-        let task = session.dataTask(with: urlRequest) { (data, response, error) in
-          if let error = error {
-            handler(.failure(.genericError(error: error)))
-          } else if let httpResponse = response as? HTTPURLResponse {
+        do {
+          let (data, response) = try await session.data(for: urlRequest)
+
+          if let httpResponse = response as? HTTPURLResponse {
             let response = ApiResponse(data: data, response: httpResponse)
 
-            handler(.success(response))
+            return .success(response)
           } else {
-            handler(.failure(.notHttpResponse))
+            return .failure(.notHttpResponse)
           }
         }
-
-        task.resume()
-      } catch {
-        handler(.failure(.bodyEncodingFailed))
+        catch {
+          return .failure(.genericError(error: error))
+        }
       }
-    } else {
-      handler(.failure(.invalidURL))
+      catch {
+        return .failure(.bodyEncodingFailed)
+      }
+    }
+    else {
+      return .failure(.invalidURL)
     }
   }
-
-//  @discardableResult
-//  public func fetchRx(_ request: ApiRequest) -> Observable<ApiResponse> {
-//    return Observable.create { observer -> Disposable in
-//      if let url = self.buildUrl(request) {
-//        do {
-//          let urlRequest = try self.buildUrlRequest(url: url, request: request)
-//          // print("\(urlRequest.httpMethod!): \(url)")
-//
-//          let task = self.session.dataTask(with: urlRequest) { (data, response, error) in
-//            if let error = error {
-//              observer.onError(ApiError.genericError(error: error))
-//            }
-//            else if let httpResponse = response as? HTTPURLResponse {
-//              let response = ApiResponse(data: data, response: httpResponse)
-//
-//              //print("Result: \(String(data: data, encoding: .utf8)!)")
-//
-//              observer.on(.next(response))
-//              observer.on(.completed)
-//            }
-//            else {
-//              observer.on(.error(ApiError.notHttpResponse))
-//            }
-//          }
-//
-//          task.resume()
-//        } catch {
-//          print(error)
-//          observer.on(.error(ApiError.bodyEncodingFailed))
-//        }
-//      }
-//      else {
-//        observer.on(.error(ApiError.invalidURL))
-//      }
-//
-//      return Disposables.create()
-//    }
-//  }
-
-  public func request(_ path: String = "", method: HttpMethod = .get,
-                      queryItems: Set<URLQueryItem> = [], headers: Set<HttpHeader> = [],
-                      body: Data? = nil,
-                      unauthorized: Bool = false) throws -> ApiResponse? {
-    let request = ApiRequest(path: path, queryItems: queryItems, method: method, headers: headers, body: body)
-
-    return try Await.await { handler in
-      self.fetch(request, handler)
-    }
-  }
-
-//  public func requestRx(_ path: String = "", method: HttpMethod = .get,
-//                      queryItems: Set<URLQueryItem> = [], headers: Set<HttpHeader> = [],
-//                      body: Data? = nil,
-//                      unauthorized: Bool=false) throws -> ApiResponse? {
-//    let request = ApiRequest(path: path, queryItems: queryItems, method: method, headers: headers, body: body)
-//
-//    return try Await.awaitRx {
-//      self.fetchRx(request)
-//    }
-//  }
-
-//  @discardableResult
-//  public func awaitRx<T>(_ handler: @escaping () -> Observable<T>) throws -> T? {
-//    return try Await.awaitRx(handler)
-//  }
 }

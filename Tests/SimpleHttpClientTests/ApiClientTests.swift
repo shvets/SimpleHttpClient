@@ -1,7 +1,6 @@
 import XCTest
 
 import Foundation
-import Await
 
 @testable import SimpleHttpClient
 
@@ -17,42 +16,34 @@ class ApiClientTests: XCTestCase, URLSessionDelegate {
 
   var subject = ApiClient(ApiClientTests.url!)
 
-  func testGetAsyncApi() {
-    let exp = expectation(description: "Tests Get Async API")
-
+  func testGetAsyncApi() async {
     let request = ApiRequest(path: "posts")
 
-    subject.fetch(request) { (result) in
-      switch result {
-        case .success(let response):
-          do {
-            let posts = try self.subject.decode(response.data!, to: [Post].self)!
-            print("Received posts: \(posts.first?.title ?? "")")
+    let result = await subject.fetch(request)
 
-            XCTAssertEqual(posts.count, 100)
+    switch result {
+      case .success(let response):
+        do {
+          let posts = try self.subject.decode(response.data!, to: [Post].self)!
+          print("Received posts: \(posts.first?.title ?? "")")
 
-            exp.fulfill()
-          }
-          catch {
-            XCTFail("Error during decoding: \(error)")
-          }
-        case .failure(let error):
-          XCTFail("Error during request: \(error)")
+          XCTAssertEqual(posts.count, 100)
         }
-    }
-
-    waitForExpectations(timeout: 10)
+        catch {
+          XCTFail("Error during decoding: \(error)")
+        }
+      case .failure(let error):
+        XCTFail("Error during request: \(error)")
+      }
   }
 
-  func testGetApi() throws {
+  func testGetApi() async throws {
     let request = ApiRequest(path: "posts")
 
-    let response = try Await.await() { handler in
-      self.subject.fetch(request, handler)
-    }
+    let result = try await subject.fetch(request)
 
-    if let response = response, let data = response.data,
-       let posts = try self.subject.decode(data, to: [Post].self) {
+    if case .success(let response) = result, let data = response.data,
+       let posts = try subject.decode(data, to: [Post].self) {
 
       // print(try posts.prettify())
 

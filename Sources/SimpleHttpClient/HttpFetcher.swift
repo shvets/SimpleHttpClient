@@ -1,3 +1,5 @@
+import Foundation
+
 protocol HttpFetcher {
-  func fetch(_ request: ApiRequest) async -> ApiResult
+  func fetch(_ request: ApiRequest, delegate: URLSessionTaskDelegate?) async -> ApiResult
 }

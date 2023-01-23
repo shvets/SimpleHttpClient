@@ -5,17 +5,19 @@ class ApiClientOperation: Operation {
 
   var client: ApiClient
   var request: ApiRequest
+  var delegate: URLSessionTaskDelegate?
 
-  init(client: ApiClient, request: ApiRequest) {
+  init(client: ApiClient, request: ApiRequest, delegate: URLSessionTaskDelegate? = nil) {
     self.client = client
     self.request = request
+    self.delegate = delegate
   }
 
   override func main() {
     let semaphore = DispatchSemaphore(value: 0)
 
     Task {
-      let result = await client.fetch(request)
+      let result = await client.fetch(request, delegate: delegate)
 
       switch result {
         case .success(let r):
@@ -36,10 +38,11 @@ extension ApiClient: HttpFetcher {
   public func request(_ path: String = "", method: HttpMethod = .get,
                       queryItems: Set<URLQueryItem> = [], headers: Set<HttpHeader> = [],
                       body: Data? = nil,
-                      unauthorized: Bool = false) throws -> ApiResponse {
+                      unauthorized: Bool = false,
+                      delegate: URLSessionTaskDelegate? = nil) throws -> ApiResponse {
     let request = ApiRequest(path: path, queryItems: queryItems, method: method, headers: headers, body: body)
 
-    let operation = ApiClientOperation(client: self, request: request)
+    let operation = ApiClientOperation(client: self, request: request, delegate: delegate)
 
     operation.start()
 
@@ -54,13 +57,13 @@ extension ApiClient: HttpFetcher {
     return operation.response!
   }
 
-  public func fetch(_ request: ApiRequest) async -> ApiResult {
+  public func fetch(_ request: ApiRequest, delegate: URLSessionTaskDelegate? = nil) async -> ApiResult {
     if let url = buildUrl(request) {
       do {
         let urlRequest = try buildUrlRequest(url: url, request: request)
 
         do {
-          let (data, response) = try await session.data(for: urlRequest)
+          let (data, response) = try await session.data(for: urlRequest, delegate: delegate)
 
           if let httpResponse = response as? HTTPURLResponse {
             let response = ApiResponse(data: data, response: httpResponse)

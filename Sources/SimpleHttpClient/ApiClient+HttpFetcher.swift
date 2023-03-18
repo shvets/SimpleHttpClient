@@ -57,6 +57,36 @@ extension ApiClient: HttpFetcher {
     return operation.response!
   }
 
+  public func requestAsync(_ path: String = "", method: HttpMethod = .get,
+                      queryItems: Set<URLQueryItem> = [], headers: Set<HttpHeader> = [],
+                      body: Data? = nil,
+                      unauthorized: Bool = false,
+                      delegate: URLSessionTaskDelegate? = nil) async throws -> ApiResponse {
+    let request = ApiRequest(path: path, queryItems: queryItems, method: method, headers: headers, body: body)
+
+    let result = await fetch(request, delegate: delegate)
+
+    switch result {
+    case .success(let r):
+      return r
+
+    case .failure(let error):
+      throw error
+    }
+  }
+
+  public func requestAsync(_ request: ApiRequest) async throws -> ApiResponse {
+    let result = await fetch(request, delegate: nil)
+
+    switch result {
+    case .success(let r):
+      return r
+
+    case .failure(let error):
+      throw error
+    }
+  }
+
   public func fetch(_ request: ApiRequest, delegate: URLSessionTaskDelegate? = nil) async -> ApiResult {
     if let url = buildUrl(request) {
       do {

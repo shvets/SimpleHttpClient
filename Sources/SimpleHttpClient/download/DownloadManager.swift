@@ -24,6 +24,21 @@ open class DownloadManager {
     }
   }
 
+  public func downloadFromAsync(_ url: URL, toUrl: URL) async throws {
+    if let baseUrl = getBaseUrl(url) {
+      let apiClient = ApiClient(baseUrl)
+
+      let response = try await apiClient.requestAsync(url.path)
+
+      if let data = response.data {
+        try createFile(url: toUrl, contents: data)
+      }
+      else {
+        throw DownloadError.downloadFailed("Cannot download \(toUrl.path)")
+      }
+    }
+  }
+
   func createFile(url: URL, contents: Data) throws {
     let file = url.path
     let dir = url.deletingLastPathComponent()

@@ -8,6 +8,10 @@ open class ApiClient {
     self.baseURL = baseURL
     self.session = session
   }
+  
+  deinit {
+    session.finishTasksAndInvalidate()
+  }
 
   func buildUrl(_ request: ApiRequest) -> URL? {
     var urlComponents = URLComponents()

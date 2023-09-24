@@ -1,5 +1,8 @@
 # SimpleHttpClient Changelog
 
+## 1.0.7
+* Using new swift version and build
+
 ## 1.0.6
 * Add Delegate support
 

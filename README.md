@@ -168,11 +168,20 @@ swift -I .build/debug -L .build/debug -lSimpleHttpClient
 ```
 
 ```bash
-git tag 1.0.0
-git push origin 1.0.0
+git tag 1.0.7
+git push --tags
+
 ```
 
-    # Links
+# Publishing
+
+```sh
+git tag v0.13.0
+
+git push --tags
+```
+
+# Links
     
 - https://tim.engineering/break-up-third-party-networking-urlsession
 - https://mecid.github.io/2019/04/17/asynchronous-completion-handlers-with-result-type

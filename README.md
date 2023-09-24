@@ -167,18 +167,12 @@ swift -I .build/debug -L .build/debug -lSimpleHttpClient
 ./.build/debug/grabbook --zvook http://bookzvuk.ru/zhizn-i-neobyichaynyie-priklyucheniya-soldata-ivana-chonkina-1-litso-neprikosnovennoe-vladimir-voynovich-audiokniga-onlayn/
 ```
 
+# Publishing
+
 ```bash
 git tag 1.0.7
 git push --tags
 
-```
-
-# Publishing
-
-```sh
-git tag v0.13.0
-
-git push --tags
 ```
 
 # Links

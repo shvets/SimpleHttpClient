@@ -172,7 +172,6 @@ swift -I .build/debug -L .build/debug -lSimpleHttpClient
 ```bash
 git tag 1.0.9
 git push --tags
-
 ```
 
 # Links
